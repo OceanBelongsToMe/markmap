@@ -97,8 +97,8 @@ const SELECTOR_LIST_ITEM = /^li$/;
 
 function getLevel(tagName: string) {
   if (SELECTOR_HEADING.test(tagName)) return +tagName[1] as Levels;
-  if (SELECTOR_LIST.test(tagName)) return Levels.List;
-  if (SELECTOR_LIST_ITEM.test(tagName)) return Levels.ListItem;
+  if (SELECTOR_LIST.test(tagName)) return Levels.Block;
+  if (SELECTOR_LIST_ITEM.test(tagName)) return Levels.Block;
   return Levels.Block;
 }
 
