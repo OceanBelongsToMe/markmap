@@ -447,6 +447,9 @@ export class Markmap {
       .attr('x', paddingX)
       .attr('y', 0)
       .style('opacity', 0)
+      .attr('lines', (d) => {
+        return d.payload?.lines as string;
+      })
       .on('mousedown', stopPropagation)
       .on('dblclick', stopPropagation);
     mmFoEnter
