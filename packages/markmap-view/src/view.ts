@@ -447,7 +447,7 @@ export class Markmap {
       .attr('x', paddingX)
       .attr('y', 0)
       .style('opacity', 0)
-      .attr('lines', (d) => {
+      .attr('data-lines', (d) => {
         return d.payload?.lines as string;
       })
       .on('mousedown', stopPropagation)
