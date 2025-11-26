@@ -165,7 +165,7 @@ export class Markmap {
     this.toggleNode(d, recursive);
   };
 
-  private _initializeData(node: IPureNode | INode) {
+  _initializeData(node: IPureNode | INode) {
     let nodeId = 0;
     const { color, initialExpandLevel } = this.options;
 
@@ -642,7 +642,39 @@ export class Markmap {
       .end()
       .catch(noop);
   }
-
+  async centerSvg(maxScale = this.options.maxInitialScale): Promise<void> {
+    const svgNode = this.svg.node()!;
+    const { width: offsetWidth, height: offsetHeight } =
+      svgNode.getBoundingClientRect();
+    const { fitRatio } = this.options;
+    const { x1, y1, x2, y2 } = this.state.rect;
+    const naturalWidth = x2 - x1;
+    const naturalHeight = y2 - y1;
+    const scale = Math.min(
+      (offsetWidth / naturalWidth) * fitRatio,
+      (offsetHeight / naturalHeight) * fitRatio,
+      maxScale,
+    );
+    const contentCenterX = (x1 + x2) / 2;
+    const translateX = offsetWidth / 2 - contentCenterX * scale;
+    // ⭐⭐⭐ 垂直方向黄金分割位置对齐 ⭐⭐⭐
+    const contentCenterY = (y1 + y2) / 2;
+    const targetY = offsetHeight * 0.3; // 上三分之一点  0.382;  // 上黄金点位置
+    const translateY_target = targetY - contentCenterY * scale;
+    // ⭐ 顶部对齐位置（y1 贴顶）
+    const translateY_top = -y1 * scale;
+    const translateY_max = offsetHeight / 2 - contentCenterY * scale; // 或你希望的最大值
+    const initialZoom = zoomIdentity
+      .translate(
+        translateX,
+        Math.min(Math.max(translateY_target, translateY_top), translateY_max),
+      )
+      .scale(scale);
+    return this.transition(this.svg)
+      .call(this.zoom.transform, initialZoom)
+      .end()
+      .catch(noop);
+  }
   findElement(node: INode) {
     let result:
       | {
