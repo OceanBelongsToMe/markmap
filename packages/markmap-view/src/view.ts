@@ -68,6 +68,8 @@ export class Markmap {
   private _observer: ResizeObserver;
 
   private _disposeList: (() => void)[] = [];
+  // last assigned node id (keeps increasing between incremental additions)
+  private _lastId = 0;
 
   constructor(
     svg: string | SVGElement | ID3SVGElement,
@@ -209,6 +211,8 @@ export class Markmap {
       depth -= 1;
     });
 
+    // remember last id assigned for incremental additions
+    this._lastId = nodeId;
     return node as INode;
   }
 
@@ -233,7 +237,11 @@ export class Markmap {
         if (!d.payload?.fold) return d.children;
       })
       .nodeSize((node) => {
-        const [width, height] = node.data.state.size;
+        const size =
+          node.data.state && node.data.state.size
+            ? node.data.state.size
+            : [0, 0];
+        const [width, height] = size;
         return [height, width + (width ? paddingX * 2 : 0) + spacingHorizontal];
       })
       .spacing((a, b) => {
@@ -298,6 +306,367 @@ export class Markmap {
   async setHighlight(node?: INode | null) {
     this.state.highlight = node || undefined;
     await this.renderData();
+  }
+
+  /**
+   * Incrementally set the highlighted node without re-rendering the whole view.
+   * Updates the highlight rect in-place and animates it.
+   */
+  async setHighlightIncremental(node?: INode | null): Promise<void> {
+    this.state.highlight = node || undefined;
+    const highlight = this.state.highlight;
+    const highlightNodes = this.g
+      .selectAll(childSelector(SELECTOR_HIGHLIGHT))
+      .selectAll<SVGRectElement, any>(childSelector<SVGRectElement>('rect'))
+      .data(highlight ? [this._getHighlightRect(highlight)] : [])
+      .join('rect');
+
+    const t = this.transition(highlightNodes)
+      .attr('x', (d: any) => d.x)
+      .attr('y', (d: any) => d.y)
+      .attr('width', (d: any) => d.width)
+      .attr('height', (d: any) => d.height);
+
+    return (t as any).end().catch(noop);
+  }
+
+  /**
+   * Add a single node as a child of `parent`.
+   * If `parent` is `null`, the node is added to the root node's children.
+   * Returns the added node (with initialized state) or `undefined` on failure.
+   */
+  async addNode(
+    parent: INode | null,
+    node: IPureNode | INode,
+    index?: number,
+  ): Promise<INode | undefined> {
+    if (!this.state.data) return undefined;
+
+    // Accept INode from other Markmap instances by converting to a pure node
+    // (strip `state` and clone children/payload) so we allocate new ids.
+    const toPure = (n: any): IPureNode => ({
+      content: n.content,
+      children: (n.children || []).map((c: any) => toPure(c)),
+      payload: n.payload ? { ...(n.payload || {}) } : undefined,
+    });
+    const pureNode: IPureNode = (node as any).state
+      ? toPure(node)
+      : (node as IPureNode);
+
+    // Minimal incremental insertion WITHOUT re-traversing and WITHOUT full re-render.
+    // This will initialize state only for the new node, append DOM elements for it,
+    // and animate it from the parent's origin to the target position. It DOES NOT
+    // perform a full relayout for other nodes — other nodes keep their current positions.
+
+    const paddingX = this.options.paddingX;
+
+    const parentNode = parent || this.state.data;
+    parentNode.children = parentNode.children || [];
+
+    // initialize state for the new node subtree (assign ids, depth, key, path)
+    const newNode = this._initNodeAndChildren(pureNode as any, parentNode);
+
+    // capture old rects for the affected subtree (parentNode)
+    const oldRectMap: Record<
+      number,
+      { x: number; y: number; width: number; height: number }
+    > = {};
+    walkTree(parentNode, (item, next) => {
+      oldRectMap[item.state.id] = {
+        ...(item.state.rect || { x: 0, y: 0, width: 0, height: 0 }),
+      };
+      if (!item.payload?.fold) next();
+    });
+
+    // insert into model (so relayout includes the new node)
+    if (index == null || index < 0 || index > parentNode.children.length) {
+      parentNode.children.push(newNode as unknown as INode);
+    } else {
+      parentNode.children.splice(index, 0, newNode as unknown as INode);
+    }
+
+    // Create DOM for the new node directly
+    const mmG = this.g
+      .append<SVGGElement>('g')
+      .datum(newNode)
+      .attr('data-depth', newNode.state.depth)
+      .attr('data-path', newNode.state.path)
+      .attr(
+        'class',
+        ['markmap-node', newNode.payload?.fold && 'markmap-fold']
+          .filter(Boolean)
+          .join(' '),
+      );
+
+    // line
+    mmG
+      .append('line')
+      .attr('stroke', (d: any) => this.options.color(d))
+      .attr('stroke-width', 0)
+      .attr('x1', 0)
+      .attr('x2', 0);
+
+    // circle (if there will be children later)
+    mmG
+      .append('circle')
+      .attr('stroke-width', 0)
+      .attr('r', 0)
+      .on('click', (e: any, d: any) => this.handleClick(e, d))
+      .on('mousedown', stopPropagation)
+      .attr('stroke', (d: any) => this.options.color(d))
+      .attr(
+        'fill',
+        newNode.payload?.fold && newNode.children
+          ? this.options.color(newNode)
+          : 'var(--markmap-circle-open-bg)',
+      );
+
+    // foreignObject
+    mmG
+      .append('foreignObject')
+      .attr('class', 'markmap-foreign')
+      .attr('x', paddingX)
+      .attr('y', 0)
+      .style('opacity', 0)
+      .attr('data-lines', (d: any) => d.payload?.lines as string)
+      .on('mousedown', stopPropagation)
+      .on('dblclick', stopPropagation)
+      .append('xhtml:div')
+      .append('xhtml:div')
+      .html(newNode.content)
+      .attr('xmlns', 'http://www.w3.org/1999/xhtml');
+
+    // Observe and measure size
+    const foNode = (mmG.node() as SVGGElement).querySelector(
+      '.markmap-foreign',
+    ) as SVGForeignObjectElement;
+    const el = foNode?.firstChild?.firstChild as Element | null;
+    if (el) this._observer.observe(el);
+
+    // measure size synchronously if possible
+    const divEl = el as HTMLDivElement | null;
+    const newSize: [number, number] = divEl
+      ? [divEl.scrollWidth, divEl.scrollHeight]
+      : [0, 0];
+    newNode.state.size = newSize;
+    newNode.state.rect.width = Math.max(0, newSize[0] + paddingX * 2);
+    newNode.state.rect.height = newSize[1];
+
+    // Now perform subtree relayout for the parent node and animate all affected nodes
+    const newRectMap = this._relayoutSubtree(parentNode);
+
+    // Build a single map of existing DOM node elements to avoid repeated selectAll calls
+    const elementMap: Record<number, { data: INode; g: SVGGElement }> = {};
+    this.g
+      .selectAll<SVGGElement, INode>(childSelector<SVGGElement>(SELECTOR_NODE))
+      .each(function (d) {
+        if (!d || !d.state) return;
+        elementMap[d.state.id] = { data: d, g: this as SVGGElement };
+      });
+
+    const promises: Promise<any>[] = [];
+    Object.keys(newRectMap).forEach((idStr) => {
+      const id = Number(idStr);
+      const newRect = newRectMap[id];
+      const found = elementMap[id];
+
+      // Determine old rect: prefer previously saved oldRectMap, fall back to current state.rect, else use newRect
+      const oldRect =
+        oldRectMap[id] ||
+        (found && found.data && found.data.state && found.data.state.rect) ||
+        newRect;
+
+      if (found) {
+        const sel = select(found.g);
+        // Parse existing transform on the element and preserve its translate component if present.
+        const curTransform = sel.attr('transform') as string | null;
+        let startTx: number | undefined;
+        let startTy: number | undefined;
+        if (curTransform) {
+          const matchTranslate =
+            /translate\(([-0-9.]+)(?:[,\s]+)([-0-9.]+)\)/.exec(curTransform);
+          if (matchTranslate) {
+            startTx = Number(matchTranslate[1]);
+            startTy = Number(matchTranslate[2]);
+          } else {
+            const matchMatrix = /matrix\(([-0-9.,\s]+)\)/.exec(curTransform);
+            if (matchMatrix) {
+              const parts = matchMatrix[1]
+                .split(',')
+                .map((s) => Number(s.trim()));
+              if (parts.length === 6) {
+                // matrix(a, b, c, d, tx, ty)
+                startTx = parts[4];
+                startTy = parts[5];
+              }
+            }
+          }
+        }
+        const fromX = typeof startTx === 'number' ? startTx : oldRect.x;
+        const fromY = typeof startTy === 'number' ? startTy : oldRect.y;
+        sel.attr('transform', `translate(${fromX},${fromY})`);
+        promises.push(
+          this.transition(sel as any)
+            .attr('transform', `translate(${newRect.x},${newRect.y})`)
+            .end()
+            .catch(noop),
+        );
+        // update bound data's state.rect
+        if (found.data) found.data.state.rect = { ...newRect };
+      } else {
+        // No existing DOM element found — skip animation but update model if present
+        const nodeItem = this.findElementById(id)?.data;
+        if (nodeItem) nodeItem.state.rect = { ...newRect };
+      }
+    });
+
+    await Promise.all(promises);
+
+    // update ancestors' bounding boxes
+    this._updateAncestorsRect(parentNode);
+
+    return newNode as INode;
+  }
+
+  /**
+   * Re-layout a subtree rooted at `root` using flextree and return a map of id -> rect (absolute coordinates).
+   * The returned rects are in the same coordinate space as `state.rect` used elsewhere.
+   */
+  private _relayoutSubtree(root: INode) {
+    const { lineWidth, paddingX, spacingHorizontal, spacingVertical } =
+      this.options;
+    const layout = flextree<INode>({})
+      .children((d) => {
+        if (!d.payload?.fold) return d.children;
+      })
+      .nodeSize((node) => {
+        const [width, height] = node.data.state.size;
+        return [height, width + (width ? paddingX * 2 : 0) + spacingHorizontal];
+      })
+      .spacing((a, b) => {
+        return (
+          (a.parent === b.parent ? spacingVertical : spacingVertical * 2) +
+          lineWidth(a.data)
+        );
+      });
+
+    const tree = layout.hierarchy(root);
+    layout(tree);
+    const fnodes = tree.descendants();
+
+    const rootF = tree; // fnode of root
+    const rootOriginY = root.state.rect.y; // we will align computed layout to this root origin
+    const rootFTop = rootF.x - rootF.xSize / 2;
+
+    const rectMap: Record<
+      number,
+      { x: number; y: number; width: number; height: number }
+    > = {};
+    fnodes.forEach((fnode) => {
+      const node = fnode.data;
+      const computed = {
+        x: root.state.rect.x + fnode.y,
+        y: rootOriginY - rootFTop + (fnode.x - fnode.xSize / 2),
+        width: fnode.ySize - spacingHorizontal,
+        height: fnode.xSize,
+      };
+      rectMap[node.state.id] = computed;
+    });
+    return rectMap;
+  }
+
+  /**
+   * Update ancestor nodes' state.rect by computing bounding boxes of their visible descendants.
+   */
+  private _updateAncestorsRect(node: INode) {
+    let cur: INode | undefined = node;
+    while (cur) {
+      // compute bbox of visible descendants
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      walkTree(cur, (item, next) => {
+        const r = item.state.rect;
+        if (r) {
+          minX = Math.min(minX, r.x);
+          minY = Math.min(minY, r.y);
+          maxX = Math.max(maxX, r.x + r.width);
+          maxY = Math.max(maxY, r.y + r.height);
+        }
+        if (!item.payload?.fold) next();
+      });
+      if (minX === Infinity) {
+        // no visible descendants; keep existing rect
+      } else {
+        cur.state.rect = {
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY,
+        };
+      }
+      // move to parent (if any)
+      const parentPath = cur.state.path?.split('.') || [];
+      parentPath.pop();
+      const parentId = parentPath.length
+        ? Number(parentPath[parentPath.length - 1])
+        : undefined;
+      cur = parentId ? this.findElementById(parentId)?.data : undefined;
+    }
+  }
+
+  private findElementById(id: number) {
+    let result:
+      | {
+          data: INode;
+          g: SVGGElement;
+        }
+      | undefined;
+    this.g
+      .selectAll<SVGGElement, INode>(childSelector<SVGGElement>(SELECTOR_NODE))
+      .each(function walk(d) {
+        if (!d || !d.state) return;
+        if (d.state.id === id) {
+          result = {
+            data: d,
+            g: this,
+          };
+        }
+      });
+    return result;
+  }
+
+  /**
+   * Initialize `state` for a node and all its descendants.
+   * Assigns incremental ids using `this._lastId` and sets depth/path/key.
+   */
+  private _initNodeAndChildren(node: IPureNode | INode, parent?: INode): INode {
+    // shallow clone so we don't mutate input objects unexpectedly
+    const n: any = { ...(node as any) };
+    n.children = (n.children || []).map((c: any) => ({ ...c }));
+
+    this._lastId += 1;
+    const depth = (parent?.state?.depth || 0) + 1;
+    n.state = {
+      ...(n.state || {}),
+      depth,
+      id: this._lastId,
+      rect: { x: 0, y: 0, width: 0, height: 0 },
+      size: [0, 0],
+    };
+    n.state.key =
+      [parent?.state?.id, n.state.id].filter(Boolean).join('.') +
+      simpleHash(n.content);
+    n.state.path = [parent?.state?.path, n.state.id].filter(Boolean).join('.');
+    // preload color
+    this.options.color(n);
+
+    // recurse children
+    n.children = (n.children || []).map((c: any) =>
+      this._initNodeAndChildren(c, n),
+    );
+    return n as INode;
   }
 
   private _getHighlightRect(highlight: INode) {
@@ -642,7 +1011,10 @@ export class Markmap {
       .end()
       .catch(noop);
   }
-  async centerSvg(maxScale = this.options.maxInitialScale): Promise<void> {
+  async centerSvg(
+    targetPos: number,
+    maxScale = this.options.maxInitialScale,
+  ): Promise<void> {
     const svgNode = this.svg.node()!;
     const { width: offsetWidth, height: offsetHeight } =
       svgNode.getBoundingClientRect();
@@ -657,18 +1029,27 @@ export class Markmap {
     );
     const contentCenterX = (x1 + x2) / 2;
     const translateX = offsetWidth / 2 - contentCenterX * scale;
-    // ⭐⭐⭐ 垂直方向黄金分割位置对齐 ⭐⭐⭐
-    const contentCenterY = (y1 + y2) / 2;
-    const targetY = offsetHeight * 0.3; // 上三分之一点  0.382;  // 上黄金点位置
-    const translateY_target = targetY - contentCenterY * scale;
-    // ⭐ 顶部对齐位置（y1 贴顶）
-    const translateY_top = -y1 * scale;
-    const translateY_max = offsetHeight / 2 - contentCenterY * scale; // 或你希望的最大值
+    // Vertical alignment: numeric `targetPos` indicates closeness to bottom.
+    //  - 0 => align content top to viewport top
+    //  - 0.5 => center vertically
+    //  - 1 => align content bottom to viewport bottom
+    // For intermediate values we linearly interpolate between top and bottom alignments.
+    const translateY_top = -y1 * scale; // align content top to viewport top
+    const translateY_bottom = offsetHeight - y2 * scale; // align content bottom to viewport bottom
+    // clamp targetPos to [0, 1]
+    const t = Math.max(0, Math.min(1, targetPos));
+    // linear interpolation between top and bottom translations
+    const translateY_target = translateY_top * (1 - t) + translateY_bottom * t;
+    // allow translations between top and bottom (order may vary), so compute min/max
+    const minTranslateY = Math.min(translateY_top, translateY_bottom);
+    const maxTranslateY = Math.max(translateY_top, translateY_bottom);
+    const translateY = Math.min(
+      Math.max(translateY_target, minTranslateY),
+      maxTranslateY,
+    );
+
     const initialZoom = zoomIdentity
-      .translate(
-        translateX,
-        Math.min(Math.max(translateY_target, translateY_top), translateY_max),
-      )
+      .translate(translateX, translateY)
       .scale(scale);
     return this.transition(this.svg)
       .call(this.zoom.transform, initialZoom)
