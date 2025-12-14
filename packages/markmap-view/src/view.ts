@@ -1131,7 +1131,7 @@ export class Markmap {
 
   async renderData(originData?: INode) {
     const { paddingX, autoFit, color, maxWidth, lineWidth } = this.options;
-    const rootNode = this.state.data;
+    const rootNode = originData || this.state.data;
     if (!rootNode) return;
 
     const nodeMap: Record<number, INode> = {};
@@ -1352,189 +1352,6 @@ export class Markmap {
   }
 
   /**
-   * Re-render a subtree rooted at `root` without touching other branches.
-   * Keeps the affected nodes animated and updates ancestor bounds.
-   */
-  async renderSubtree(root: INode) {
-    if (!this.state.data || !root) return;
-    this._inSubtreeRender = true;
-    try {
-      const { paddingX, lineWidth } = this.options;
-
-      // collect visible nodes under root and parent map
-      const nodes: INode[] = [];
-      const parentMap: Record<number, number> = {};
-      walkTree(root, (n, next, parent) => {
-        nodes.push(n);
-        if (parent) parentMap[n.state.id] = parent.state.id;
-        if (!n.payload?.fold) next();
-      });
-
-      // Use shared node-group updater scoped to subtree
-      const {
-        mmGEnter,
-        mmGExit,
-        mmGMerge,
-        mmLine,
-        mmLineEnter,
-        mmCircleMerge,
-        mmFoMerge,
-        mmFoExit,
-      } = this._updateNodeGroups({
-        nodes,
-        keyFn: (d) => d.state.key,
-        filter: (d: any) =>
-          d &&
-          d.state &&
-          d.state.path &&
-          d.state.path.startsWith(root.state.path),
-        onEnterEach: () => {
-          /* noop on enter; origin set later */
-        },
-        onExitEach: () => {
-          /* noop on exit; origin set later */
-        },
-      });
-      const observer = this._observer;
-      // Unobserve removed foreignObjects
-      mmFoExit.each(
-        (d: any, i: number, nodesArr: ArrayLike<SVGForeignObjectElement>) => {
-          const el = (nodesArr[i] as any).firstChild?.firstChild as Element;
-          try {
-            observer.unobserve(el);
-          } catch {
-            /* ignore */
-          }
-        },
-      );
-
-      // perform relayout for subtree
-      await new Promise(requestAnimationFrame);
-      const newRectMap = this._relayoutSubtree(root);
-
-      // prepare origin maps for enter/exit animations
-      const sourceRectMap: Record<
-        number,
-        { x: number; y: number; width: number; height: number }
-      > = {};
-      this.g
-        .selectAll<
-          SVGGElement,
-          INode
-        >(childSelector<SVGGElement>(SELECTOR_NODE))
-        .each(function (d) {
-          if (!d || !d.state) return;
-          if (d.state.path && d.state.path.startsWith(root.state.path)) {
-            sourceRectMap[d.state.id] = d.state.rect;
-          }
-        });
-
-      // set enter initial transform
-      mmGEnter.attr('transform', (d: any) => {
-        const origin = sourceRectMap[parentMap[d.state.id]] || root.state.rect;
-        return `translate(${origin.x + origin.width - d.state.rect.width},${origin.y + origin.height - d.state.rect.height})`;
-      });
-
-      // exit transform
-      this.transition(mmGExit)
-        .attr('transform', (d: any) => {
-          const target = newRectMap[parentMap[d.state.id]] || root.state.rect;
-          const tx = target.x + target.width - d.state.rect.width;
-          const ty = target.y + target.height - d.state.rect.height;
-          return `translate(${tx},${ty})`;
-        })
-        .remove();
-
-      // animate merged groups to new positions and update inner elements
-      mmGMerge.attr('class', (d) =>
-        ['markmap-node', d.payload?.fold && 'markmap-fold']
-          .filter(Boolean)
-          .join(' '),
-      );
-      this.transition(mmGMerge).attr(
-        'transform',
-        (d: any) =>
-          `translate(${newRectMap[d.state.id]?.x || d.state.rect.x},${newRectMap[d.state.id]?.y || d.state.rect.y})`,
-      );
-
-      mmLine
-        .merge(mmLineEnter)
-        .attr('y1', (d: any) => d.state.rect.height + lineWidth(d) / 2)
-        .attr('y2', (d: any) => d.state.rect.height + lineWidth(d) / 2);
-      this.transition(mmLine.merge(mmLineEnter) as any)
-        .attr('x1', -1)
-        .attr(
-          'x2',
-          (d: any) =>
-            d.state.rect.width - (d.children && d.children.length ? 6 : 0),
-        )
-        .attr('stroke', (d: any) => this.options.color(d))
-        .attr('stroke-width', (d: any) => lineWidth(d));
-
-      this.transition(mmCircleMerge as any)
-        .attr('cx', (d: any) => d.state.rect.width)
-        .attr('cy', (d: any) => d.state.rect.height + lineWidth(d) / 2)
-        .attr('r', 6)
-        .attr('stroke-width', '1.5');
-
-      mmFoMerge
-        .attr('width', (d: any) =>
-          Math.max(0, d.state.rect.width - paddingX * 2),
-        )
-        .attr('height', (d: any) => d.state.rect.height);
-      this.transition(mmFoMerge as any).style('opacity', 1);
-
-      // links within subtree
-      const nodeSet = new Set(nodes.map((n) => n.state && n.state.id));
-      const links = nodes.flatMap((node) =>
-        node.payload?.fold
-          ? []
-          : (node.children || [])
-              .filter((ch) => ch && nodeSet.has(ch.state && ch.state.id))
-              .map((ch) => ({ source: node, target: ch })),
-      );
-      const _mm = this._bindLinks(
-        links,
-        (d: any) => {
-          const originRect = (d.target.state && d.target.state.rect) || {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
-          };
-          const pathOrigin: [number, number] = [
-            originRect.x + originRect.width,
-            originRect.y + originRect.height,
-          ];
-          return linkShape({ source: pathOrigin, target: pathOrigin });
-        },
-        (d) =>
-          !!(
-            d &&
-            d.target &&
-            d.target.state &&
-            d.target.state.path &&
-            d.target.state.path.startsWith(root.state.path)
-          ),
-      );
-      const mmPathMerge = _mm.mmPathMerge as d3.Selection<
-        SVGPathElement,
-        { source: INode; target: INode },
-        any,
-        any
-      >;
-      mmPathMerge
-        .attr('d', (d) => this._computeLinkAttrs(d).d)
-        .attr('stroke', (d) => this._computeLinkAttrs(d).stroke)
-        .attr('stroke-width', (d) => this._computeLinkAttrs(d).strokeWidth);
-
-      this._updateAncestorsRect(root);
-    } finally {
-      this._inSubtreeRender = false;
-    }
-  }
-
-  /**
    * Update a node's subtree by replacing its content with the parsed result
    * of a Markdown fragment. This is the MVP strategy that preserves the
    * `root` node's id/state but replaces its children with freshly initialized
@@ -1701,13 +1518,6 @@ export class Markmap {
       };
     });
     this.state.data = newRoot;
-    // render only the replaced subtree to avoid full refresh
-    try {
-      await this.renderSubtree(newRoot);
-    } catch {
-      // fallback: full render on errors
-      await this.renderData();
-    }
     return newRoot;
   }
 
