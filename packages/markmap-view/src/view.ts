@@ -42,7 +42,6 @@ function minBy(numbers: number[], by: (v: number) => number): number {
   const index = minIndex(numbers, by);
   return numbers[index];
 }
-
 function stopPropagation(e: Event) {
   e.stopPropagation();
 }
@@ -70,6 +69,10 @@ export class Markmap {
   private _disposeList: (() => void)[] = [];
   // last assigned node id (keeps increasing between incremental additions)
   private _lastId = 0;
+  // flag to indicate we're performing a subtree render (prevents observer re-entry)
+  private _inSubtreeRender = false;
+  // map of id -> node for fast lookup (kept in sync by initialization and incremental ops)
+  _nodeMap = new Map<number, INode>();
 
   constructor(
     svg: string | SVGElement | ID3SVGElement,
@@ -97,7 +100,7 @@ export class Markmap {
     this.g.append('g').attr('class', 'markmap-highlight');
     this._observer = new ResizeObserver(
       debounce(() => {
-        this.renderData();
+        if (!this._inSubtreeRender) this.renderData();
       }, 100),
     );
     this._disposeList.push(
@@ -106,6 +109,23 @@ export class Markmap {
       }),
       () => this._observer.disconnect(),
     );
+  }
+
+  setOptions(opts?: Partial<IMarkmapOptions>): void {
+    this.options = {
+      ...this.options,
+      ...opts,
+    };
+    if (this.options.zoom) {
+      this.svg.call(this.zoom);
+    } else {
+      this.svg.on('.zoom', null);
+    }
+    if (this.options.pan) {
+      this.svg.on('wheel', this.handlePan);
+    } else {
+      this.svg.on('wheel', null);
+    }
   }
 
   getStyleContent(): string {
@@ -168,19 +188,21 @@ export class Markmap {
   };
 
   _initializeData(node: IPureNode | INode) {
-    let nodeId = 0;
     const { color, initialExpandLevel } = this.options;
-
+    this._lastId = 0;
     let foldRecursively = 0;
     let depth = 0;
+    // rebuild node map
+    this._nodeMap = new Map<number, INode>();
+
     walkTree(node as INode, (item, next, parent) => {
       depth += 1;
       item.children = item.children?.map((child) => ({ ...child }));
-      nodeId += 1;
+      this._lastId += 1;
       item.state = {
         ...item.state,
         depth,
-        id: nodeId,
+        id: this._lastId,
         rect: {
           x: 0,
           y: 0,
@@ -189,13 +211,16 @@ export class Markmap {
         },
         size: [0, 0],
       };
+      this._nodeMap.set(item.state.id, item);
       item.state.key =
         [parent?.state?.id, item.state.id].filter(Boolean).join('.') +
         simpleHash(item.content);
       item.state.path = [parent?.state?.path, item.state.id]
         .filter(Boolean)
         .join('.');
-      color(item); // preload colors
+      color(item);
+
+      item.payload = { ...item.payload, path: item.state.path };
 
       const isFoldRecursively = item.payload?.fold === 2;
       if (isFoldRecursively) {
@@ -210,24 +235,25 @@ export class Markmap {
       if (isFoldRecursively) foldRecursively -= 1;
       depth -= 1;
     });
-
-    // remember last id assigned for incremental additions
-    this._lastId = nodeId;
     return node as INode;
   }
 
   private _relayout() {
     if (!this.state.data) return;
 
+    // measure foreignObject sizes
     this.g
-      .selectAll<SVGGElement, INode>(childSelector<SVGGElement>(SELECTOR_NODE))
+      .selectAll(childSelector<SVGGElement>(SELECTOR_NODE))
       .selectAll<SVGForeignObjectElement, INode>(
         childSelector<SVGForeignObjectElement>('foreignObject'),
       )
-      .each(function (d) {
-        const el = this.firstChild?.firstChild as HTMLDivElement;
-        const newSize: [number, number] = [el.scrollWidth, el.scrollHeight];
-        d.state.size = newSize;
+      .each(function (d: any) {
+        const el = (this.firstChild as any)
+          ?.firstChild as HTMLDivElement | null;
+        if (el) {
+          const newSize: [number, number] = [el.scrollWidth, el.scrollHeight];
+          d.state.size = newSize;
+        }
       });
 
     const { lineWidth, paddingX, spacingHorizontal, spacingVertical } =
@@ -250,6 +276,7 @@ export class Markmap {
           lineWidth(a.data)
         );
       });
+
     const tree = layout.hierarchy(this.state.data);
     layout(tree);
     const fnodes = tree.descendants();
@@ -263,36 +290,13 @@ export class Markmap {
       };
     });
     this.state.rect = {
-      x1: min(fnodes, (fnode) => fnode.data.state.rect.x) || 0,
-      y1: min(fnodes, (fnode) => fnode.data.state.rect.y) || 0,
+      x1: min(fnodes, (f) => f.data.state.rect.x) || 0,
+      y1: min(fnodes, (f) => f.data.state.rect.y) || 0,
       x2:
-        max(
-          fnodes,
-          (fnode) => fnode.data.state.rect.x + fnode.data.state.rect.width,
-        ) || 0,
+        max(fnodes, (f) => f.data.state.rect.x + f.data.state.rect.width) || 0,
       y2:
-        max(
-          fnodes,
-          (fnode) => fnode.data.state.rect.y + fnode.data.state.rect.height,
-        ) || 0,
+        max(fnodes, (f) => f.data.state.rect.y + f.data.state.rect.height) || 0,
     };
-  }
-
-  setOptions(opts?: Partial<IMarkmapOptions>): void {
-    this.options = {
-      ...this.options,
-      ...opts,
-    };
-    if (this.options.zoom) {
-      this.svg.call(this.zoom);
-    } else {
-      this.svg.on('.zoom', null);
-    }
-    if (this.options.pan) {
-      this.svg.on('wheel', this.handlePan);
-    } else {
-      this.svg.on('wheel', null);
-    }
   }
 
   async setData(data?: IPureNode | null, opts?: Partial<IMarkmapOptions>) {
@@ -353,13 +357,6 @@ export class Markmap {
       ? toPure(node)
       : (node as IPureNode);
 
-    // Minimal incremental insertion WITHOUT re-traversing and WITHOUT full re-render.
-    // This will initialize state only for the new node, append DOM elements for it,
-    // and animate it from the parent's origin to the target position. It DOES NOT
-    // perform a full relayout for other nodes — other nodes keep their current positions.
-
-    const paddingX = this.options.paddingX;
-
     const parentNode = parent || this.state.data;
     parentNode.children = parentNode.children || [];
 
@@ -386,71 +383,19 @@ export class Markmap {
     }
 
     // Create DOM for the new node directly
-    const mmG = this.g
-      .append<SVGGElement>('g')
-      .datum(newNode)
-      .attr('data-depth', newNode.state.depth)
-      .attr('data-path', newNode.state.path)
-      .attr(
-        'class',
-        ['markmap-node', newNode.payload?.fold && 'markmap-fold']
-          .filter(Boolean)
-          .join(' '),
-      );
+    const mmG = this._createNodeGroupD3(this.g, newNode);
 
-    // line
-    mmG
-      .append('line')
-      .attr('stroke', (d: any) => this.options.color(d))
-      .attr('stroke-width', 0)
-      .attr('x1', 0)
-      .attr('x2', 0);
-
-    // circle (if there will be children later)
-    mmG
-      .append('circle')
-      .attr('stroke-width', 0)
-      .attr('r', 0)
-      .on('click', (e: any, d: any) => this.handleClick(e, d))
-      .on('mousedown', stopPropagation)
-      .attr('stroke', (d: any) => this.options.color(d))
-      .attr(
-        'fill',
-        newNode.payload?.fold && newNode.children
-          ? this.options.color(newNode)
-          : 'var(--markmap-circle-open-bg)',
-      );
-
-    // foreignObject
-    mmG
-      .append('foreignObject')
-      .attr('class', 'markmap-foreign')
-      .attr('x', paddingX)
-      .attr('y', 0)
-      .style('opacity', 0)
-      .attr('data-lines', (d: any) => d.payload?.lines as string)
-      .on('mousedown', stopPropagation)
-      .on('dblclick', stopPropagation)
-      .append('xhtml:div')
-      .append('xhtml:div')
-      .html(newNode.content)
-      .attr('xmlns', 'http://www.w3.org/1999/xhtml');
-
-    // Observe and measure size
+    // Observe and measure size synchronously if possible
     const foNode = (mmG.node() as SVGGElement).querySelector(
       '.markmap-foreign',
-    ) as SVGForeignObjectElement;
-    const el = foNode?.firstChild?.firstChild as Element | null;
-    if (el) this._observer.observe(el);
-
-    // measure size synchronously if possible
-    const divEl = el as HTMLDivElement | null;
-    const newSize: [number, number] = divEl
-      ? [divEl.scrollWidth, divEl.scrollHeight]
-      : [0, 0];
-    newNode.state.size = newSize;
-    newNode.state.rect.width = Math.max(0, newSize[0] + paddingX * 2);
-    newNode.state.rect.height = newSize[1];
+    ) as SVGForeignObjectElement | null;
+    this._updateForeignObject(
+      foNode,
+      newNode.content,
+      (newNode.payload as any)?.lines || '',
+      newNode,
+      true,
+    );
 
     // Now perform subtree relayout for the parent node and animate all affected nodes
     const newRectMap = this._relayoutSubtree(parentNode);
@@ -483,24 +428,9 @@ export class Markmap {
         let startTx: number | undefined;
         let startTy: number | undefined;
         if (curTransform) {
-          const matchTranslate =
-            /translate\(([-0-9.]+)(?:[,\s]+)([-0-9.]+)\)/.exec(curTransform);
-          if (matchTranslate) {
-            startTx = Number(matchTranslate[1]);
-            startTy = Number(matchTranslate[2]);
-          } else {
-            const matchMatrix = /matrix\(([-0-9.,\s]+)\)/.exec(curTransform);
-            if (matchMatrix) {
-              const parts = matchMatrix[1]
-                .split(',')
-                .map((s) => Number(s.trim()));
-              if (parts.length === 6) {
-                // matrix(a, b, c, d, tx, ty)
-                startTx = parts[4];
-                startTy = parts[5];
-              }
-            }
-          }
+          const parsed = this._getTranslateFromTransformString(curTransform);
+          startTx = parsed.x;
+          startTy = parsed.y;
         }
         const fromX = typeof startTx === 'number' ? startTx : oldRect.x;
         const fromY = typeof startTy === 'number' ? startTy : oldRect.y;
@@ -513,6 +443,56 @@ export class Markmap {
         );
         // update bound data's state.rect
         if (found.data) found.data.state.rect = { ...newRect };
+        // Update inner elements (line, circle, foreignObject) to match new rect
+        try {
+          const lineSel = sel.select<SVGLineElement>('line');
+          const circleSel = sel.select<SVGCircleElement>('circle');
+          const foSel = sel.select<SVGForeignObjectElement>('foreignObject');
+          const lw = this.options.lineWidth(found.data);
+          // line: position under content
+          lineSel
+            .attr('y1', found.data.state.rect.height + lw / 2)
+            .attr('y2', found.data.state.rect.height + lw / 2)
+            .attr('x1', -1)
+            .attr(
+              'x2',
+              found.data.state.rect.width -
+                (found.data.children && found.data.children.length ? 6 : 0),
+            )
+            .attr('stroke', this.options.color(found.data))
+            .attr('stroke-width', lw);
+          // circle: position to the right of content
+          circleSel
+            .attr('cx', found.data.state.rect.width)
+            .attr('cy', found.data.state.rect.height + lw / 2)
+            .attr(
+              'r',
+              found.data.children && found.data.children.length ? 6 : 0,
+            )
+            .attr(
+              'stroke-width',
+              found.data.children && found.data.children.length ? 1.5 : 0,
+            )
+            .attr('stroke', this.options.color(found.data))
+            .attr(
+              'fill',
+              found.data.payload?.fold && found.data.children
+                ? this.options.color(found.data)
+                : 'var(--markmap-circle-open-bg)',
+            );
+          // foreignObject: size
+          foSel
+            .attr(
+              'width',
+              Math.max(
+                0,
+                found.data.state.rect.width - this.options.paddingX * 2,
+              ),
+            )
+            .attr('height', found.data.state.rect.height);
+        } catch {
+          /* ignore DOM update errors */
+        }
       } else {
         // No existing DOM element found — skip animation but update model if present
         const nodeItem = this.findElementById(id)?.data;
@@ -639,13 +619,14 @@ export class Markmap {
 
   /**
    * Initialize `state` for a node and all its descendants.
-   * Assigns incremental ids using `this._lastId` and sets depth/path/key.
+   * Assigns incremental ids derived from `_nodeMap` and sets depth/path/key.
    */
-  private _initNodeAndChildren(node: IPureNode | INode, parent?: INode): INode {
+  _initNodeAndChildren(node: IPureNode | INode, parent?: INode): INode {
     // shallow clone so we don't mutate input objects unexpectedly
     const n: any = { ...(node as any) };
     n.children = (n.children || []).map((c: any) => ({ ...c }));
 
+    // allocate a new id using maintained _lastId
     this._lastId += 1;
     const depth = (parent?.state?.depth || 0) + 1;
     n.state = {
@@ -655,18 +636,483 @@ export class Markmap {
       rect: { x: 0, y: 0, width: 0, height: 0 },
       size: [0, 0],
     };
+    this._nodeMap.set(n.state.id, n);
+    this._lastId = n.state.id;
     n.state.key =
       [parent?.state?.id, n.state.id].filter(Boolean).join('.') +
       simpleHash(n.content);
     n.state.path = [parent?.state?.path, n.state.id].filter(Boolean).join('.');
     // preload color
     this.options.color(n);
-
-    // recurse children
+    n.payload = { ...n.payload, path: n.state.path };
     n.children = (n.children || []).map((c: any) =>
       this._initNodeAndChildren(c, n),
     );
     return n as INode;
+  }
+
+  /**
+   * Rebase `payload.lines` from a parsed fragment to absolute lines based on
+   * the `root`'s payload.lines. The function tries to be flexible with input
+   * formats (number, "start-end", JSON array) and preserves a simple
+   * human-readable string output when possible.
+   */
+  private _rebasePayloadLines(
+    lines: string,
+    base: number | null,
+  ): string | undefined {
+    if (lines == null) return undefined;
+    if (base == null) return String(lines);
+
+    const addBase = (n: any) => {
+      const num = Number(n);
+      if (Number.isFinite(num)) return num + base;
+      return n;
+    };
+    const m = /^\s*(\d+)\s*([,\-:])?\s*(\d+)?\s*$/.exec(lines);
+    if (m) {
+      const a = addBase(m[1]);
+      if (m[3]) {
+        const b = addBase(m[3]);
+        return `${a},${b}`;
+      }
+      return undefined;
+    }
+  }
+
+  /**
+   * Parse an element `transform` attribute and return translate components if present.
+   * Supports `translate(x,y)` and `matrix(a,b,c,d,tx,ty)` forms.
+   */
+  private _getTranslateFromTransformString(transform: string | null): {
+    x?: number;
+    y?: number;
+  } {
+    if (!transform) return {};
+    const matchTranslate = /translate\(([-0-9.]+)(?:[,\s]+)([-0-9.]+)\)/.exec(
+      transform,
+    );
+    if (matchTranslate) {
+      return { x: Number(matchTranslate[1]), y: Number(matchTranslate[2]) };
+    }
+    const matchMatrix = /matrix\(([-0-9.,\s]+)\)/.exec(transform);
+    if (matchMatrix) {
+      const parts = matchMatrix[1].split(',').map((s) => Number(s.trim()));
+      if (parts.length === 6) {
+        return { x: parts[4], y: parts[5] };
+      }
+    }
+    return {};
+  }
+
+  /**
+   * Attach/update inner elements (line, circle, foreignObject) to a merged
+   * group selection. Returns commonly used selections for further transitions.
+   */
+  private _attachGroupInner(
+    mmGMerge: d3.Selection<SVGGElement, INode, any, any>,
+  ): {
+    mmLine: d3.Selection<SVGLineElement, INode, any, any>;
+    mmLineEnter: d3.Selection<SVGLineElement, INode, any, any>;
+    mmCircleMerge: d3.Selection<SVGCircleElement, INode, any, any>;
+    mmFoMerge: d3.Selection<SVGForeignObjectElement, INode, any, any>;
+  } {
+    const paddingX = this.options.paddingX;
+    const color = this.options.color;
+
+    const mmLine = mmGMerge
+      .selectAll<SVGLineElement, INode>(childSelector<SVGLineElement>('line'))
+      .data(
+        (d: INode) => [d],
+        (d: INode) => d.state.key,
+      );
+    const mmLineEnter = mmLine
+      .enter()
+      .append('line')
+      .attr('stroke', (d: INode) => color(d))
+      .attr('stroke-width', 0) as d3.Selection<SVGLineElement, INode, any, any>;
+
+    const mmCircle = mmGMerge
+      .selectAll<
+        SVGCircleElement,
+        INode
+      >(childSelector<SVGCircleElement>('circle'))
+      .data(
+        (d: INode) => (d.children?.length ? [d] : []),
+        (d: INode) => d.state.key,
+      );
+    const mmCircleEnter = mmCircle
+      .enter()
+      .append('circle')
+      .attr('stroke-width', 0)
+      .attr('r', 0)
+      .on('click', (e: any, d: INode) => this.handleClick(e, d))
+      .on('mousedown', stopPropagation) as d3.Selection<
+      SVGCircleElement,
+      INode,
+      any,
+      any
+    >;
+    const mmCircleMerge = mmCircleEnter
+      .merge(mmCircle)
+      .attr('stroke', (d: INode) => color(d))
+      .attr('fill', (d: INode) =>
+        d.payload?.fold && d.children
+          ? color(d)
+          : 'var(--markmap-circle-open-bg)',
+      ) as d3.Selection<SVGCircleElement, INode, any, any>;
+
+    const mmFo = mmGMerge
+      .selectAll<
+        SVGForeignObjectElement,
+        INode
+      >(childSelector<SVGForeignObjectElement>('foreignObject'))
+      .data(
+        (d: INode) => [d],
+        (d: INode) => d.state.key,
+      );
+    const mmFoEnter = mmFo
+      .enter()
+      .append('foreignObject')
+      .attr('class', 'markmap-foreign')
+      .attr('x', paddingX)
+      .attr('y', 0)
+      .style('opacity', 0)
+      .attr('data-lines', (d: INode) => (d.payload?.lines as string) || '')
+      .on('mousedown', stopPropagation)
+      .on('dblclick', stopPropagation) as d3.Selection<
+      SVGForeignObjectElement,
+      INode,
+      any,
+      any
+    >;
+    mmFoEnter
+      .append('xhtml:div')
+      .append('xhtml:div')
+      .attr('xmlns', 'http://www.w3.org/1999/xhtml');
+    mmFoEnter.each(
+      (d: INode, i: number, nodes: ArrayLike<SVGForeignObjectElement>) => {
+        const fo = nodes[i] as SVGForeignObjectElement;
+        this._updateForeignObject(
+          fo,
+          d.content,
+          (d.payload as any)?.lines || '',
+          d,
+          false,
+        );
+      },
+    );
+    const mmFoMerge = mmFoEnter.merge(mmFo);
+    mmFoMerge.each(
+      (d: INode, i: number, nodes: ArrayLike<SVGForeignObjectElement>) => {
+        const fo = nodes[i] as SVGForeignObjectElement;
+        this._updateForeignObject(
+          fo,
+          d.content,
+          (d.payload as any)?.lines || '',
+          d,
+          false,
+        );
+      },
+    );
+
+    return {
+      mmLine,
+      mmLineEnter,
+      mmCircleMerge,
+      mmFoMerge,
+    };
+  }
+
+  /**
+   * General node group update helper.
+   * - `nodes`: array of INode to bind
+   * - `keyFn`: optional key function
+   * - `filter`: optional predicate used to filter existing selection before data-join
+   * - `onEnterEach`/`onExitEach`: optional per-element handlers invoked during enter/exit `.each`.
+   */
+  private _updateNodeGroups(opts: {
+    nodes: INode[];
+    keyFn?: (d: INode) => string;
+    filter?: (d: INode, i?: number, nodes?: ArrayLike<SVGGElement>) => boolean;
+    onEnterEach?: (d: INode, i: number, nodes: ArrayLike<SVGGElement>) => void;
+    onExitEach?: (d: INode, i: number, nodes: ArrayLike<SVGGElement>) => void;
+  }): {
+    mmGEnter: d3.Selection<SVGGElement, INode, any, any>;
+    mmGExit: d3.Selection<SVGGElement, INode, any, any>;
+    mmGMerge: d3.Selection<SVGGElement, INode, any, any>;
+    mmFoExit: d3.Selection<SVGForeignObjectElement, INode, any, any>;
+    mmLine: d3.Selection<SVGLineElement, INode, any, any>;
+    mmLineEnter: d3.Selection<SVGLineElement, INode, any, any>;
+    mmCircleMerge: d3.Selection<SVGCircleElement, INode, any, any>;
+    mmFoMerge: d3.Selection<SVGForeignObjectElement, INode, any, any>;
+  } {
+    const { nodes, keyFn, filter, onEnterEach, onExitEach } = opts;
+    let baseSel = this.g.selectAll<SVGGElement, INode>(
+      childSelector<SVGGElement>(SELECTOR_NODE),
+    );
+    if (filter) baseSel = baseSel.filter(filter as any);
+
+    const sel = baseSel.data(
+      nodes,
+      keyFn || ((d: INode) => d.state.key),
+    ) as d3.Selection<SVGGElement, INode, any, any>;
+    const mmGEnter = sel.enter().append('g') as d3.Selection<
+      SVGGElement,
+      INode,
+      any,
+      any
+    >;
+    mmGEnter
+      .attr('data-depth', (d: INode) => d.state.depth)
+      .attr('data-path', (d: INode) => d.state.path)
+      .each(function (
+        this: any,
+        d: INode,
+        i: number,
+        nodesArr: ArrayLike<SVGGElement>,
+      ) {
+        if (onEnterEach) onEnterEach(d, i, nodesArr);
+      });
+    const mmGExit = sel.exit() as d3.Selection<SVGGElement, INode, any, any>;
+    mmGExit.each(function (
+      this: any,
+      d: INode,
+      i: number,
+      nodesArr: ArrayLike<SVGGElement>,
+    ) {
+      if (onExitEach) onExitEach(d, i, nodesArr);
+    });
+    const mmGMerge = sel.merge(mmGEnter) as d3.Selection<
+      SVGGElement,
+      INode,
+      any,
+      any
+    >;
+    mmGMerge.attr('class', (d: INode) =>
+      ['markmap-node', d.payload?.fold && 'markmap-fold']
+        .filter(Boolean)
+        .join(' '),
+    );
+
+    const inner = this._attachGroupInner(mmGMerge);
+
+    const mmFoExit = mmGExit.selectAll<SVGForeignObjectElement, INode>(
+      childSelector<SVGForeignObjectElement>('foreignObject'),
+    );
+    // Unobserve removed foreignObjects
+    mmFoExit.each(
+      (d: any, i: number, nodesArr: ArrayLike<SVGForeignObjectElement>) => {
+        const el = (nodesArr[i] as any).firstChild?.firstChild as Element;
+        try {
+          this._observer.unobserve(el);
+        } catch {
+          /* ignore */
+        }
+      },
+    );
+
+    return {
+      mmGEnter,
+      mmGExit,
+      mmGMerge,
+      mmFoExit,
+      mmLine: inner.mmLine,
+      mmLineEnter: inner.mmLineEnter,
+      mmCircleMerge: inner.mmCircleMerge,
+      mmFoMerge: inner.mmFoMerge,
+    };
+  }
+
+  /**
+   * Bind and create link `path` elements for a given set of links.
+   * `enterD` produces the initial `d` path for entering links.
+   */
+  private _bindLinks(
+    links: { source: INode; target: INode }[],
+    enterD: any,
+    filter?: (d: { source: INode; target: INode }) => boolean,
+  ) {
+    let baseSel = this.g.selectAll<
+      SVGPathElement,
+      { source: INode; target: INode }
+    >(childSelector<SVGPathElement>(SELECTOR_LINK)) as d3.Selection<
+      SVGPathElement,
+      { source: INode; target: INode },
+      any,
+      any
+    >;
+    if (filter) baseSel = baseSel.filter(filter as any);
+    const mmPath = baseSel.data(
+      links,
+      (d: { source: INode; target: INode }) => d.target.state.key,
+    ) as d3.Selection<
+      SVGPathElement,
+      { source: INode; target: INode },
+      any,
+      any
+    >;
+    const mmPathExit = mmPath.exit() as d3.Selection<
+      SVGPathElement,
+      { source: INode; target: INode },
+      any,
+      any
+    >;
+    const mmPathEnter = mmPath
+      .enter()
+      .insert('path', 'g')
+      .attr('class', 'markmap-link')
+      .attr(
+        'data-depth',
+        (d: { source: INode; target: INode }) => d.target.state.depth,
+      )
+      .attr(
+        'data-path',
+        (d: { source: INode; target: INode }) => d.target.state.path,
+      )
+      .attr('d', enterD)
+      .attr('stroke-width', 0) as d3.Selection<
+      SVGPathElement,
+      { source: INode; target: INode },
+      any,
+      any
+    >;
+    const mmPathMerge = mmPathEnter.merge(mmPath) as d3.Selection<
+      SVGPathElement,
+      { source: INode; target: INode },
+      any,
+      any
+    >;
+    return { mmPathMerge, mmPathExit, mmPathEnter };
+  }
+
+  /**
+   * Create a standard `g.markmap-node` group using D3 and attach the
+   * line, circle and foreignObject skeleton. Returns the created group
+   * selection bound to `node`.
+   */
+  private _createNodeGroupD3(
+    parent: d3.Selection<SVGGElement, any, any, any>,
+    node: INode,
+  ) {
+    const paddingX = this.options.paddingX;
+    const mmG = parent
+      .append<SVGGElement>('g')
+      .datum(node)
+      .attr('data-depth', node.state.depth)
+      .attr('data-path', node.state.path)
+      .attr(
+        'class',
+        ['markmap-node', node.payload?.fold && 'markmap-fold']
+          .filter(Boolean)
+          .join(' '),
+      );
+
+    mmG
+      .append('line')
+      .attr('stroke', (d: any) => this.options.color(d))
+      .attr('stroke-width', 0)
+      .attr('x1', 0)
+      .attr('x2', 0);
+
+    mmG
+      .append('circle')
+      .attr('stroke-width', 0)
+      .attr('r', 0)
+      .on('click', (e: any, d: any) => this.handleClick(e, d))
+      .on('mousedown', stopPropagation)
+      .attr('stroke', (d: any) => this.options.color(d))
+      .attr(
+        'fill',
+        node.payload?.fold && node.children
+          ? this.options.color(node)
+          : 'var(--markmap-circle-open-bg)',
+      );
+
+    mmG
+      .append('foreignObject')
+      .attr('class', 'markmap-foreign')
+      .attr('x', paddingX)
+      .attr('y', 0)
+      .style('opacity', 0)
+      .attr('data-lines', (d: any) => d.payload?.lines as string)
+      .on('mousedown', stopPropagation)
+      .on('dblclick', stopPropagation)
+      .append('xhtml:div')
+      .append('xhtml:div')
+      .html((d: any) => d.content)
+      .attr('xmlns', 'http://www.w3.org/1999/xhtml');
+
+    return mmG;
+  }
+
+  /**
+   * Update a `foreignObject`'s inner XHTML content, register it with the
+   * `ResizeObserver`, and optionally measure & update the provided node's
+   * size/rect. `payloadLines` will be set as the `data-lines` attribute if
+   * provided.
+   */
+  private _updateForeignObject(
+    fo: SVGForeignObjectElement | null,
+    content: string | undefined,
+    payloadLines?: string | null,
+    node?: INode,
+    measure = false,
+  ) {
+    if (!fo) return;
+    const inner = fo.firstChild?.firstChild as HTMLDivElement | null;
+    if (inner) {
+      inner.innerHTML = content || '';
+      inner.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      try {
+        this._observer.observe(inner);
+      } catch {
+        /* ignore observation errors */
+      }
+      if (node && measure) {
+        const newSize: [number, number] = [
+          inner.scrollWidth,
+          inner.scrollHeight,
+        ];
+        node.state.size = newSize;
+        node.state.rect.width = Math.max(
+          0,
+          newSize[0] + this.options.paddingX * 2,
+        );
+        node.state.rect.height = newSize[1];
+      }
+    }
+    if (typeof payloadLines !== 'undefined' && payloadLines !== null) {
+      try {
+        fo.setAttribute('data-lines', String(payloadLines));
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  private _computeLinkAttrs(link: { source: INode; target: INode }) {
+    const origSource = link.source;
+    const origTarget = link.target;
+    const source: [number, number] = [
+      origSource.state.rect.x +
+        origSource.state.rect.width -
+        (origSource.children && origSource.children.length ? 6 : 0),
+      origSource.state.rect.y +
+        origSource.state.rect.height +
+        this.options.lineWidth(origSource) / 2,
+    ];
+    const target: [number, number] = [
+      origTarget.state.rect.x,
+      origTarget.state.rect.y +
+        origTarget.state.rect.height +
+        this.options.lineWidth(origTarget) / 2,
+    ];
+    return {
+      d: linkShape({ source, target }),
+      stroke: this.options.color(origTarget),
+      strokeWidth: this.options.lineWidth(origTarget),
+    };
   }
 
   private _getHighlightRect(highlight: INode) {
@@ -689,6 +1135,7 @@ export class Markmap {
     if (!rootNode) return;
 
     const nodeMap: Record<number, INode> = {};
+
     const parentMap: Record<number, number> = {};
     const nodes: INode[] = [];
     walkTree(rootNode, (item, next, parent) => {
@@ -733,113 +1180,32 @@ export class Markmap {
       .attr('height', (d) => d.height);
 
     // Update the nodes
-    const mmG = this.g
-      .selectAll<SVGGElement, INode>(childSelector<SVGGElement>(SELECTOR_NODE))
-      .each((d) => {
-        // Save the current rects before updating nodes
+    // capture current rects for origin calculations
+    this.g
+      .selectAll(childSelector<SVGGElement>(SELECTOR_NODE))
+      .each((d: any) => {
         sourceRectMap[d.state.id] = d.state.rect;
-      })
-      .data(nodes, (d) => d.state.key);
-    const mmGEnter = mmG
-      .enter()
-      .append('g')
-      .attr('data-depth', (d) => d.state.depth)
-      .attr('data-path', (d) => d.state.path)
-      .each((d) => {
-        setOriginNode(nodeMap[parentMap[d.state.id]]);
       });
-    const mmGExit = mmG.exit<INode>().each((d) => {
-      setOriginNode(nodeMap[parentMap[d.state.id]]);
-    });
-    const mmGMerge = mmG
-      .merge(mmGEnter)
-      .attr('class', (d) =>
-        ['markmap-node', d.payload?.fold && 'markmap-fold']
-          .filter(Boolean)
-          .join(' '),
-      );
 
-    // Update lines under the content
-    const mmLine = mmGMerge
-      .selectAll<SVGLineElement, INode>(childSelector<SVGLineElement>('line'))
-      .data(
-        (d) => [d],
-        (d) => d.state.key,
-      );
-    const mmLineEnter = mmLine
-      .enter()
-      .append('line')
-      .attr('stroke', (d) => color(d))
-      .attr('stroke-width', 0);
-    const mmLineMerge = mmLine.merge(mmLineEnter);
-
-    // Circle to link to children of the node
-    const mmCircle = mmGMerge
-      .selectAll<
-        SVGCircleElement,
-        INode
-      >(childSelector<SVGCircleElement>('circle'))
-      .data(
-        (d) => (d.children?.length ? [d] : []),
-        (d) => d.state.key,
-      );
-    const mmCircleEnter = mmCircle
-      .enter()
-      .append('circle')
-      .attr('stroke-width', 0)
-      .attr('r', 0)
-      .on('click', (e, d) => this.handleClick(e, d))
-      .on('mousedown', stopPropagation);
-    const mmCircleMerge = mmCircleEnter
-      .merge(mmCircle)
-      .attr('stroke', (d) => color(d))
-      .attr('fill', (d) =>
-        d.payload?.fold && d.children
-          ? color(d)
-          : 'var(--markmap-circle-open-bg)',
-      );
-
-    const observer = this._observer;
-    const mmFo = mmGMerge
-      .selectAll<
-        SVGForeignObjectElement,
-        INode
-      >(childSelector<SVGForeignObjectElement>('foreignObject'))
-      .data(
-        (d) => [d],
-        (d) => d.state.key,
-      );
-    const mmFoEnter = mmFo
-      .enter()
-      .append('foreignObject')
-      .attr('class', 'markmap-foreign')
-      .attr('x', paddingX)
-      .attr('y', 0)
-      .style('opacity', 0)
-      .attr('data-lines', (d) => {
-        return d.payload?.lines as string;
-      })
-      .on('mousedown', stopPropagation)
-      .on('dblclick', stopPropagation);
-    mmFoEnter
-      // The outer `<div>` with a width of `maxWidth`
-      .append<HTMLDivElement>('xhtml:div')
-      // The inner `<div>` with `display: inline-block` to get the proper width
-      .append<HTMLDivElement>('xhtml:div')
-      .html((d) => d.content)
-      .attr('xmlns', 'http://www.w3.org/1999/xhtml');
-    mmFoEnter.each(function () {
-      const el = this.firstChild?.firstChild as Element;
-      observer.observe(el);
+    const {
+      mmGEnter,
+      mmGExit,
+      mmGMerge,
+      mmLine,
+      mmLineEnter,
+      mmCircleMerge,
+      mmFoMerge,
+      mmFoExit,
+    } = this._updateNodeGroups({
+      nodes,
+      keyFn: (d) => d.state.key,
+      onEnterEach: (d: any) => {
+        setOriginNode(nodeMap[parentMap[d.state.id]]);
+      },
+      onExitEach: (d: any) => {
+        setOriginNode(nodeMap[parentMap[d.state.id]]);
+      },
     });
-    const mmFoExit = mmGExit.selectAll<SVGForeignObjectElement, INode>(
-      childSelector<SVGForeignObjectElement>('foreignObject'),
-    );
-    mmFoExit.each(function () {
-      const el = this.firstChild?.firstChild as Element;
-      observer.unobserve(el);
-    });
-    const mmFoMerge = mmFoEnter.merge(mmFo);
 
     // Update the links
     const links = nodes.flatMap((node) =>
@@ -847,29 +1213,21 @@ export class Markmap {
         ? []
         : node.children.map((child) => ({ source: node, target: child })),
     );
-    const mmPath = this.g
-      .selectAll<
-        SVGPathElement,
-        { source: INode; target: INode }
-      >(childSelector<SVGPathElement>(SELECTOR_LINK))
-      .data(links, (d) => d.target.state.key);
-    const mmPathExit = mmPath.exit<{ source: INode; target: INode }>();
-    const mmPathEnter = mmPath
-      .enter()
-      .insert('path', 'g')
-      .attr('class', 'markmap-link')
-      .attr('data-depth', (d) => d.target.state.depth)
-      .attr('data-path', (d) => d.target.state.path)
-      .attr('d', (d) => {
-        const originRect = getOriginSourceRect(d.target);
-        const pathOrigin: [number, number] = [
-          originRect.x + originRect.width,
-          originRect.y + originRect.height,
-        ];
-        return linkShape({ source: pathOrigin, target: pathOrigin });
-      })
-      .attr('stroke-width', 0);
-    const mmPathMerge = mmPathEnter.merge(mmPath);
+    const _mm = this._bindLinks(links, (d) => {
+      const originRect = getOriginSourceRect(d.target);
+      const pathOrigin: [number, number] = [
+        originRect.x + originRect.width,
+        originRect.y + originRect.height,
+      ];
+      return linkShape({ source: pathOrigin, target: pathOrigin });
+    });
+    const mmPathMerge = _mm.mmPathMerge as d3.Selection<
+      SVGPathElement,
+      { source: INode; target: INode },
+      any,
+      any
+    >;
+    const mmPathExit = _mm.mmPathExit as any;
 
     this.svg.style(
       '--markmap-max-width',
@@ -894,55 +1252,87 @@ export class Markmap {
         originRect.y + originRect.height - d.state.rect.height
       })`;
     });
-    this.transition(mmGExit)
-      .attr('transform', (d) => {
-        const targetRect = getOriginTargetRect(d);
-        const targetX = targetRect.x + targetRect.width - d.state.rect.width;
-        const targetY = targetRect.y + targetRect.height - d.state.rect.height;
+    this.transition(mmGExit as any)
+      .attr('transform', (d: any) => {
+        const targetRect = getOriginTargetRect(d as INode);
+        const targetX =
+          targetRect.x + targetRect.width - (d as INode).state.rect.width;
+        const targetY =
+          targetRect.y + targetRect.height - (d as INode).state.rect.height;
         return `translate(${targetX},${targetY})`;
       })
       .remove();
 
-    this.transition(mmGMerge).attr(
+    this.transition(mmGMerge as any).attr(
       'transform',
-      (d) => `translate(${d.state.rect.x},${d.state.rect.y})`,
+      (d: any) =>
+        `translate(${(d as INode).state.rect.x},${(d as INode).state.rect.y})`,
     );
 
-    const mmLineExit = mmGExit.selectAll<SVGLineElement, INode>(
+    const mmLineExit = (mmGExit as any).selectAll(
       childSelector<SVGLineElement>('line'),
-    );
-    this.transition(mmLineExit)
-      .attr('x1', (d) => d.state.rect.width)
+    ) as d3.Selection<SVGLineElement, INode, any, any>;
+    this.transition(mmLineExit as any)
+      .attr(
+        'x1',
+        (d: any) =>
+          (d as INode).state.rect.width -
+          ((d as INode).children && (d as INode).children.length ? 6 : 0),
+      )
       .attr('stroke-width', 0);
     mmLineEnter
-      .attr('x1', (d) => d.state.rect.width)
-      .attr('x2', (d) => d.state.rect.width);
-    mmLineMerge
-      .attr('y1', (d) => d.state.rect.height + lineWidth(d) / 2)
-      .attr('y2', (d) => d.state.rect.height + lineWidth(d) / 2);
-    this.transition(mmLineMerge)
+      .attr(
+        'x1',
+        (d: any) =>
+          (d as INode).state.rect.width -
+          ((d as INode).children && (d as INode).children.length ? 6 : 0),
+      )
+      .attr(
+        'x2',
+        (d: any) =>
+          (d as INode).state.rect.width -
+          ((d as INode).children && (d as INode).children.length ? 6 : 0),
+      );
+    mmLine
+      .merge(mmLineEnter)
+      .attr('y1', (d: any) => d.state.rect.height + lineWidth(d) / 2)
+      .attr('y2', (d: any) => d.state.rect.height + lineWidth(d) / 2);
+    this.transition(mmLine.merge(mmLineEnter) as any)
       .attr('x1', -1)
-      .attr('x2', (d) => d.state.rect.width + 2)
-      .attr('stroke', (d) => color(d))
-      .attr('stroke-width', lineWidth);
+      .attr(
+        'x2',
+        (d: any) =>
+          d.state.rect.width - (d.children && d.children.length ? 6 : 0),
+      )
+      .attr('stroke', (d: any) => color(d))
+      .attr('stroke-width', lineWidth as any);
 
-    const mmCircleExit = mmGExit.selectAll<SVGCircleElement, INode>(
+    const mmCircleExit = (mmGExit as any).selectAll(
       childSelector<SVGCircleElement>('circle'),
-    );
-    this.transition(mmCircleExit).attr('r', 0).attr('stroke-width', 0);
+    ) as d3.Selection<SVGCircleElement, INode, any, any>;
+    this.transition(mmCircleExit as any)
+      .attr('r', 0)
+      .attr('stroke-width', 0);
     mmCircleMerge
-      .attr('cx', (d) => d.state.rect.width)
-      .attr('cy', (d) => d.state.rect.height + lineWidth(d) / 2);
-    this.transition(mmCircleMerge).attr('r', 6).attr('stroke-width', '1.5');
+      .attr('cx', (d: any) => (d as INode).state.rect.width)
+      .attr(
+        'cy',
+        (d: any) => (d as INode).state.rect.height + lineWidth(d as INode) / 2,
+      );
+    this.transition(mmCircleMerge as any)
+      .attr('r', 6)
+      .attr('stroke-width', '1.5');
 
-    this.transition(mmFoExit).style('opacity', 0);
+    this.transition(mmFoExit as any).style('opacity', 0);
     mmFoMerge
-      .attr('width', (d) => Math.max(0, d.state.rect.width - paddingX * 2))
-      .attr('height', (d) => d.state.rect.height);
-    this.transition(mmFoMerge).style('opacity', 1);
+      .attr('width', (d: any) =>
+        Math.max(0, (d as INode).state.rect.width - paddingX * 2),
+      )
+      .attr('height', (d: any) => (d as INode).state.rect.height);
+    this.transition(mmFoMerge as any).style('opacity', 1);
 
-    this.transition(mmPathExit)
-      .attr('d', (d) => {
+    this.transition(mmPathExit as any)
+      .attr('d', (d: any) => {
         const targetRect = getOriginTargetRect(d.target);
         const pathTarget: [number, number] = [
           targetRect.x + targetRect.width,
@@ -953,28 +1343,372 @@ export class Markmap {
       .attr('stroke-width', 0)
       .remove();
 
-    this.transition(mmPathMerge)
-      .attr('stroke', (d) => color(d.target))
-      .attr('stroke-width', (d) => lineWidth(d.target))
-      .attr('d', (d) => {
-        const origSource = d.source;
-        const origTarget = d.target;
-        const source: [number, number] = [
-          origSource.state.rect.x + origSource.state.rect.width,
-          origSource.state.rect.y +
-            origSource.state.rect.height +
-            lineWidth(origSource) / 2,
-        ];
-        const target: [number, number] = [
-          origTarget.state.rect.x,
-          origTarget.state.rect.y +
-            origTarget.state.rect.height +
-            lineWidth(origTarget) / 2,
-        ];
-        return linkShape({ source, target });
-      });
+    this.transition(mmPathMerge as any)
+      .attr('stroke', (d: any) => this._computeLinkAttrs(d).stroke)
+      .attr('stroke-width', (d: any) => this._computeLinkAttrs(d).strokeWidth)
+      .attr('d', (d: any) => this._computeLinkAttrs(d).d);
 
     if (autoFit) this.fit();
+  }
+
+  /**
+   * Re-render a subtree rooted at `root` without touching other branches.
+   * Keeps the affected nodes animated and updates ancestor bounds.
+   */
+  async renderSubtree(root: INode) {
+    if (!this.state.data || !root) return;
+    this._inSubtreeRender = true;
+    try {
+      const { paddingX, lineWidth } = this.options;
+
+      // collect visible nodes under root and parent map
+      const nodes: INode[] = [];
+      const parentMap: Record<number, number> = {};
+      walkTree(root, (n, next, parent) => {
+        nodes.push(n);
+        if (parent) parentMap[n.state.id] = parent.state.id;
+        if (!n.payload?.fold) next();
+      });
+
+      // Use shared node-group updater scoped to subtree
+      const {
+        mmGEnter,
+        mmGExit,
+        mmGMerge,
+        mmLine,
+        mmLineEnter,
+        mmCircleMerge,
+        mmFoMerge,
+        mmFoExit,
+      } = this._updateNodeGroups({
+        nodes,
+        keyFn: (d) => d.state.key,
+        filter: (d: any) =>
+          d &&
+          d.state &&
+          d.state.path &&
+          d.state.path.startsWith(root.state.path),
+        onEnterEach: () => {
+          /* noop on enter; origin set later */
+        },
+        onExitEach: () => {
+          /* noop on exit; origin set later */
+        },
+      });
+      const observer = this._observer;
+      // Unobserve removed foreignObjects
+      mmFoExit.each(
+        (d: any, i: number, nodesArr: ArrayLike<SVGForeignObjectElement>) => {
+          const el = (nodesArr[i] as any).firstChild?.firstChild as Element;
+          try {
+            observer.unobserve(el);
+          } catch {
+            /* ignore */
+          }
+        },
+      );
+
+      // perform relayout for subtree
+      await new Promise(requestAnimationFrame);
+      const newRectMap = this._relayoutSubtree(root);
+
+      // prepare origin maps for enter/exit animations
+      const sourceRectMap: Record<
+        number,
+        { x: number; y: number; width: number; height: number }
+      > = {};
+      this.g
+        .selectAll<
+          SVGGElement,
+          INode
+        >(childSelector<SVGGElement>(SELECTOR_NODE))
+        .each(function (d) {
+          if (!d || !d.state) return;
+          if (d.state.path && d.state.path.startsWith(root.state.path)) {
+            sourceRectMap[d.state.id] = d.state.rect;
+          }
+        });
+
+      // set enter initial transform
+      mmGEnter.attr('transform', (d: any) => {
+        const origin = sourceRectMap[parentMap[d.state.id]] || root.state.rect;
+        return `translate(${origin.x + origin.width - d.state.rect.width},${origin.y + origin.height - d.state.rect.height})`;
+      });
+
+      // exit transform
+      this.transition(mmGExit)
+        .attr('transform', (d: any) => {
+          const target = newRectMap[parentMap[d.state.id]] || root.state.rect;
+          const tx = target.x + target.width - d.state.rect.width;
+          const ty = target.y + target.height - d.state.rect.height;
+          return `translate(${tx},${ty})`;
+        })
+        .remove();
+
+      // animate merged groups to new positions and update inner elements
+      mmGMerge.attr('class', (d) =>
+        ['markmap-node', d.payload?.fold && 'markmap-fold']
+          .filter(Boolean)
+          .join(' '),
+      );
+      this.transition(mmGMerge).attr(
+        'transform',
+        (d: any) =>
+          `translate(${newRectMap[d.state.id]?.x || d.state.rect.x},${newRectMap[d.state.id]?.y || d.state.rect.y})`,
+      );
+
+      mmLine
+        .merge(mmLineEnter)
+        .attr('y1', (d: any) => d.state.rect.height + lineWidth(d) / 2)
+        .attr('y2', (d: any) => d.state.rect.height + lineWidth(d) / 2);
+      this.transition(mmLine.merge(mmLineEnter) as any)
+        .attr('x1', -1)
+        .attr(
+          'x2',
+          (d: any) =>
+            d.state.rect.width - (d.children && d.children.length ? 6 : 0),
+        )
+        .attr('stroke', (d: any) => this.options.color(d))
+        .attr('stroke-width', (d: any) => lineWidth(d));
+
+      this.transition(mmCircleMerge as any)
+        .attr('cx', (d: any) => d.state.rect.width)
+        .attr('cy', (d: any) => d.state.rect.height + lineWidth(d) / 2)
+        .attr('r', 6)
+        .attr('stroke-width', '1.5');
+
+      mmFoMerge
+        .attr('width', (d: any) =>
+          Math.max(0, d.state.rect.width - paddingX * 2),
+        )
+        .attr('height', (d: any) => d.state.rect.height);
+      this.transition(mmFoMerge as any).style('opacity', 1);
+
+      // links within subtree
+      const nodeSet = new Set(nodes.map((n) => n.state && n.state.id));
+      const links = nodes.flatMap((node) =>
+        node.payload?.fold
+          ? []
+          : (node.children || [])
+              .filter((ch) => ch && nodeSet.has(ch.state && ch.state.id))
+              .map((ch) => ({ source: node, target: ch })),
+      );
+      const _mm = this._bindLinks(
+        links,
+        (d: any) => {
+          const originRect = (d.target.state && d.target.state.rect) || {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+          };
+          const pathOrigin: [number, number] = [
+            originRect.x + originRect.width,
+            originRect.y + originRect.height,
+          ];
+          return linkShape({ source: pathOrigin, target: pathOrigin });
+        },
+        (d) =>
+          !!(
+            d &&
+            d.target &&
+            d.target.state &&
+            d.target.state.path &&
+            d.target.state.path.startsWith(root.state.path)
+          ),
+      );
+      const mmPathMerge = _mm.mmPathMerge as d3.Selection<
+        SVGPathElement,
+        { source: INode; target: INode },
+        any,
+        any
+      >;
+      mmPathMerge
+        .attr('d', (d) => this._computeLinkAttrs(d).d)
+        .attr('stroke', (d) => this._computeLinkAttrs(d).stroke)
+        .attr('stroke-width', (d) => this._computeLinkAttrs(d).strokeWidth);
+
+      this._updateAncestorsRect(root);
+    } finally {
+      this._inSubtreeRender = false;
+    }
+  }
+
+  /**
+   * Update a node's subtree by replacing its content with the parsed result
+   * of a Markdown fragment. This is the MVP strategy that preserves the
+   * `root` node's id/state but replaces its children with freshly initialized
+   * nodes produced by the parser.
+   *
+   * `transformer` may be provided (an instance of `Transformer` from
+   * `markmap-lib`); otherwise a dynamic import is used.
+   */
+  async updateFragment(
+    rootId: number,
+    parsed: IPureNode,
+    changes: number,
+    baseLine: number,
+  ): Promise<INode | undefined> {
+    const root = this._nodeMap.get(rootId);
+    if (!root) return undefined;
+
+    const fail = (msg: string): never => {
+      throw new Error(msg);
+    };
+
+    const rootPath = root.state?.path;
+    if (!rootPath) fail('Root has no state.path');
+
+    // Locate parent for possible sibling replacement.
+    const parentPathParts = rootPath.split('.');
+    parentPathParts.pop();
+    const parentId = parentPathParts.length
+      ? Number(parentPathParts[parentPathParts.length - 1])
+      : undefined;
+
+    const parentNode =
+      typeof parentId === 'number' && Number.isFinite(parentId)
+        ? this._nodeMap.get(parentId)
+        : undefined;
+
+    if (!parentNode) {
+      return this._initializeData(parsed);
+    }
+    // Build all new nodes locally first (strict parse + atomic commit).
+    let nextId = this._lastId;
+    const allocateId = () => {
+      nextId += 1;
+      return nextId;
+    };
+
+    const initLocal = (node: IPureNode | INode, parent?: INode): INode => {
+      const n: any = { ...(node as any) };
+      n.children = (n.children || []).map((c: any) => ({ ...c }));
+
+      const depth = (parent?.state?.depth || 0) + 1;
+      const id = allocateId();
+      n.state = {
+        ...(n.state || {}),
+        depth,
+        id,
+        rect: { x: 0, y: 0, width: 0, height: 0 },
+        size: [0, 0],
+      };
+      n.state.key =
+        [parent?.state?.id, n.state.id].filter(Boolean).join('.') +
+        simpleHash(n.content);
+      n.state.path = [parent?.state?.path, n.state.id]
+        .filter(Boolean)
+        .join('.');
+
+      // preload color and payload.path
+      this.options.color(n);
+      n.payload = { ...(n.payload || {}), path: n.state.path };
+
+      // Rebase fragment-relative payload.lines -> absolute
+      if (n.payload && n.payload.lines != null) {
+        const abs = this._rebasePayloadLines(n.payload.lines, baseLine);
+        if (abs == null)
+          fail(`Cannot parse payload.lines for node ${n.state.path}`);
+        n.payload.lines = abs as any;
+      }
+
+      n.children = (n.children || []).map((c: any) => initLocal(c, n));
+      return n as INode;
+    };
+
+    let newRoot: INode;
+    const isNotWrapper = parsed.content !== '' || parsed.children?.length;
+    if (!isNotWrapper) {
+      const newNodes = (parsed.children || []).map((c: any) =>
+        initLocal(c, parentNode),
+      );
+      newRoot = {
+        children: newNodes,
+        payload: parsed.payload ? { ...(parsed.payload || {}) } : undefined,
+        state: {
+          id: -1,
+          depth: parentNode.state?.depth,
+          path: '',
+          key: '',
+          rect: { x: 0, y: 0, width: 0, height: 0 },
+          size: [0, 0],
+        },
+      } as INode;
+    } else {
+      newRoot = initLocal(parsed, parentNode);
+    }
+    if (parentNode.children) {
+      const idx = parentNode.children.findIndex(
+        (c) => c?.state?.id === root?.state?.id,
+      );
+      if (idx >= 0) {
+        parentNode.children.splice(idx, 1, newRoot);
+      }
+    }
+    if (isNotWrapper && parsed.payload && parsed.payload.lines) {
+      const lines = this._rebasePayloadLines(
+        parsed.payload.lines as string,
+        baseLine,
+      );
+      if (!lines) fail('Cannot parse payload.lines for the new root node');
+      newRoot.payload = { ...(newRoot.payload || {}), lines };
+    }
+
+    // Update last id to cover both seen ids and newly allocated ids
+    this._lastId = Math.max(this._lastId, nextId);
+
+    const inFragment = (p: string) =>
+      p === rootPath || p.startsWith(`${rootPath}.`);
+
+    const delta = changes;
+    if (delta !== 0) {
+      let seenFragment = false;
+      for (const [, n] of this._nodeMap) {
+        const p = n.state?.path;
+        if (!p) continue;
+        if (!seenFragment) {
+          if (!inFragment(p)) continue;
+          seenFragment = true;
+          continue;
+        }
+        if (inFragment(p)) continue;
+        if (n.payload && n.payload.lines != null) {
+          const nextLines = this._rebasePayloadLines(
+            n.payload.lines as string,
+            delta,
+          );
+          if (!nextLines) fail(`Cannot parse payload.lines for node ${p}`);
+          n.payload.lines = nextLines as any;
+        }
+      }
+    }
+
+    walkTree(newRoot, (item, next) => {
+      this._nodeMap.set(item.state.id, item);
+      next();
+    });
+    walkTree(root, (item, next) => {
+      this._nodeMap.delete(item.state.id);
+      next();
+    });
+
+    // Align each new child's rect to the original root rect for initial visual placement.
+    newRoot.state.rect = { ...root.state.rect };
+    (newRoot.children || []).forEach((ch) => {
+      ch.state.rect = {
+        ...(newRoot.state.rect || { x: 0, y: 0, width: 0, height: 0 }),
+      };
+    });
+    this.state.data = newRoot;
+    // render only the replaced subtree to avoid full refresh
+    try {
+      await this.renderSubtree(newRoot);
+    } catch {
+      // fallback: full render on errors
+      await this.renderData();
+    }
+    return newRoot;
   }
 
   transition<T extends d3.BaseType, U, P extends d3.BaseType, Q>(

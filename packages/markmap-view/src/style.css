@@ -19,6 +19,8 @@
   }
 
   &-node {
+    /* Hint browser to optimize transforms for smoother animations */
+    will-change: transform;
     > circle {
       cursor: pointer;
     }
