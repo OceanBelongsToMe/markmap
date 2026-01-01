@@ -23,6 +23,7 @@
   --titlebar-traffic-center-x: 80px;
   --titlebar-inset-left-fullscreen: 10px;
   --titlebar-traffic-center-x-fullscreen: 12px;
+  --toolbar-inset-left: var(--titlebar-traffic-center-x);
   --font-title: "Avenir", "Inter", "Helvetica", "Arial", sans-serif;
   --font-body: "Avenir", "Inter", "Helvetica", "Arial", sans-serif;
   --font-code: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
@@ -64,12 +65,11 @@ body,
 }
 
 .toolbar-region {
-  padding-left: 80px !important;
   grid-area: toolbar;
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--color-border-default);
-  padding: 8px var(--titlebar-inset-right) 8px var(--titlebar-inset-left);
+  padding: 8px var(--titlebar-inset-right) 8px var(--toolbar-inset-left);
 }
 
 .toolbar {
@@ -86,11 +86,10 @@ body,
   position: relative;
 }
 
-@media (min-width: 1440px) {
-  :root {
-    --titlebar-inset-left: var(--titlebar-inset-left-fullscreen);
-    --titlebar-traffic-center-x: var(--titlebar-traffic-center-x-fullscreen);
-  }
+:root[data-window-fullscreen="true"] {
+  --titlebar-inset-left: var(--titlebar-inset-left-fullscreen);
+  --titlebar-traffic-center-x: var(--titlebar-traffic-center-x-fullscreen);
+  --toolbar-inset-left: 0px;
 }
 
 .toolbar-group {
