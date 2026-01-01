@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js";
 import { createEffect } from "solid-js";
-import { useWindowFullscreen } from "../state/useWindowFullscreen";
+import { useWindowFullscreen } from "../state/window";
 
 export type AppShellProps = {
   children: JSX.Element;

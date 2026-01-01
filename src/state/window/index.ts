@@ -1,0 +1,1 @@
+export { useWindowFullscreen } from "./fullscreen";

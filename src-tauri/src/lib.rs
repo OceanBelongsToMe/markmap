@@ -1,4 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod app;
 mod commands;
 mod error;
 
@@ -104,6 +105,7 @@ pub fn run() {
             )));
             app.manage(services);
             app.manage(router);
+            app::window_events::init(app)?;
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())

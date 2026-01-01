@@ -74,6 +74,10 @@
   margin-right: 2px;
 }
 
+.sidebar-section[data-collapsed="false"] .sidebar-section-chevron {
+  margin-bottom: var(--sidebar-chevron-offset, 9px);
+}
+
 .sidebar-section[data-collapsed="true"] .sidebar-section-chevron {
   transform: rotate(-45deg);
 }
