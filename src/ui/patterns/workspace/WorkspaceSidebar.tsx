@@ -5,7 +5,12 @@ import { Sidebar } from "../../../layouts/Regions";
 import { SidebarShell } from "../../../layouts/SidebarShell";
 import { TreeView, type TreeNode } from "../../components/TreeView";
 
-export const WorkspaceSidebar = () => {
+export type WorkspaceSidebarProps = {
+  collapsed?: boolean;
+  width?: number;
+};
+
+export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
   const { t } = useI18n();
   const nodes = createMemo<TreeNode[]>(() =>
     navModel.map((item) => ({
@@ -20,7 +25,7 @@ export const WorkspaceSidebar = () => {
 
   return (
     <Sidebar>
-      <SidebarShell>
+      <SidebarShell collapsed={props.collapsed} width={props.width}>
         <nav>
           <TreeView nodes={nodes()} />
         </nav>

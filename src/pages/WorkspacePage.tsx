@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { MainLayout } from "../layouts/MainLayout";
 import { workspaceLayoutMins } from "../layouts/rules/workspaceLayoutSizes";
 import { useLayoutState } from "../state/useLayoutState";
+import { useSidebarState } from "../state/useSidebarState";
 import { useResponsiveLayout } from "../state/useResponsiveLayout";
 import { FloatingEditorPanelContent } from "../features/workspace/FloatingEditorPanelContent";
 import { WorkspaceToolbarContent } from "../features/workspace/WorkspaceToolbarContent";
@@ -14,6 +15,7 @@ import { ToolbarShell } from "../ui/patterns/ToolbarShell";
 
 export const WorkspacePage = () => {
   const { layoutMode } = useLayoutState();
+  const { collapsed, width: sidebarWidth, setWidth: setSidebarWidth } = useSidebarState();
   const [shellRef, setShellRef] = createSignal<HTMLDivElement | undefined>();
   const { layoutVariant, width, viewportWidth } = useResponsiveLayout(
     () => shellRef(),
@@ -47,9 +49,21 @@ export const WorkspacePage = () => {
             {Math.round(viewportWidth())}
           </div>
           <WorkspaceSplitShell
-            sidebar={showSidebar() ? <WorkspaceSidebar /> : undefined}
+            sidebar={
+              showSidebar() ? (
+                <WorkspaceSidebar collapsed={collapsed()} width={sidebarWidth()} />
+              ) : undefined
+            }
+            sidebarWidth={sidebarWidth()}
             editor={<WorkspaceEditorPane />}
             preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
+            onSizesChange={(sizes) => {
+              if (!showSidebar()) return;
+              const next = sizes[0];
+              if (typeof next === "number") {
+                setSidebarWidth(next);
+              }
+            }}
           />
         </div>
       }

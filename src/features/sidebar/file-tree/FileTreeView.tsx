@@ -12,9 +12,11 @@ export const FileTreeView = (props: FileTreeViewProps) => {
   return (
     <div>
       {props.nodes.map((node) => (
-        <button type="button" onClick={() => props.onSelect?.(node.id)}>
-          {props.renderLabel ? props.renderLabel(node) : node.label}
-        </button>
+        <div>
+          <button type="button" onClick={() => props.onSelect?.(node.id)}>
+            {props.renderLabel ? props.renderLabel(node) : node.label}
+          </button>
+        </div>
       ))}
     </div>
   );

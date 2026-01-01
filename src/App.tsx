@@ -4,6 +4,7 @@ import { routes } from "./routes";
 import "./App.css";
 import "./ui/typography/typography.css";
 import "./ui/theme/theme.css";
+import "./layouts/sidebar.css";
 
 function App() {
   return (

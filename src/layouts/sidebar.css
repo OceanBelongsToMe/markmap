@@ -11,3 +11,14 @@
 .sidebar-shell.is-collapsed {
   width: var(--sidebar-collapsed-width, 56px);
 }
+
+.sidebar-region {
+  height: 100%;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.sidebar-shell nav {
+  width: 100%;
+}

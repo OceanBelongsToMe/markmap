@@ -9,6 +9,8 @@ export type WorkspaceSplitShellProps = {
   sidebar?: JSX.Element;
   editor: JSX.Element;
   preview?: JSX.Element;
+  sidebarWidth?: number;
+  onSizesChange?: (sizes: number[]) => void;
 };
 
 export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
@@ -19,7 +21,10 @@ export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
       next.push({
         key: "sidebar",
         content: props.sidebar,
-        size: workspacePaneSizes.sidebar
+        size: {
+          ...workspacePaneSizes.sidebar,
+          initialPx: props.sidebarWidth ?? workspacePaneSizes.sidebar.initialPx
+        }
       });
     }
 
@@ -40,5 +45,11 @@ export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
     return next;
   });
 
-  return <MultiPaneShell class="workspace-shell" panes={panes} />;
+  return (
+    <MultiPaneShell
+      class="workspace-shell"
+      panes={panes}
+      onSizesChange={props.onSizesChange}
+    />
+  );
 };

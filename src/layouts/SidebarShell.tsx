@@ -3,6 +3,7 @@ import type { JSX } from "solid-js";
 export type SidebarShellProps = {
   children: JSX.Element;
   collapsed?: boolean;
+  width?: number;
   class?: string;
 };
 
@@ -15,5 +16,12 @@ export const SidebarShell = (props: SidebarShellProps) => {
     .filter(Boolean)
     .join(" ");
 
-  return <div class={className}>{props.children}</div>;
+  const style =
+    props.width !== undefined ? { "--sidebar-width": `${props.width}px` } : undefined;
+
+  return (
+    <div class={className} style={style}>
+      {props.children}
+    </div>
+  );
 };

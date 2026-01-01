@@ -1,4 +1,4 @@
-import { createMemo, createSignal } from "solid-js";
+import { createEffect, createMemo, createSignal } from "solid-js";
 import { MultiPaneLayout, type Pane } from "../../layouts/MultiPaneLayout";
 import { useMeasuredWidth } from "../../state/useMeasuredWidth";
 import { usePaneSizes, type PaneSize } from "../../state/usePaneSizes";
@@ -7,6 +7,7 @@ import { SashContainer } from "./SashContainer";
 export type MultiPaneShellProps = {
   panes: () => Array<Pane & { size?: PaneSize }>;
   class?: string;
+  onSizesChange?: (sizes: number[]) => void;
 };
 
 export const MultiPaneShell = (props: MultiPaneShellProps) => {
@@ -18,6 +19,9 @@ export const MultiPaneShell = (props: MultiPaneShellProps) => {
     return containerRef()?.getBoundingClientRect().left ?? 0;
   });
   const { sizes, handleDrag } = usePaneSizes(() => panes(), containerWidth);
+  createEffect(() => {
+    props.onSizesChange?.(sizes());
+  });
 
   return (
     <div
