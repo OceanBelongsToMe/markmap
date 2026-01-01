@@ -1,0 +1,31 @@
+import { createSignal } from "solid-js";
+import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
+
+export const useWorkspaceActions = () => {
+  const [greetMsg, setGreetMsg] = createSignal("");
+  const [name, setName] = createSignal("");
+
+  const greet = async () => {
+    try {
+      const path = await open({ directory: true });
+      if (!path) return;
+      const selection = Array.isArray(path) ? path[0] : path;
+      if (!selection) return;
+      const result = await invoke("dispatch", {
+        req: { command: "workspace_attach_folder", payload: { root_path: selection } }
+      });
+      console.log("workspace_attach_folder result", result);
+      setGreetMsg(await invoke("greet", { name: selection }));
+    } catch (error) {
+      console.error("new action error", error);
+    }
+  };
+
+  return {
+    greetMsg,
+    name,
+    setName,
+    greet
+  };
+};

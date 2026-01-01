@@ -1,0 +1,9 @@
+[package]
+name = "knowlattice-plugins"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+knowlattice-core = { path = "../core" }
+knowlattice-services = { path = "../services" }
+common = { package = "knowlattice-common", path = "../common" }

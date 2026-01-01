@@ -1,0 +1,58 @@
+.typo-h1 {
+  font-family: var(--font-title);
+  font-size: var(--font-size-h1);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.typo-h2 {
+  font-family: var(--font-title);
+  font-size: var(--font-size-h2);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.typo-h3 {
+  font-family: var(--font-title);
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.typo-body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-primary);
+}
+
+.typo-caption {
+  font-family: var(--font-body);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-loose);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-muted);
+}
+
+.typo-comment {
+  font-family: var(--font-body);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-loose);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-muted);
+}
+
+.typo-code {
+  font-family: var(--font-code);
+  font-size: var(--font-size-code);
+  line-height: var(--line-height-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-secondary);
+  background: var(--color-bg-subtle);
+  border-radius: 4px;
+  padding: 0.1em 0.3em;
+}

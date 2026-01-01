@@ -1,0 +1,990 @@
+---
+source: crates/search/tests/markdown_parser.rs
+expression: summary
+---
+ParseSummary {
+    nodes: [
+        NodeAggregateSummary {
+            node_idx: 0,
+            node_type_id: 1,
+            parent_idx: None,
+            range_start: 0,
+            range_end: 8,
+            texts: [],
+            node_types: [
+                "Heading { level: HeadingLevel(1) }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 1,
+            node_type_id: 32,
+            parent_idx: Some(
+                0,
+            ),
+            range_start: 2,
+            range_end: 7,
+            texts: [
+                "Title",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 2,
+            node_type_id: 10,
+            parent_idx: None,
+            range_start: 9,
+            range_end: 82,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 3,
+            node_type_id: 32,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 9,
+            range_end: 15,
+            texts: [
+                "Intro ",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 4,
+            node_type_id: 17,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 15,
+            range_end: 19,
+            texts: [],
+            node_types: [
+                "Emphasis",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 5,
+            node_type_id: 32,
+            parent_idx: Some(
+                4,
+            ),
+            range_start: 16,
+            range_end: 18,
+            texts: [
+                "em",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 6,
+            node_type_id: 32,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 19,
+            range_end: 24,
+            texts: [
+                " and ",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 7,
+            node_type_id: 18,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 24,
+            range_end: 34,
+            texts: [],
+            node_types: [
+                "Strong",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 8,
+            node_type_id: 32,
+            parent_idx: Some(
+                7,
+            ),
+            range_start: 26,
+            range_end: 32,
+            texts: [
+                "strong",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 9,
+            node_type_id: 32,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 34,
+            range_end: 40,
+            texts: [
+                " with ",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 10,
+            node_type_id: 13,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 40,
+            range_end: 46,
+            texts: [
+                "code",
+            ],
+            node_types: [
+                "CodeInline",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 11,
+            node_type_id: 32,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 46,
+            range_end: 53,
+            texts: [
+                " and a ",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 12,
+            node_type_id: 7,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 53,
+            range_end: 80,
+            texts: [],
+            node_types: [
+                "Link { href: \"https://example.com\", title: None, link_type: Inline, ref_id: None }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 13,
+            node_type_id: 32,
+            parent_idx: Some(
+                12,
+            ),
+            range_start: 54,
+            range_end: 58,
+            texts: [
+                "link",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 14,
+            node_type_id: 32,
+            parent_idx: Some(
+                2,
+            ),
+            range_start: 80,
+            range_end: 81,
+            texts: [
+                ".",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 15,
+            node_type_id: 11,
+            parent_idx: None,
+            range_start: 83,
+            range_end: 96,
+            texts: [],
+            node_types: [
+                "BlockQuote { kind: None }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 16,
+            node_type_id: 10,
+            parent_idx: Some(
+                15,
+            ),
+            range_start: 85,
+            range_end: 96,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 17,
+            node_type_id: 32,
+            parent_idx: Some(
+                16,
+            ),
+            range_start: 85,
+            range_end: 95,
+            texts: [
+                "Quote line",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 18,
+            node_type_id: 2,
+            parent_idx: None,
+            range_start: 97,
+            range_end: 139,
+            texts: [],
+            node_types: [
+                "List { order: 0, is_item: false }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 19,
+            node_type_id: 3,
+            parent_idx: Some(
+                18,
+            ),
+            range_start: 97,
+            range_end: 106,
+            texts: [],
+            node_types: [
+                "ListItem { order: 0, is_item: true }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 20,
+            node_type_id: 32,
+            parent_idx: Some(
+                19,
+            ),
+            range_start: 99,
+            range_end: 105,
+            texts: [
+                "Item 1",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 21,
+            node_type_id: 8,
+            parent_idx: Some(
+                18,
+            ),
+            range_start: 106,
+            range_end: 1126,
+            texts: [],
+            node_types: [
+                "ListItem { order: 0, is_item: true }",
+                "Task { checked: true }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 22,
+            node_type_id: 32,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 112,
+            range_end: 121,
+            texts: [
+                "Task item",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 23,
+            node_type_id: 3,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 122,
+            range_end: 139,
+            texts: [],
+            node_types: [
+                "ListItem { order: 0, is_item: true }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 24,
+            node_type_id: 7,
+            parent_idx: Some(
+                23,
+            ),
+            range_start: 124,
+            range_end: 136,
+            texts: [],
+            node_types: [
+                "Link { href: \"wiki\", title: None, link_type: WikiLink { has_pothole: true }, ref_id: None }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 25,
+            node_type_id: 32,
+            parent_idx: Some(
+                24,
+            ),
+            range_start: 131,
+            range_end: 135,
+            texts: [
+                "node",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 26,
+            node_type_id: 4,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 139,
+            range_end: 159,
+            texts: [],
+            node_types: [
+                "CodeBlock { language: Some(\"rs\") }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 27,
+            node_type_id: 32,
+            parent_idx: Some(
+                26,
+            ),
+            range_start: 145,
+            range_end: 156,
+            texts: [
+                "let x = 1;\n",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 28,
+            node_type_id: 5,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 161,
+            range_end: 203,
+            texts: [],
+            node_types: [
+                "Table { alignments: [2, 3] }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 29,
+            node_type_id: 14,
+            parent_idx: Some(
+                28,
+            ),
+            range_start: 161,
+            range_end: 175,
+            texts: [],
+            node_types: [
+                "TableHead",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 30,
+            node_type_id: 16,
+            parent_idx: Some(
+                29,
+            ),
+            range_start: 162,
+            range_end: 167,
+            texts: [],
+            node_types: [
+                "TableCell",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 31,
+            node_type_id: 32,
+            parent_idx: Some(
+                30,
+            ),
+            range_start: 164,
+            range_end: 165,
+            texts: [
+                "A",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 32,
+            node_type_id: 16,
+            parent_idx: Some(
+                29,
+            ),
+            range_start: 168,
+            range_end: 173,
+            texts: [],
+            node_types: [
+                "TableCell",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 33,
+            node_type_id: 32,
+            parent_idx: Some(
+                32,
+            ),
+            range_start: 171,
+            range_end: 172,
+            texts: [
+                "B",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 34,
+            node_type_id: 15,
+            parent_idx: Some(
+                28,
+            ),
+            range_start: 189,
+            range_end: 203,
+            texts: [],
+            node_types: [
+                "TableRow",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 35,
+            node_type_id: 16,
+            parent_idx: Some(
+                34,
+            ),
+            range_start: 190,
+            range_end: 195,
+            texts: [],
+            node_types: [
+                "TableCell",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 36,
+            node_type_id: 32,
+            parent_idx: Some(
+                35,
+            ),
+            range_start: 192,
+            range_end: 193,
+            texts: [
+                "1",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 37,
+            node_type_id: 16,
+            parent_idx: Some(
+                34,
+            ),
+            range_start: 196,
+            range_end: 201,
+            texts: [],
+            node_types: [
+                "TableCell",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 38,
+            node_type_id: 32,
+            parent_idx: Some(
+                37,
+            ),
+            range_start: 199,
+            range_end: 200,
+            texts: [
+                "2",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 39,
+            node_type_id: 10,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 204,
+            range_end: 257,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 40,
+            node_type_id: 6,
+            parent_idx: Some(
+                39,
+            ),
+            range_start: 204,
+            range_end: 256,
+            texts: [],
+            node_types: [
+                "Image { src: \"https://example.com/image.png\", alt: None, title: Some(\"caption\") }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 41,
+            node_type_id: 32,
+            parent_idx: Some(
+                40,
+            ),
+            range_start: 206,
+            range_end: 214,
+            texts: [
+                "alt text",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 42,
+            node_type_id: 10,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 258,
+            range_end: 266,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 43,
+            node_type_id: 32,
+            parent_idx: Some(
+                42,
+            ),
+            range_start: 258,
+            range_end: 261,
+            texts: [
+                "Ref",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 44,
+            node_type_id: 23,
+            parent_idx: Some(
+                42,
+            ),
+            range_start: 261,
+            range_end: 265,
+            texts: [
+                "1",
+            ],
+            node_types: [
+                "FootnoteReference { label: \"1\" }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 45,
+            node_type_id: 31,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 267,
+            range_end: 271,
+            texts: [],
+            node_types: [
+                "HorizontalRule",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 46,
+            node_type_id: 1,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 272,
+            range_end: 294,
+            texts: [],
+            node_types: [
+                "Heading { level: HeadingLevel(2) }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 47,
+            node_type_id: 32,
+            parent_idx: Some(
+                46,
+            ),
+            range_start: 275,
+            range_end: 293,
+            texts: [
+                "heading blockquote",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 48,
+            node_type_id: 11,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 295,
+            range_end: 321,
+            texts: [],
+            node_types: [
+                "BlockQuote { kind: None }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 49,
+            node_type_id: 10,
+            parent_idx: Some(
+                48,
+            ),
+            range_start: 297,
+            range_end: 321,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 50,
+            node_type_id: 32,
+            parent_idx: Some(
+                49,
+            ),
+            range_start: 297,
+            range_end: 320,
+            texts: [
+                "blockquote、blockquote",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 51,
+            node_type_id: 2,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 322,
+            range_end: 545,
+            texts: [],
+            node_types: [
+                "List { order: 0, is_item: false }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 52,
+            node_type_id: 3,
+            parent_idx: Some(
+                51,
+            ),
+            range_start: 322,
+            range_end: 545,
+            texts: [],
+            node_types: [
+                "ListItem { order: 0, is_item: true }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 53,
+            node_type_id: 32,
+            parent_idx: Some(
+                52,
+            ),
+            range_start: 324,
+            range_end: 331,
+            texts: [
+                "Katex: ",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 54,
+            node_type_id: 28,
+            parent_idx: Some(
+                52,
+            ),
+            range_start: 331,
+            range_end: 369,
+            texts: [
+                "x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}",
+            ],
+            node_types: [
+                "MathInline",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 55,
+            node_type_id: 2,
+            parent_idx: Some(
+                52,
+            ),
+            range_start: 372,
+            range_end: 545,
+            texts: [],
+            node_types: [
+                "List { order: 0, is_item: false }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 56,
+            node_type_id: 3,
+            parent_idx: Some(
+                55,
+            ),
+            range_start: 372,
+            range_end: 413,
+            texts: [],
+            node_types: [
+                "ListItem { order: 0, is_item: true }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 57,
+            node_type_id: 28,
+            parent_idx: Some(
+                56,
+            ),
+            range_start: 374,
+            range_end: 412,
+            texts: [
+                "x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}",
+            ],
+            node_types: [
+                "MathInline",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 58,
+            node_type_id: 3,
+            parent_idx: Some(
+                55,
+            ),
+            range_start: 415,
+            range_end: 468,
+            texts: [],
+            node_types: [
+                "ListItem { order: 0, is_item: true }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 59,
+            node_type_id: 28,
+            parent_idx: Some(
+                58,
+            ),
+            range_start: 417,
+            range_end: 467,
+            texts: [
+                "3 CaO +Fe_2O_3\\stackrel{高温}{==}2 Fe + 3 CO_2",
+            ],
+            node_types: [
+                "MathInline",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 60,
+            node_type_id: 3,
+            parent_idx: Some(
+                55,
+            ),
+            range_start: 470,
+            range_end: 545,
+            texts: [],
+            node_types: [
+                "ListItem { order: 0, is_item: true }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 61,
+            node_type_id: 28,
+            parent_idx: Some(
+                60,
+            ),
+            range_start: 472,
+            range_end: 543,
+            texts: [
+                "2 CO_2 \\stackrel{光}{\\underset{\\text{催化剂1}}{===}}2 Fe + 3 CO_2",
+            ],
+            node_types: [
+                "MathInline",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 62,
+            node_type_id: 10,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 545,
+            range_end: 662,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 63,
+            node_type_id: 29,
+            parent_idx: Some(
+                62,
+            ),
+            range_start: 545,
+            range_end: 661,
+            texts: [
+                "\\left( \\sum_{k=1}^n a_k b_k \\right)^2 \\leq \\left( \\sum_{k=1}^n a_k^{2} \\right) \\left( \\sum_{k=1}^n b_k^2 \\right)",
+            ],
+            node_types: [
+                "MathDisplay",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 64,
+            node_type_id: 10,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 663,
+            range_end: 1024,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 65,
+            node_type_id: 29,
+            parent_idx: Some(
+                64,
+            ),
+            range_start: 663,
+            range_end: 1023,
+            texts: [
+                "\\begin{array}{c}\n\\nabla \\times \\vec{\\mathbf{B}} -\\, \\frac1c\\, \\frac{\\partial\\vec{\\mathbf{E}}}{\\partial t} &\n= \\frac{4\\pi}{c}\\vec{\\mathbf{j}}    \\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\\n\\nabla \\times \\vec{\\mathbf{E}}\\, +\\, \\frac1c\\, \\frac{\\partial\\vec{\\mathbf{B}}}{\\partial t} & = \\vec{\\mathbf{0}} \\\\\n\\nabla \\cdot \\vec{\\mathbf{B}} & = 0\n\\end{array}",
+            ],
+            node_types: [
+                "MathDisplay",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 66,
+            node_type_id: 4,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 1025,
+            range_end: 1104,
+            texts: [],
+            node_types: [
+                "CodeBlock { language: Some(\"plantuml\") }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 67,
+            node_type_id: 32,
+            parent_idx: Some(
+                66,
+            ),
+            range_start: 1037,
+            range_end: 1101,
+            texts: [
+                "@startuml\nBob -> Alice : hello11\nBob1 -> Alice : hello2\n@enduml\n",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 68,
+            node_type_id: 22,
+            parent_idx: Some(
+                21,
+            ),
+            range_start: 1106,
+            range_end: 1126,
+            texts: [],
+            node_types: [
+                "FootnoteDefinition { label: \"1\" }",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 69,
+            node_type_id: 10,
+            parent_idx: Some(
+                68,
+            ),
+            range_start: 1112,
+            range_end: 1126,
+            texts: [],
+            node_types: [
+                "Paragraph",
+            ],
+        },
+        NodeAggregateSummary {
+            node_idx: 70,
+            node_type_id: 32,
+            parent_idx: Some(
+                69,
+            ),
+            range_start: 1112,
+            range_end: 1125,
+            texts: [
+                "Footnote text",
+            ],
+            node_types: [
+                "Text",
+            ],
+        },
+    ],
+}

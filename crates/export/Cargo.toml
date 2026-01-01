@@ -1,0 +1,8 @@
+[package]
+name = "knowlattice-export"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+knowlattice-core = { path = "../core" }
+common = { package = "knowlattice-common", path = "../common" }

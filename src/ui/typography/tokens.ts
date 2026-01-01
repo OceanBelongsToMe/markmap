@@ -1,0 +1,20 @@
+export const typographyTokens = {
+  fontFamilyBody: "\"Avenir\", \"Inter\", \"Helvetica\", \"Arial\", sans-serif",
+  fontFamilyTitle: "\"Avenir\", \"Inter\", \"Helvetica\", \"Arial\", sans-serif",
+  fontFamilyCode: "\"SFMono-Regular\", Menlo, Consolas, \"Liberation Mono\", monospace",
+  sizeH1: "24px",
+  sizeH2: "20px",
+  sizeH3: "16px",
+  sizeBody: "14px",
+  sizeCaption: "12px",
+  sizeCode: "13px",
+  lineHeightTight: "1.2",
+  lineHeightBase: "1.5",
+  lineHeightLoose: "1.7",
+  weightBold: "600",
+  weightMedium: "500",
+  weightRegular: "400",
+  colorPrimary: "#0f0f0f",
+  colorSecondary: "#3a3a3a",
+  colorMuted: "#6c6c6c"
+};

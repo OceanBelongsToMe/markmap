@@ -1,0 +1,30 @@
+import { labels } from "../ia/labels";
+
+export const zhCN: Record<keyof typeof labels, string> = {
+  language: "语言",
+  languageEnglish: "English",
+  languageZhCN: "中文",
+  workspace: "工作空间",
+  welcomeTitle: "欢迎使用 Tauri + Solid",
+  learnMore: "点击 Tauri、Vite 和 Solid 的标志了解更多。",
+  greet: "问候",
+  enterName: "输入名称...",
+  close: "关闭",
+  floatingEditorPanelTitle: "悬浮编辑面板",
+  floatingEditorPanelPlaceholder: "在此输入...",
+  contentTypeNote: "笔记",
+  contentTypeOutline: "大纲",
+  contentTypeMarkmap: "思维导图",
+  editorInputMarkdownText: "纯文本 Markdown",
+  editorInputWysiwyg: "所见即所得",
+  editorInputMarkmap: "Markmap",
+  files: "文件",
+  tree: "文件树",
+  recent: "最近",
+  favorites: "收藏",
+  tags: "标签",
+  search: "搜索",
+  settings: "设置",
+  addNote: "新增笔记",
+  emptyState: "这里还没有内容，开始创建吧"
+};

@@ -1,0 +1,22 @@
+export type TreeNode = {
+  id: string;
+  label: string;
+  children?: TreeNode[];
+};
+
+export type TreeViewProps = {
+  nodes: TreeNode[];
+};
+
+export const TreeView = (props: TreeViewProps) => {
+  return (
+    <ul>
+      {props.nodes.map((node) => (
+        <li>
+          {node.label}
+          {node.children ? <TreeView nodes={node.children} /> : null}
+        </li>
+      ))}
+    </ul>
+  );
+};

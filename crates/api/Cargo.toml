@@ -1,0 +1,15 @@
+[package]
+name = "knowlattice-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+async-trait = { workspace = true }
+knowlattice-core = { path = "../core" }
+knowlattice-services = { path = "../services" }
+knowlattice-search = { path = "../search" }
+knowlattice-export = { path = "../export" }
+common = { package = "knowlattice-common", path = "../common" }

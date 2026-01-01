@@ -1,0 +1,15 @@
+[package]
+name = "knowlattice-services"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+knowlattice-core = { path = "../core" }
+knowlattice-storage = { path = "../storage" }
+knowlattice-search = { path = "../search" }
+knowlattice-export = { path = "../export" }
+common = { package = "knowlattice-common", path = "../common" }
+sqlx = { workspace = true }
+tokio = { version = "1", features = ["fs", "rt", "sync"] }
+ignore = "0.4"
+tracing = { workspace = true }

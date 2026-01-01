@@ -12,13 +12,20 @@
   },
   "license": "MIT",
   "dependencies": {
-    "solid-js": "^1.9.3",
+    "@solidjs/router": "^0.15.4",
     "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/plugin-dialog": "^2.4.2",
+    "@tauri-apps/plugin-opener": "^2",
+    "markmap-common": "link:markmap-common",
+    "markmap-html-parser": "link:markmap-html-parser",
+    "markmap-lib": "link:markmap-lib",
+    "markmap-toolbar": "link:markmap-toolbar",
+    "markmap-view": "link:markmap-view",
+    "solid-js": "^1.9.3"
   },
   "devDependencies": {
-    "typescript": "~5.6.2",
-    "vite": "^6.0.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
     "vite-plugin-solid": "^2.11.0",
     "@tauri-apps/cli": "^2"
   }

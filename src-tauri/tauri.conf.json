@@ -12,13 +12,23 @@
   "app": {
     "windows": [
       {
-        "title": "knowlattice",
+        "title": "",
         "width": 800,
+        "titleBarStyle": "Overlay",
+        "dragDropEnabled": false,
         "height": 600
       }
     ],
     "security": {
       "csp": null
+    }
+  },
+  "plugins": {
+    "sql": {
+      "preload": [
+        "sqlite:knowlattice.db"
+      ],
+      "defaultDb": "sqlite:knowlattice.db"
     }
   },
   "bundle": {

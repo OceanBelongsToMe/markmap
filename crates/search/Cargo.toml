@@ -1,0 +1,13 @@
+[package]
+name = "knowlattice-search"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+knowlattice-core = { path = "../core" }
+common = { package = "knowlattice-common", path = "../common" }
+pulldown-cmark = "0.13"
+
+[dev-dependencies]
+insta = "1.42"
+proptest = "1.6"
