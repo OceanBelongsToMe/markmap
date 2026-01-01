@@ -1,17 +1,20 @@
-import { createMemo } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 import { navModel } from "../../../ia/nav-model";
-import { useI18n } from "../../../i18n/context";
 import { Sidebar } from "../../../layouts/Regions";
 import { SidebarShell } from "../../../layouts/SidebarShell";
 import { TreeView, type TreeNode } from "../../components/TreeView";
+import { SidebarSection } from "../sidebar/SidebarSection";
+import { useI18n } from "../../../i18n/context";
 
 export type WorkspaceSidebarProps = {
   collapsed?: boolean;
   width?: number;
+  onToggle?: () => void;
 };
 
 export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
   const { t } = useI18n();
+  const [navCollapsed, setNavCollapsed] = createSignal(false);
   const nodes = createMemo<TreeNode[]>(() =>
     navModel.map((item) => ({
       id: item.id,
@@ -27,7 +30,13 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
     <Sidebar>
       <SidebarShell collapsed={props.collapsed} width={props.width}>
         <nav>
-          <TreeView nodes={nodes()} />
+          <SidebarSection
+            title={t("navigation")}
+            collapsed={navCollapsed()}
+            onToggle={() => setNavCollapsed(!navCollapsed())}
+          >
+            <TreeView nodes={nodes()} />
+          </SidebarSection>
         </nav>
       </SidebarShell>
     </Sidebar>

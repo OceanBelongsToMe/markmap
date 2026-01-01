@@ -18,6 +18,7 @@ export const zhCN: Record<keyof typeof labels, string> = {
   editorInputMarkdownText: "纯文本 Markdown",
   editorInputWysiwyg: "所见即所得",
   editorInputMarkmap: "Markmap",
+  navigation: "导航",
   files: "文件",
   tree: "文件树",
   recent: "最近",
@@ -26,5 +27,7 @@ export const zhCN: Record<keyof typeof labels, string> = {
   search: "搜索",
   settings: "设置",
   addNote: "新增笔记",
+  showSidebar: "显示侧栏",
+  hideSidebar: "隐藏侧栏",
   emptyState: "这里还没有内容，开始创建吧"
 };

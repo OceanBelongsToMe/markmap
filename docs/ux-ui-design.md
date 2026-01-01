@@ -106,6 +106,9 @@
   - 状态管理：`src/state/useSidebarState.ts`（仅 state，不含 DOM/样式）。
   - 状态接口：`src/layouts/SidebarShell.tsx`（仅 props 契约与 class/style 绑定）。
   - 样式层：`src/layouts/sidebar.css`（宽度/边框/折叠态规则）。
+- 约束说明（避免布局联动误伤）：
+  - 侧栏骨架不修改 `AppShell` 网格结构，避免影响分割线/悬浮层定位。
+  - 侧栏样式迁移到独立样式文件不应改变布局，仅影响容器视觉。
 - 模式层设计（SideBar Patterns）：
   - 分区结构：`top` / `body` / `footer` 插槽。
   - `body` 为列表型内容区，可拆分多个 `Section`（文件树/最近打开/标签）。
@@ -115,6 +118,16 @@
   - 状态层：`useFileTreeState`（展开/选中/过滤）。
   - 视图层：`FileTreeView`（渲染与事件绑定）。
   - 组合层：`FileTreeSection`（组装数据 + 状态 + 视图）。
+- IA 与侧栏 Section 对齐（SRP）：
+  - IA 层：`navModel` 定义静态入口与层级结构。
+  - 模式层：`SidebarSection` 只负责分区与渲染容器。
+  - 业务层：`FileTreeSection`/`RecentSection`/`TagsSection` 负责动态内容。
+  - 约束：IA 不渲染，Section 不定义 IA，业务层不修改 IA。
+- 折叠/展开（SRP）：
+  - 状态层：`src/state/useSidebarState.ts` 仅维护 `collapsed`。
+  - 骨架层：`src/layouts/SidebarShell.tsx` 仅消费 `collapsed` 切换 class。
+  - 样式层：`src/layouts/sidebar.css` 仅定义 `.is-collapsed` 的视觉表现。
+  - 触发层：页面/业务组件仅调用 `setCollapsed`，不参与布局计算。
 
 ##### 响应式断点与布局变形规则
 

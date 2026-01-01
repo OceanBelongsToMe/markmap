@@ -348,7 +348,7 @@
   - InvalidateCache：失效缓存
   - GetIndexStatus：查询解析/索引状态（待处理/进行中/失败/完成）
   - 策略：基于编辑器变更集（如 CodeMirror changes）做增量解析；优先解析当前活跃文件，后台按优先级补齐其余文件
-  - 说明：services::index 负责调度与最小闭环（解析→收集→入库）；解析/索引构建由 search::parser/indexer 实现
+  - 说明：services::index 负责调度与最小闭环（解析 → 收集 → 入库）；解析/索引构建由 search::parser/indexer 实现
   - 约定：services::index 提供 ParsePipeline/IndexPipeline trait；默认 ParsePipeline 使用 MarkdownParser + NodeCollectingSink
   - 用例：ReadDocument（从 FS 读取 markdown），ParseDocument（解析+收集），ApplyIndex（入库 nodes/node_text/node_range），RunIndex（执行 read→parse→apply），RunIndexNext（从队列拉取并执行）
   - 调度实现：tokio::mpsc 队列 + RunIndexWorker 后台执行；Semaphore 控制并发并对 doc_id 去重
@@ -379,7 +379,7 @@ Repository + Data Mapper（可选 Unit of Work）
   - FolderRepository：list_by_workspace/get/save/delete
   - DocumentRepository：list_by_folder/get/save/delete、batch_upsert
   - NodeBaseRepository（nodes 基表）：list_by_doc/get/batch_upsert/delete_by_doc，返回 NodeBaseRow
-  - Node*Repository（node*text/node_range/node**）：按表读写，完整节点由 services 组装
+  - Node*Repository（node*text/node_range/node\*\*）：按表读写，完整节点由 services 组装
 - 说明：repo 接口建议使用 async（sqlx 驱动）
 - storage::mapper（通用映射）
   - Record <-> Domain（领域映射）

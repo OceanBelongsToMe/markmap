@@ -53,16 +53,20 @@ body,
 
 .app-shell {
   display: grid;
-  grid-template-rows: 33px 1fr;
+  grid-template-rows: 80px 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-areas:
-    "toolbar"
-    "content";
+    "toolbar toolbar"
+    "sidebar content";
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 .toolbar-region {
   grid-area: toolbar;
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid var(--color-border-default);
   padding: 8px var(--titlebar-inset-right) 8px var(--titlebar-inset-left);
 }
@@ -75,12 +79,10 @@ body,
 }
 
 .toolbar-shell-content {
-  top: -4px;
   display: flex;
   align-items: center;
   gap: 12px;
-  position: absolute;
-  left: var(--titlebar-traffic-center-x);
+  position: relative;
 }
 
 @media (min-width: 1440px) {
@@ -103,6 +105,13 @@ body,
 .content-stage {
   grid-area: content;
   position: relative;
+  overflow: hidden;
+}
+
+.sidebar-layer {
+  grid-area: sidebar;
+  min-width: 0;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -139,6 +148,7 @@ body,
   inset: 0;
   pointer-events: none;
   z-index: 20;
+  grid-area: content;
 }
 
 .floating-editor-panel {
@@ -247,9 +257,10 @@ body,
 @media (max-width: 900px) {
   .app-shell {
     grid-template-rows: 33px 1fr;
+    grid-template-columns: auto 1fr;
     grid-template-areas:
-      "toolbar"
-      "content";
+      "toolbar toolbar"
+      "sidebar content";
   }
 
   .split-layout {

@@ -15,7 +15,12 @@ import { ToolbarShell } from "../ui/patterns/ToolbarShell";
 
 export const WorkspacePage = () => {
   const { layoutMode } = useLayoutState();
-  const { collapsed, width: sidebarWidth, setWidth: setSidebarWidth } = useSidebarState();
+  const {
+    collapsed,
+    setCollapsed,
+    width: sidebarWidth,
+    setWidth: setSidebarWidth
+  } = useSidebarState();
   const [shellRef, setShellRef] = createSignal<HTMLDivElement | undefined>();
   const { layoutVariant, width, viewportWidth } = useResponsiveLayout(
     () => shellRef(),
@@ -51,7 +56,11 @@ export const WorkspacePage = () => {
           <WorkspaceSplitShell
             sidebar={
               showSidebar() ? (
-                <WorkspaceSidebar collapsed={collapsed()} width={sidebarWidth()} />
+                <WorkspaceSidebar
+                  collapsed={collapsed()}
+                  width={sidebarWidth()}
+                  onToggle={() => setCollapsed(!collapsed())}
+                />
               ) : undefined
             }
             sidebarWidth={sidebarWidth()}

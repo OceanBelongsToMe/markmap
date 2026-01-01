@@ -16,6 +16,7 @@ export const labels = {
   editorInputMarkdownText: "Markdown Text",
   editorInputWysiwyg: "WYSIWYG",
   editorInputMarkmap: "Markmap",
+  navigation: "Navigation",
   files: "Files",
   tree: "Tree",
   recent: "Recent",
@@ -24,5 +25,7 @@ export const labels = {
   search: "Search",
   settings: "Settings",
   addNote: "Add note",
+  showSidebar: "Show sidebar",
+  hideSidebar: "Hide sidebar",
   emptyState: "No content yet. Create your first item."
 } as const;
