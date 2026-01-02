@@ -3,9 +3,12 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   border-right: 1px solid var(--color-border-default);
   background: var(--color-bg-surface);
   width: 100%;
+  overflow: visible;
 }
 
 .sidebar-shell.is-collapsed {
@@ -15,17 +18,27 @@
 .sidebar-region {
   height: 100%;
   min-width: 0;
+  min-height: 0;
   width: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .sidebar-shell nav {
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 0;
 }
 
 .sidebar-section {
   padding: 0;
   border-bottom: 1px solid var(--color-border-default);
+  --collapsible-max-height: none;
 }
 
 .sidebar-section:last-child {
@@ -76,6 +89,21 @@
   flex-direction: column;
   gap: 6px;
   padding: 0 10px 10px;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.sidebar-section-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.sidebar-section.is-grow {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-section-body > ul {

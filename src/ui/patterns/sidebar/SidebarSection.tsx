@@ -7,6 +7,7 @@ export type SidebarSectionProps = {
   children: JSX.Element;
   collapsed?: boolean;
   onToggle?: () => void;
+  class?: string;
 };
 
 export const SidebarSection = (props: SidebarSectionProps) => {
@@ -17,6 +18,7 @@ export const SidebarSection = (props: SidebarSectionProps) => {
   const className = [
     "sidebar-section",
     "collapsible",
+    props.class ?? "",
     isCollapsed() ? "is-collapsed" : ""
   ]
     .filter(Boolean)
