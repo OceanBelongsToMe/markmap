@@ -8,7 +8,7 @@ use crate::document::service::BatchImport;
 use crate::index::service::EnqueueParse;
 
 use crate::builder::{ServiceContext, ServiceRegistry};
-use crate::workspace::{AttachFolder, CreateWorkspace};
+use crate::workspace::{AttachFolder, CreateWorkspace, SwitchWorkspace};
 
 pub struct AttachFolderImportResult {
     pub workspace_id: WorkspaceId,
@@ -22,6 +22,7 @@ pub struct AttachFolderAndImport {
     scan_folder: Arc<ScanFolder>,
     batch_import: Arc<BatchImport>,
     enqueue_parse: Arc<EnqueueParse>,
+    switch_workspace: Arc<SwitchWorkspace>,
 }
 
 impl AttachFolderAndImport {
@@ -31,6 +32,7 @@ impl AttachFolderAndImport {
         let scan_folder: Arc<ScanFolder> = registry.get()?;
         let batch_import: Arc<BatchImport> = registry.get()?;
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
+        let switch_workspace: Arc<SwitchWorkspace> = registry.get()?;
 
         registry.register(Arc::new(AttachFolderAndImport {
             create_workspace,
@@ -38,6 +40,7 @@ impl AttachFolderAndImport {
             scan_folder,
             batch_import,
             enqueue_parse,
+            switch_workspace,
         }));
         Ok(())
     }
@@ -58,6 +61,7 @@ impl AttachFolderAndImport {
             .attach_folder
             .execute(workspace_id, root_path)
             .await?;
+        self.switch_workspace.execute(workspace_id).await?;
         let seeds = self
             .scan_folder
             .execute(folder.root_path.clone(), extensions)

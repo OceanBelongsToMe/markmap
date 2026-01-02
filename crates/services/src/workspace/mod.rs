@@ -25,9 +25,9 @@ use crate::builder::{ServiceContext, ServiceRegistry};
 pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
     CreateWorkspace::register(ctx, registry)?;
     AttachFolder::register(ctx, registry)?;
-    AttachFolderAndImport::register(ctx, registry)?;
     DetachFolder::register(ctx, registry)?;
     SwitchWorkspace::register(ctx, registry)?;
+    AttachFolderAndImport::register(ctx, registry)?;
     GetCurrentWorkspace::register(ctx, registry)?;
     ListWorkspace::register(ctx, registry)?;
     UpdateWorkspaceConfigOverrides::register(ctx, registry)?;
