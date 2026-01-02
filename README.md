@@ -55,4 +55,5 @@ npm run tauri dev
 
 ## License
 
-MIT
+Proprietary. All rights reserved.
+No public redistribution, modification, or use without explicit written permission.
