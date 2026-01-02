@@ -6,6 +6,10 @@ mod document_repo;
 mod folder_repo;
 #[path = "cases/workspace_repo.rs"]
 mod workspace_repo;
+#[path = "cases/workspace_state_repo.rs"]
+mod workspace_state_repo;
+#[path = "cases/workspace_recent_files_repo.rs"]
+mod workspace_recent_files_repo;
 
 #[path = "cases/node_base_repo.rs"]
 mod node_base_repo;

@@ -20,3 +20,38 @@ pub struct WorkspaceAttachFolderResponse {
     pub folder_id: String,
     pub imported: usize,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceSwitchRequest {
+    pub workspace_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceSwitchResponse {
+    pub workspace_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceRecentFileRequest {
+    pub workspace_id: String,
+    pub document_id: String,
+    pub position: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceRecentFileResponse {
+    pub workspace_id: String,
+    pub document_id: String,
+    pub last_opened_at: i64,
+    pub position: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceRecentFilesRequest {
+    pub workspace_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceRecentFilesResponse {
+    pub items: Vec<WorkspaceRecentFileResponse>,
+}

@@ -11,7 +11,8 @@ use crate::repo::{
         NodeLinkRepository, NodeListRepository, NodeRangeRepository, NodeTableRepository,
         NodeTaskRepository, NodeTextRepository, NodeTypeRepository, NodeWikiRepository,
     },
-    DocumentRepository, FolderRepository, WorkspaceRepository,
+    DocumentRepository, FolderRepository, WorkspaceRecentFilesRepository, WorkspaceRepository,
+    WorkspaceStateRepository,
 };
 use crate::sqlite::pool::SqlitePool;
 use crate::sqlite::repo::SqliteRepositories;
@@ -79,7 +80,9 @@ pub fn build_sqlite_repositories(pool: Pool<Sqlite>) -> AppResult<RepositoryProv
     let node_task_repo: Arc<dyn NodeTaskRepository> = repos.clone();
     let node_text_repo: Arc<dyn NodeTextRepository> = repos.clone();
     let node_type_repo: Arc<dyn NodeTypeRepository> = repos.clone();
-    let node_wiki_repo: Arc<dyn NodeWikiRepository> = repos;
+    let node_wiki_repo: Arc<dyn NodeWikiRepository> = repos.clone();
+    let workspace_state_repo: Arc<dyn WorkspaceStateRepository> = repos.clone();
+    let workspace_recent_files_repo: Arc<dyn WorkspaceRecentFilesRepository> = repos;
 
     provider.register::<Arc<dyn WorkspaceRepository>>(workspace_repo);
     provider.register::<Arc<dyn FolderRepository>>(folder_repo);
@@ -96,6 +99,8 @@ pub fn build_sqlite_repositories(pool: Pool<Sqlite>) -> AppResult<RepositoryProv
     provider.register::<Arc<dyn NodeTextRepository>>(node_text_repo);
     provider.register::<Arc<dyn NodeTypeRepository>>(node_type_repo);
     provider.register::<Arc<dyn NodeWikiRepository>>(node_wiki_repo);
+    provider.register::<Arc<dyn WorkspaceStateRepository>>(workspace_state_repo);
+    provider.register::<Arc<dyn WorkspaceRecentFilesRepository>>(workspace_recent_files_repo);
 
     Ok(provider)
 }

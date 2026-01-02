@@ -635,3 +635,50 @@ Hook/Observer（事件钩子）
 - 多用户协作：权限、审计、同步协议
 - 云同步：storage 增加远端实现
 - 增量更新：search 支持局部重建
+
+---
+
+## 8. 状态建模（以“变化”为单位）
+
+### 8.1 单一变化：Workspace 变化
+
+只关心与 Workspace 相关的变化：
+
+- 当前 workspace 切换
+- 最近打开 workspace
+- 最近打开文件（可视为 workspace 范围内的行为）
+
+### 8.2 对应的数据结构（建议）
+
+`workspace_state`（只描述 workspace 相关状态）
+
+```sql
+CREATE TABLE workspace_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  current_workspace_id TEXT NULL,
+  updated_at TEXT NOT NULL
+);
+```
+
+`workspace_recent_files`（只描述 workspace 内最近文件）
+
+```sql
+CREATE TABLE workspace_recent_files (
+  workspace_id TEXT NOT NULL,
+  document_id TEXT NOT NULL,
+  last_opened_at TEXT NOT NULL,
+  position INTEGER NOT NULL,
+  PRIMARY KEY (workspace_id, document_id)
+);
+```
+
+### 8.3 设计原则与扩展
+
+- `workspace_state` 只跟 workspace 变化有关。
+- `workspace_recent_files` 只跟 workspace 内文件访问变化有关。
+- 状态模型属于应用状态层，不进入 core 领域模型；由 services 负责用例编排，storage 负责持久化。
+- 不使用 `AppState` 聚合多种变化，避免吞噬窗口/主题/权限等其他维度。
+- 后续新增非 workspace 变化时，单独建表：
+  - `theme_state`
+  - `window_state`
+  - `permission_state`
