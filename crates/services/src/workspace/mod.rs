@@ -2,6 +2,7 @@ mod attach_folder;
 mod attach_folder_import;
 mod create_workspace;
 mod detach_folder;
+mod file_tree;
 mod get_current_workspace;
 mod list_workspace;
 mod recent_files;
@@ -12,6 +13,9 @@ pub use attach_folder::AttachFolder;
 pub use attach_folder_import::{AttachFolderAndImport, AttachFolderImportResult};
 pub use create_workspace::CreateWorkspace;
 pub use detach_folder::DetachFolder;
+pub use file_tree::{
+    ListWorkspaceFileTree, WorkspaceDocumentNode, WorkspaceFileTree, WorkspaceFolderNode,
+};
 pub use get_current_workspace::GetCurrentWorkspace;
 pub use list_workspace::ListWorkspace;
 pub use recent_files::{ListRecentFiles, RecordRecentFile};
@@ -29,6 +33,7 @@ pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResu
     SwitchWorkspace::register(ctx, registry)?;
     AttachFolderAndImport::register(ctx, registry)?;
     GetCurrentWorkspace::register(ctx, registry)?;
+    ListWorkspaceFileTree::register(ctx, registry)?;
     ListWorkspace::register(ctx, registry)?;
     UpdateWorkspaceConfigOverrides::register(ctx, registry)?;
     RecordRecentFile::register(ctx, registry)?;

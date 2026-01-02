@@ -6,12 +6,14 @@ use crate::dto::workspace::{
     WorkspacePingResponse, WorkspaceRecentFileRequest, WorkspaceRecentFileResponse,
     WorkspaceRecentFilesRequest, WorkspaceRecentFilesResponse, WorkspaceSwitchRequest,
     WorkspaceSwitchResponse, WorkspaceCurrentRequest, WorkspaceCurrentResponse,
-    WorkspaceCurrentResponsePayload,
+    WorkspaceCurrentResponsePayload, WorkspaceFileTreeRequest, WorkspaceFileTreeResponse,
+    WorkspaceFolderNode, WorkspaceDocumentNode,
 };
 use crate::error::ApiError;
 use common::time::timestamp_to_millis;
 use knowlattice_services::workspace::{
-    AttachFolderAndImport, GetCurrentWorkspace, ListRecentFiles, RecordRecentFile, SwitchWorkspace,
+    AttachFolderAndImport, GetCurrentWorkspace, ListRecentFiles, ListWorkspaceFileTree,
+    RecordRecentFile, SwitchWorkspace,
 };
 
 use super::ids::{parse_document_id, parse_workspace_id};
@@ -22,6 +24,7 @@ pub const COMMAND_SWITCH_WORKSPACE: &str = "workspace_switch";
 pub const COMMAND_RECORD_RECENT_FILE: &str = "workspace_recent_file_record";
 pub const COMMAND_LIST_RECENT_FILES: &str = "workspace_recent_files_list";
 pub const COMMAND_CURRENT_WORKSPACE: &str = "workspace_current";
+pub const COMMAND_WORKSPACE_FILE_TREE: &str = "workspace_file_tree";
 
 pub struct WorkspacePingHandler;
 pub struct WorkspaceAttachFolderHandler;
@@ -29,6 +32,7 @@ pub struct WorkspaceSwitchHandler;
 pub struct WorkspaceRecentFileHandler;
 pub struct WorkspaceRecentFilesHandler;
 pub struct WorkspaceCurrentHandler;
+pub struct WorkspaceFileTreeHandler;
 
 #[async_trait::async_trait]
 impl CommandHandler for WorkspacePingHandler {
@@ -206,6 +210,54 @@ impl CommandHandler for WorkspaceCurrentHandler {
     }
 }
 
+#[async_trait::async_trait]
+impl CommandHandler for WorkspaceFileTreeHandler {
+    type Request = WorkspaceFileTreeRequest;
+    type Response = WorkspaceFileTreeResponse;
+
+    fn name(&self) -> &'static str {
+        COMMAND_WORKSPACE_FILE_TREE
+    }
+
+    async fn handle(
+        &self,
+        ctx: &ApiContext,
+        payload: WorkspaceFileTreeRequest,
+    ) -> Result<WorkspaceFileTreeResponse, ApiError> {
+        let services = Arc::clone(&ctx.services);
+        let lister: Arc<ListWorkspaceFileTree> = services.get().map_err(to_api_error)?;
+        let workspace_id = parse_workspace_id(&payload.workspace_id)?;
+        let tree = lister.execute(workspace_id).await.map_err(to_api_error)?;
+
+        let folders = tree
+            .folders
+            .into_iter()
+            .map(|folder| WorkspaceFolderNode {
+                id: folder.id.as_uuid().to_string(),
+                root_path: folder.root_path,
+                documents: folder
+                    .documents
+                    .into_iter()
+                    .map(|doc| WorkspaceDocumentNode {
+                        id: doc.id.as_uuid().to_string(),
+                        folder_id: doc.folder_id.as_uuid().to_string(),
+                        path: doc.path,
+                        title: doc.title,
+                        updated_at: timestamp_to_millis(doc.updated_at),
+                        ext: doc.ext,
+                        lang: doc.lang,
+                    })
+                    .collect(),
+            })
+            .collect();
+
+        Ok(WorkspaceFileTreeResponse {
+            workspace_id: tree.workspace_id.as_uuid().to_string(),
+            folders,
+        })
+    }
+}
+
 fn to_api_error(err: common::error::AppError) -> ApiError {
     match err.details {
         Some(details) => ApiError::with_details(err.code.as_str(), err.message, details),
@@ -220,6 +272,7 @@ pub fn register(registry: &mut CommandRegistry) {
     registry.register(WorkspaceRecentFileHandler);
     registry.register(WorkspaceRecentFilesHandler);
     registry.register(WorkspaceCurrentHandler);
+    registry.register(WorkspaceFileTreeHandler);
 }
 
 pub fn register_codecs(codecs: &mut CodecRegistry) {
@@ -229,4 +282,5 @@ pub fn register_codecs(codecs: &mut CodecRegistry) {
     codecs.register::<WorkspaceRecentFileHandler>(COMMAND_RECORD_RECENT_FILE);
     codecs.register::<WorkspaceRecentFilesHandler>(COMMAND_LIST_RECENT_FILES);
     codecs.register::<WorkspaceCurrentHandler>(COMMAND_CURRENT_WORKSPACE);
+    codecs.register::<WorkspaceFileTreeHandler>(COMMAND_WORKSPACE_FILE_TREE);
 }

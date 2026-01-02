@@ -71,3 +71,32 @@ pub struct WorkspaceCurrentResponse {
 pub struct WorkspaceCurrentResponsePayload {
     pub current: Option<WorkspaceCurrentResponse>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceFileTreeRequest {
+    pub workspace_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceFileTreeResponse {
+    pub workspace_id: String,
+    pub folders: Vec<WorkspaceFolderNode>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceFolderNode {
+    pub id: String,
+    pub root_path: String,
+    pub documents: Vec<WorkspaceDocumentNode>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceDocumentNode {
+    pub id: String,
+    pub folder_id: String,
+    pub path: String,
+    pub title: String,
+    pub updated_at: i64,
+    pub ext: Option<String>,
+    pub lang: Option<String>,
+}
