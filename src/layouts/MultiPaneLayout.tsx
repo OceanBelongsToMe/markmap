@@ -1,21 +1,25 @@
-import { createMemo } from "solid-js";
+import { Index, createMemo } from "solid-js";
 import type { JSX } from "solid-js";
 
 export type Pane = {
   key: string;
   content: JSX.Element;
-  width?: string;
 };
 
 export type MultiPaneLayoutProps = {
   panes: Pane[];
+  widths?: () => number[];
   class?: string;
 };
 
 export const MultiPaneLayout = (props: MultiPaneLayoutProps) => {
-  const template = createMemo(() =>
-    props.panes.map((pane) => pane.width ?? "1fr").join(" ")
-  );
+  const template = createMemo(() => {
+    const widths = props.widths?.();
+    if (widths && widths.length) {
+      return widths.map((value) => `${value}px`).join(" ");
+    }
+    return props.panes.map(() => "1fr").join(" ");
+  });
 
   return (
     <div
@@ -23,14 +27,16 @@ export const MultiPaneLayout = (props: MultiPaneLayoutProps) => {
       data-pane-count={props.panes.length}
       style={{
         display: "grid",
-        "grid-template-columns": template(),
-        width: "100%",
-        height: "100%"
+        "grid-template-columns": template()
       }}
     >
-      {props.panes.map((pane) => (
-        <div>{pane.content}</div>
-      ))}
+      <Index each={props.panes}>
+        {(pane) => (
+          <div class="multi-pane-pane" data-pane-key={pane().key}>
+            {pane().content}
+          </div>
+        )}
+      </Index>
     </div>
   );
 };

@@ -9,6 +9,7 @@ export const Sash = (props: SashProps) => {
 
   const onPointerDown = (event: PointerEvent) => {
     sashRef?.setPointerCapture(event.pointerId);
+    document.documentElement.dataset.resizing = "true";
 
     const onPointerMove = (moveEvent: PointerEvent) => {
       props.onDrag(moveEvent.clientX);

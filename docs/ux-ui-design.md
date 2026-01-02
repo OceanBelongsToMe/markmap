@@ -177,6 +177,14 @@
   - `SashContainer`（patterns）：集中渲染多条分割线（按列计算位置）。
 - 组合层（patterns）：
   - `MultiPaneShell`：组合多列结构 + 分割线交互 + 尺寸策略（不含业务逻辑）。
+- 拖拽抖动控制（实现要点）：
+  - `MultiPaneLayout` 使用稳定子节点渲染（如 `Index`），避免拖拽时重建 pane 导致闪烁。
+  - 列宽由 `grid-template-columns` 驱动，保证拖拽逻辑生效。
+  - 拖拽期间为 pane 启用 `contain: layout paint` 与 `will-change: width`，限制重排范围。
+  - `Sash` 拖拽开始/结束设置 `html[data-resizing]`，作为样式提示。
+- 渲染稳定性规范（MUST）：
+  - 频繁更新且顺序稳定的列表/容器必须使用 `Index` 渲染，禁止直接 `map` 生成子节点。
+  - 动态增删的列表使用 `For` 并提供稳定 key，避免节点重建与动画抖动。
 - 通用工具栏（patterns）：
   - `ToolbarShell`：通用工具栏骨架（left/center/right slots）。
 - 通用工具栏（components）：

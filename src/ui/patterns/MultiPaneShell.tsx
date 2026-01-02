@@ -25,13 +25,7 @@ export const MultiPaneShell = (props: MultiPaneShellProps) => {
       ref={(el) => setContainerRef(el)}
       style={{ position: "relative", width: "100%", height: "100%" }}
     >
-      <MultiPaneLayout
-        panes={panes().map((pane, index) => ({
-          key: pane.key,
-          content: pane.content,
-          width: `${sizes()[index]}px`
-        }))}
-      />
+      <MultiPaneLayout panes={panes()} widths={sizes} />
       <SashContainer
         class="sash-container full-window"
         sizes={sizes()}
