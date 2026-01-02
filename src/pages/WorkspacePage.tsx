@@ -58,7 +58,6 @@ export const WorkspacePage = () => {
               showSidebar() ? (
                 <WorkspaceSidebar
                   collapsed={collapsed()}
-                  width={sidebarWidth()}
                   onToggle={() => setCollapsed(!collapsed())}
                 />
               ) : undefined

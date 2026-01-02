@@ -23,6 +23,7 @@ export const labels = {
   favorites: "Favorites",
   tags: "Tags",
   search: "Search",
+  loading: "Loading",
   settings: "Settings",
   addNote: "Add note",
   showSidebar: "Show sidebar",

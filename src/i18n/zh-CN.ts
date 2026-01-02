@@ -25,6 +25,7 @@ export const zhCN: Record<keyof typeof labels, string> = {
   favorites: "收藏",
   tags: "标签",
   search: "搜索",
+  loading: "加载中",
   settings: "设置",
   addNote: "新增笔记",
   showSidebar: "显示侧栏",

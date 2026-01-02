@@ -308,6 +308,27 @@
 
 ---
 
+## Workspace 文件树前端拆分（SRP）
+
+### 模块拆分
+
+- API 适配层：`src/features/workspace/api/workspaceApi.ts`
+  - `getCurrentWorkspace()` / `getWorkspaceFileTree(workspaceId)`
+- 状态层：`src/state/workspace/useWorkspaceTree.ts`
+  - `currentWorkspace` / `tree` / `loading` / `error`
+- 行为层：`src/features/workspace/hooks/useWorkspaceTreeActions.ts`
+  - `loadCurrentWorkspace()` / `refreshTree()`
+- 视图层：`src/ui/patterns/workspace/WorkspaceSidebar.tsx`
+  - 只负责渲染树，不负责数据请求
+
+### 交互与职责边界
+
+- `WorkspaceSidebar` 消费状态，不执行 `invoke`。
+- API 层只做命令调用与 DTO 映射，不包含业务逻辑。
+- 状态层负责缓存与刷新策略，避免 UI 组件重复请求。
+
+---
+
 ## 评审与协作规则
 
 - 每个模块独立评审，避免跨模块耦合影响验收。

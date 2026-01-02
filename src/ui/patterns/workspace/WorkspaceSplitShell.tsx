@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { createMemo, untrack } from "solid-js";
 import type { JSX } from "solid-js";
 import type { Pane } from "../../../layouts/MultiPaneLayout";
 import { workspacePaneSizes } from "../../../layouts/rules/workspaceLayoutSizes";
@@ -23,7 +23,8 @@ export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
         content: props.sidebar,
         size: {
           ...workspacePaneSizes.sidebar,
-          initialPx: props.sidebarWidth ?? workspacePaneSizes.sidebar.initialPx
+          initialPx:
+            untrack(() => props.sidebarWidth) ?? workspacePaneSizes.sidebar.initialPx
         }
       });
     }
