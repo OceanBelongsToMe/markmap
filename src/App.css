@@ -263,6 +263,11 @@ html[data-resizing] .multi-pane-pane {
   will-change: width;
 }
 
+html[data-resizing] {
+  user-select: none;
+  cursor: col-resize;
+}
+
 .markmap-stage {
   height: 100%;
   border-left: 1px solid var(--color-border-default);

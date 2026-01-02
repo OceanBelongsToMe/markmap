@@ -8,6 +8,7 @@ export const Sash = (props: SashProps) => {
   let sashRef: HTMLDivElement | undefined;
 
   const onPointerDown = (event: PointerEvent) => {
+    event.preventDefault();
     sashRef?.setPointerCapture(event.pointerId);
     document.documentElement.dataset.resizing = "true";
 
