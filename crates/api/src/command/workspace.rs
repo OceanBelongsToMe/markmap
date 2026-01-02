@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::sync::Arc;
 
 use crate::dispatch::{ApiContext, CodecRegistry, CommandHandler, CommandRegistry};
@@ -10,14 +9,11 @@ use crate::dto::workspace::{
 };
 use crate::error::ApiError;
 use common::time::timestamp_to_millis;
-use knowlattice_core::model::WorkspaceId;
-use knowlattice_services::document::scan::ScanFolder;
-use knowlattice_services::document::service::BatchImport;
-use knowlattice_services::index::service::EnqueueParse;
 use knowlattice_services::workspace::{
-    AttachFolder, CreateWorkspace, ListRecentFiles, RecordRecentFile, SwitchWorkspace,
+    AttachFolderAndImport, ListRecentFiles, RecordRecentFile, SwitchWorkspace,
 };
-use uuid::Uuid;
+
+use super::ids::{parse_document_id, parse_workspace_id};
 
 pub const COMMAND_PING: &str = "workspace_ping";
 pub const COMMAND_ATTACH_FOLDER: &str = "workspace_attach_folder";
@@ -65,46 +61,23 @@ impl CommandHandler for WorkspaceAttachFolderHandler {
     ) -> Result<WorkspaceAttachFolderResponse, ApiError> {
         let services = Arc::clone(&ctx.services);
         let root_path = payload.root_path.clone();
-        let extensions = payload.extensions.unwrap_or_else(default_extensions);
         let workspace_name = payload.workspace_name;
-        let workspace_id = payload.workspace_id;
+        let workspace_id = payload
+            .workspace_id
+            .as_deref()
+            .map(parse_workspace_id)
+            .transpose()?;
 
-        let create_workspace: Arc<CreateWorkspace> = services.get().map_err(to_api_error)?;
-        let attach_folder: Arc<AttachFolder> = services.get().map_err(to_api_error)?;
-        let scan_folder: Arc<ScanFolder> = services.get().map_err(to_api_error)?;
-        let batch_import: Arc<BatchImport> = services.get().map_err(to_api_error)?;
-        let enqueue_parse: Arc<EnqueueParse> = services.get().map_err(to_api_error)?;
-
-        let workspace_id = resolve_workspace_id(
-            &create_workspace,
-            workspace_id,
-            workspace_name,
-            &root_path,
-        )
-        .await?;
-
-        let folder = attach_folder
-            .execute(workspace_id, root_path)
-            .await
-            .map_err(to_api_error)?;
-        let seeds = scan_folder
-            .execute(folder.root_path.clone(), extensions)
-            .await
-            .map_err(to_api_error)?;
-        let imported = seeds.len();
-        let doc_ids = batch_import
-            .execute(folder.id, seeds)
-            .await
-            .map_err(to_api_error)?;
-        enqueue_parse
-            .execute_many(doc_ids)
+        let attach_flow: Arc<AttachFolderAndImport> = services.get().map_err(to_api_error)?;
+        let result = attach_flow
+            .execute(root_path, workspace_name, workspace_id, payload.extensions)
             .await
             .map_err(to_api_error)?;
 
         Ok(WorkspaceAttachFolderResponse {
-            workspace_id: workspace_id.as_uuid().to_string(),
-            folder_id: folder.id.as_uuid().to_string(),
-            imported,
+            workspace_id: result.workspace_id.as_uuid().to_string(),
+            folder_id: result.folder_id.as_uuid().to_string(),
+            imported: result.imported,
         })
     }
 }
@@ -199,54 +172,6 @@ impl CommandHandler for WorkspaceRecentFilesHandler {
 
         Ok(WorkspaceRecentFilesResponse { items })
     }
-}
-
-fn default_extensions() -> Vec<String> {
-    vec![
-        "md".to_string(),
-        "markdown".to_string(),
-        "sql".to_string(),
-    ]
-}
-
-fn parse_workspace_id(value: &str) -> Result<WorkspaceId, ApiError> {
-    let parsed = Uuid::parse_str(value).map_err(|err| {
-        ApiError::with_details("INVALID_ID", "invalid workspace id", err.to_string())
-    })?;
-    Ok(WorkspaceId::from_uuid(parsed))
-}
-
-fn parse_document_id(value: &str) -> Result<knowlattice_core::model::DocumentId, ApiError> {
-    let parsed = Uuid::parse_str(value).map_err(|err| {
-        ApiError::with_details("INVALID_ID", "invalid document id", err.to_string())
-    })?;
-    Ok(knowlattice_core::model::DocumentId::from_uuid(parsed))
-}
-
-async fn resolve_workspace_id(
-    create_workspace: &CreateWorkspace,
-    workspace_id: Option<String>,
-    workspace_name: Option<String>,
-    root_path: &str,
-) -> Result<WorkspaceId, ApiError> {
-    if let Some(value) = workspace_id {
-        let parsed = Uuid::parse_str(&value).map_err(|err| {
-            ApiError::with_details("INVALID_ID", "invalid workspace id", err.to_string())
-        })?;
-        return Ok(WorkspaceId::from_uuid(parsed));
-    }
-
-    let name = workspace_name.unwrap_or_else(|| {
-        Path::new(root_path)
-            .file_name()
-            .and_then(|value| value.to_str())
-            .map(|value| value.to_string())
-            .filter(|value| !value.trim().is_empty())
-            .unwrap_or_else(|| "Workspace".to_string())
-    });
-
-    let workspace = create_workspace.execute(name).await.map_err(to_api_error)?;
-    Ok(workspace.id)
 }
 
 fn to_api_error(err: common::error::AppError) -> ApiError {

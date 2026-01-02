@@ -624,6 +624,39 @@ Hook/Observer（事件钩子）
 - 渲染：services::render 将 NodeTree 渲染为 markdown/html/markmap
 - 导出：通过 plugins::hook::on_export 产出文件
 
+---
+
+## 6. 层级职责（SRP 理想状态）
+
+### 6.1 core（领域模型）
+
+- 只定义实体/值对象/领域规则与校验。
+- 不包含存储、I/O、应用状态与流程编排。
+- 示例：`WorkspaceId`、`Workspace`、领域校验逻辑。
+
+### 6.2 storage（持久化层）
+
+- 只做数据读写与映射（Repository/Mapper）。
+- 不包含业务流程与用例编排。
+- 示例：`WorkspaceStateRepository` 的 SQL 实现。
+
+### 6.3 services（用例编排层）
+
+- 只做业务流程编排，调用 repository 与基础能力（clock/index等）。
+- 用例保持单一职责，按变化拆分。
+- 示例：`SwitchWorkspace`、`AttachFolderAndImport`（完整流程用例）。
+
+### 6.4 api（命令边界）
+
+- 只做参数解析、DTO ↔ 用例调用、错误映射。
+- 不承载业务流程编排。
+- 示例：`WorkspaceAttachFolderHandler` 调用单个服务用例即可。
+
+### 6.5 tauri / 前端（交互层）
+
+- 只处理 UI/交互与状态消费。
+- 不内嵌业务规则或持久化逻辑。
+
 ## 6. 扩展点
 
 - 解析前后钩子（自定义语法）

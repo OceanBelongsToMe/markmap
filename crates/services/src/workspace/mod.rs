@@ -1,4 +1,5 @@
 mod attach_folder;
+mod attach_folder_import;
 mod create_workspace;
 mod detach_folder;
 mod list_workspace;
@@ -7,6 +8,7 @@ mod switch_workspace;
 mod update_workspace_config_overrides;
 
 pub use attach_folder::AttachFolder;
+pub use attach_folder_import::{AttachFolderAndImport, AttachFolderImportResult};
 pub use create_workspace::CreateWorkspace;
 pub use detach_folder::DetachFolder;
 pub use list_workspace::ListWorkspace;
@@ -21,6 +23,7 @@ use crate::builder::{ServiceContext, ServiceRegistry};
 pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
     CreateWorkspace::register(ctx, registry)?;
     AttachFolder::register(ctx, registry)?;
+    AttachFolderAndImport::register(ctx, registry)?;
     DetachFolder::register(ctx, registry)?;
     SwitchWorkspace::register(ctx, registry)?;
     ListWorkspace::register(ctx, registry)?;
