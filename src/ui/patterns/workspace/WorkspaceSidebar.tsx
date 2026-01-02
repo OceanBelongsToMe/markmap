@@ -8,6 +8,7 @@ import { useI18n } from "../../../i18n/context";
 import { useWorkspaceTreeState } from "../../../state/workspace/useWorkspaceTree";
 import { useWorkspaceTreeActions } from "../../../features/workspace/hooks/useWorkspaceTreeActions";
 import { FileTreeView } from "../../../features/sidebar/file-tree/FileTreeView";
+import { useFileTreeActions } from "../../../features/sidebar/file-tree/useFileTreeActions";
 import { useFileTreeState } from "../../../features/sidebar/file-tree/useFileTreeState";
 import type { FileTreeNode } from "../../../features/sidebar/file-tree/types";
 
@@ -22,7 +23,12 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
   const [filesCollapsed, setFilesCollapsed] = createSignal(false);
   const { fileTree, loading } = useWorkspaceTreeState();
   const { loadCurrentWorkspace } = useWorkspaceTreeActions();
-  const { expandedIds, selectedId, setSelectedId, toggleExpanded } = useFileTreeState();
+  const { expandedIds, setExpandedIds, selectedId, setSelectedId } = useFileTreeState();
+  const { handleNodeClick } = useFileTreeActions({
+    expandedIds,
+    setExpandedIds,
+    setSelectedId
+  });
   const nodes = createMemo<TreeNode[]>(() =>
     navModel.map((item) => ({
       id: item.id,
@@ -74,8 +80,7 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
                 nodes={fileNodes}
                 expandedIds={expandedIds}
                 selectedId={selectedId}
-                onSelect={(id) => setSelectedId(id)}
-                onToggle={(id) => toggleExpanded(id)}
+                onNodeClick={handleNodeClick}
               />
             )}
           </SidebarSection>

@@ -117,6 +117,7 @@
   - 领域层：`src/features/sidebar/file-tree/types.ts`（节点类型定义）。
   - 数据层：`useFileTreeData`（数据获取/结构转换）。
   - 状态层：`useFileTreeState`（展开/选中）。
+  - 行为层：`useFileTreeActions`（点击策略与展开/选中动作）。
   - 视图层：`FileTreeView`（渲染与事件绑定）。
   - 样式层：`fileTree.css`（视觉与交互细节）。
   - 组合层：`FileTreeSection`（组装数据 + 状态 + 视图）。

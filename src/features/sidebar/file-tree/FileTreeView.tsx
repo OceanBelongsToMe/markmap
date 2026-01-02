@@ -9,8 +9,7 @@ export type FileTreeViewProps = {
   nodes: Accessor<FileTreeNode[]>;
   expandedIds: Accessor<string[]>;
   selectedId?: Accessor<string | null>;
-  onToggle?: (id: string) => void;
-  onSelect?: (id: string) => void;
+  onNodeClick?: (node: FileTreeNode) => void;
 };
 
 export const FileTreeView = (props: FileTreeViewProps) => {
@@ -23,8 +22,7 @@ export const FileTreeView = (props: FileTreeViewProps) => {
             depth={0}
             expandedIds={props.expandedIds}
             selectedId={props.selectedId}
-            onToggle={props.onToggle}
-            onSelect={props.onSelect}
+            onNodeClick={props.onNodeClick}
           />
         )}
       </StableList>
@@ -37,8 +35,7 @@ type FileTreeNodeRowProps = {
   depth: number;
   expandedIds: Accessor<string[]>;
   selectedId?: Accessor<string | null>;
-  onToggle?: (id: string) => void;
-  onSelect?: (id: string) => void;
+  onNodeClick?: (node: FileTreeNode) => void;
 };
 
 const FileTreeNodeRow = (props: FileTreeNodeRowProps) => {
@@ -47,17 +44,10 @@ const FileTreeNodeRow = (props: FileTreeNodeRowProps) => {
     props.expandedIds().includes(props.node().id)
   );
   const isSelected = createMemo(() => props.selectedId?.() === props.node().id);
-  const { isOpen, isCollapsed, toggle } = useCollapsible(isExpanded, () => {
-    if (isFolder()) {
-      props.onToggle?.(props.node().id);
-    }
-  });
+  const { isOpen, isCollapsed } = useCollapsible(isExpanded);
 
   const onClickRow = () => {
-    if (isFolder()) {
-      toggle();
-    }
-    props.onSelect?.(props.node().id);
+    props.onNodeClick?.(props.node());
   };
 
   return (
@@ -93,8 +83,7 @@ const FileTreeNodeRow = (props: FileTreeNodeRowProps) => {
                     depth={props.depth + 1}
                     expandedIds={props.expandedIds}
                     selectedId={props.selectedId}
-                    onToggle={props.onToggle}
-                    onSelect={props.onSelect}
+                    onNodeClick={props.onNodeClick}
                   />
                 )}
               </StableList>
