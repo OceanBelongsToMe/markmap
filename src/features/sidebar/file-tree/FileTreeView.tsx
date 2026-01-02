@@ -52,10 +52,10 @@ const FileTreeNodeRow = (props: FileTreeNodeRowProps) => {
 
   return (
     <li
-      class="file-tree-node"
+      class="file-tree-node collapsible"
       data-type={props.node().type}
       data-selected={isSelected()}
-      data-expanded={isOpen()}
+      data-collapsed={isFolder() ? (isCollapsed() ? "true" : "false") : undefined}
       role="treeitem"
       aria-expanded={isFolder() ? isOpen() : undefined}
       aria-selected={isSelected()}
@@ -66,29 +66,27 @@ const FileTreeNodeRow = (props: FileTreeNodeRowProps) => {
         style={{ "--depth": `${props.depth}` }}
         onClick={onClickRow}
       >
-        <span class="file-tree-caret" aria-hidden="true" />
+        <span class="file-tree-caret collapsible-chevron" aria-hidden="true" />
         <span class="file-tree-icon" aria-hidden="true">
           {renderIcon(props.node())}
         </span>
         <span class="file-tree-label">{props.node().name}</span>
       </button>
       <Show when={isFolder()}>
-        <div class="file-tree-children" data-expanded={!isCollapsed()}>
-          <Show when={!isCollapsed()}>
-            <ul role="group">
-              <StableList each={() => props.node().children ?? []}>
-                {(child) => (
-                  <FileTreeNodeRow
-                    node={child}
-                    depth={props.depth + 1}
-                    expandedIds={props.expandedIds}
-                    selectedId={props.selectedId}
-                    onNodeClick={props.onNodeClick}
-                  />
-                )}
-              </StableList>
-            </ul>
-          </Show>
+        <div class="file-tree-children collapsible-body">
+          <ul role="group">
+            <StableList each={() => props.node().children ?? []}>
+              {(child) => (
+                <FileTreeNodeRow
+                  node={child}
+                  depth={props.depth + 1}
+                  expandedIds={props.expandedIds}
+                  selectedId={props.selectedId}
+                  onNodeClick={props.onNodeClick}
+                />
+              )}
+            </StableList>
+          </ul>
         </div>
       </Show>
     </li>

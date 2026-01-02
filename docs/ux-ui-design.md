@@ -128,6 +128,7 @@
   - 约束：IA 不渲染，Section 不定义 IA，业务层不修改 IA。
 - 折叠/展开（SRP）：
   - 行为层：`src/ui/components/useCollapsible.ts` 统一折叠/展开行为与状态语义。
+  - 样式层：`src/ui/components/collapsible.css` 统一折叠/展开视觉与过渡。
   - 状态层：`src/state/useSidebarState.ts` 仅维护 `collapsed`。
   - 骨架层：`src/layouts/SidebarShell.tsx` 仅消费 `collapsed` 切换 class。
   - 样式层：`src/layouts/sidebar.css` 仅定义 `.is-collapsed` 的视觉表现。

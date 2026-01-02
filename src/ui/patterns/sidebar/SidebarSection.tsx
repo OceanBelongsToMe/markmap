@@ -15,6 +15,7 @@ export const SidebarSection = (props: SidebarSectionProps) => {
   );
   const className = [
     "sidebar-section",
+    "collapsible",
     isCollapsed() ? "is-collapsed" : ""
   ]
     .filter(Boolean)
@@ -25,17 +26,23 @@ export const SidebarSection = (props: SidebarSectionProps) => {
       {props.title ? (
         <div class="sidebar-section-header">
           <button
-            class="sidebar-section-toggle"
+            class="sidebar-section-toggle collapsible-trigger"
             type="button"
             onClick={toggle}
             aria-expanded={isOpen()}
           >
-            <span class="sidebar-section-chevron" aria-hidden="true" />
+            <span
+              class="sidebar-section-chevron collapsible-chevron"
+              aria-hidden="true"
+            />
             <span class="sidebar-section-title">{props.title}</span>
           </button>
         </div>
       ) : null}
-      <div class="sidebar-section-body" aria-hidden={isCollapsed() ? "true" : "false"}>
+      <div
+        class="sidebar-section-body collapsible-body"
+        aria-hidden={isCollapsed() ? "true" : "false"}
+      >
         {props.children}
       </div>
     </section>

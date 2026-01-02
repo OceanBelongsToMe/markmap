@@ -1,0 +1,23 @@
+.collapsible-body {
+  overflow: hidden;
+  max-height: var(--collapsible-max-height, 800px);
+  opacity: 1;
+  transition: max-height 260ms ease, opacity 180ms ease, padding 180ms ease;
+}
+
+.collapsible[data-collapsed="true"] .collapsible-body {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.collapsible-chevron {
+  display: inline-block;
+  transition: transform 160ms ease, opacity 160ms ease;
+  transform-origin: 50% 50%;
+}
+
+.collapsible {
+  --collapsible-chevron-translate-collapsed: 0.5px;
+  --collapsible-chevron-translate-expanded: -3.5px;
+}
