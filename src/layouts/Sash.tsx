@@ -1,6 +1,7 @@
 export type SashProps = {
   left: number;
   onDrag: (clientX: number) => void;
+  onDragEnd?: () => void;
 };
 
 export const Sash = (props: SashProps) => {
@@ -15,7 +16,8 @@ export const Sash = (props: SashProps) => {
 
     const onPointerUp = () => {
       window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
+      delete document.documentElement.dataset.resizing;
+      props.onDragEnd?.();
     };
 
     window.addEventListener("pointermove", onPointerMove);

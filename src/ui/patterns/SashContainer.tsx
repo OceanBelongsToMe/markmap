@@ -4,6 +4,7 @@ import { Sash } from "../../layouts/Sash";
 export type SashContainerProps = {
   sizes: number[];
   onDrag: (index: number, clientX: number) => void;
+  onDragEnd?: (sizes: number[]) => void;
   class?: string;
   offsetLeft?: number;
 };
@@ -22,7 +23,11 @@ export const SashContainer = (props: SashContainerProps) => {
   return (
     <div class={props.class ?? "sash-container"}>
       {positions().map((left, index) => (
-        <Sash left={left + (props.offsetLeft ?? 0)} onDrag={(x) => props.onDrag(index, x)} />
+        <Sash
+          left={left + (props.offsetLeft ?? 0)}
+          onDrag={(x) => props.onDrag(index, x)}
+          onDragEnd={() => props.onDragEnd?.(props.sizes)}
+        />
       ))}
     </div>
   );

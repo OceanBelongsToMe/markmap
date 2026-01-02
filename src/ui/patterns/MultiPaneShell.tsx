@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 import { MultiPaneLayout, type Pane } from "../../layouts/MultiPaneLayout";
 import { useMeasuredWidth } from "../../state/useMeasuredWidth";
 import { usePaneSizes, type PaneSize } from "../../state/usePaneSizes";
@@ -19,10 +19,6 @@ export const MultiPaneShell = (props: MultiPaneShellProps) => {
     return containerRef()?.getBoundingClientRect().left ?? 0;
   });
   const { sizes, handleDrag } = usePaneSizes(() => panes(), containerWidth);
-  createEffect(() => {
-    props.onSizesChange?.(sizes());
-  });
-
   return (
     <div
       class={props.class}
@@ -46,6 +42,7 @@ export const MultiPaneShell = (props: MultiPaneShellProps) => {
           const rect = el.getBoundingClientRect();
           handleDrag(index, x, rect.left, rect.width);
         }}
+        onDragEnd={(nextSizes) => props.onSizesChange?.(nextSizes)}
       />
     </div>
   );
