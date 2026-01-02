@@ -55,3 +55,19 @@ pub struct WorkspaceRecentFilesRequest {
 pub struct WorkspaceRecentFilesResponse {
     pub items: Vec<WorkspaceRecentFileResponse>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct WorkspaceCurrentRequest {}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceCurrentResponse {
+    pub workspace_id: String,
+    pub name: String,
+    pub config_profile_id: Option<String>,
+    pub config_override: Option<std::collections::HashMap<String, String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkspaceCurrentResponsePayload {
+    pub current: Option<WorkspaceCurrentResponse>,
+}
