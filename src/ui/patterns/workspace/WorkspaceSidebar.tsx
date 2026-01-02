@@ -6,7 +6,6 @@ import { TreeView, type TreeNode } from "../../components/TreeView";
 import { SidebarSection } from "../sidebar/SidebarSection";
 import { useI18n } from "../../../i18n/context";
 import { FileTreeSection } from "../../../features/sidebar/file-tree/FileTreeSection";
-import { ScrollArea } from "../../components/ScrollArea";
 
 export type WorkspaceSidebarProps = {
   collapsed?: boolean;
@@ -44,9 +43,7 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
             onToggle={() => setFilesCollapsed(!filesCollapsed())}
             class="is-grow"
           >
-            <ScrollArea class="sidebar-section-scroll">
-              <FileTreeSection loadingLabel={t("loading")} />
-            </ScrollArea>
+            <FileTreeSection loadingLabel={t("loading")} />
           </SidebarSection>
         </nav>
       </SidebarShell>

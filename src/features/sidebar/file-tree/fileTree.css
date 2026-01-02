@@ -3,18 +3,30 @@
   list-style: none;
   margin: 0;
   padding: 4px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.file-tree ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
 }
 
 .file-tree-node {
+  position: relative;
+}
+
+.file-tree-inner {
+  position: relative;
+  width: 100%;
+}
+
+.file-tree-window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.file-tree-item {
   position: relative;
 }
 
@@ -26,7 +38,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px 6px calc(8px + var(--depth, 0) * var(--file-tree-indent));
+  padding: 0 8px 0 calc(8px + var(--depth, 0) * var(--file-tree-indent));
+  height: var(--file-tree-row-height, 28px);
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
@@ -55,6 +68,14 @@
 
 .file-tree-row:hover {
   background: var(--color-bg-subtle);
+}
+
+.file-tree-row .collapsible-chevron-icon {
+  transition: none;
+}
+
+.file-tree-row[data-animate="true"] .collapsible-chevron-icon {
+  transition: transform 160ms ease;
 }
 
 .file-tree-caret {
@@ -91,9 +112,4 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.file-tree-children {
-  margin-left: 0;
-  overflow: hidden;
 }

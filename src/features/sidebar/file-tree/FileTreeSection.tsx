@@ -10,7 +10,7 @@ export type FileTreeSectionProps = {
 export const FileTreeSection = (props: FileTreeSectionProps) => {
   const { fileNodes, loading } = useWorkspaceFileTree();
   const { expandedIds, setExpandedIds, selectedId, setSelectedId } = useFileTreeState();
-  const { handleNodeClick } = useFileTreeActions({
+  const { handleNodeClick, lastToggledId } = useFileTreeActions({
     expandedIds,
     setExpandedIds,
     setSelectedId
@@ -26,6 +26,7 @@ export const FileTreeSection = (props: FileTreeSectionProps) => {
       expandedIds={expandedIds}
       selectedId={selectedId}
       onNodeClick={handleNodeClick}
+      animateId={lastToggledId}
     />
   );
 };

@@ -118,7 +118,7 @@
   - 数据层：`useWorkspaceFileTree`（工作区数据获取与结构转换）。
   - 状态层：`useFileTreeState`（展开/选中）。
   - 行为层：`useFileTreeActions`（点击策略与展开/选中动作）。
-  - 视图层：`FileTreeView`（渲染与事件绑定）。
+  - 视图层：`FileTreeView`（渲染与事件绑定，使用 `VirtualList` 进行虚拟化）。
   - 样式层：`fileTree.css`（视觉与交互细节）。
   - 组合层：`FileTreeSection`（组装数据 + 状态 + 视图）。
 - IA 与侧栏 Section 对齐（SRP）：
