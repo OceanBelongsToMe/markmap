@@ -642,7 +642,7 @@ Hook/Observer（事件钩子）
 
 ### 6.3 services（用例编排层）
 
-- 只做业务流程编排，调用 repository 与基础能力（clock/index等）。
+- 只做业务流程编排，调用 repository 与基础能力（clock/index 等）。
 - 用例保持单一职责，按变化拆分。
 - 示例：`SwitchWorkspace`、`AttachFolderAndImport`（完整流程用例）。
 
@@ -657,13 +657,45 @@ Hook/Observer（事件钩子）
 - 只处理 UI/交互与状态消费。
 - 不内嵌业务规则或持久化逻辑。
 
-## 6. 扩展点
+---
+
+## 7. 用户流程与功能拆分（SRP）
+
+### 7.1 启动加载
+
+- `GetCurrentWorkspace`：读取当前工作区指针（workspace_state）。
+- `ListWorkspace`：列出所有工作区。
+- `ListWorkspaceFiles`：按工作区展示文件列表/文件树。
+
+### 7.2 打开文件
+
+- `OpenDocument`：读取文档内容。
+- `RecordRecentFile`：记录最近打开文件。
+
+### 7.3 渲染展示
+
+- `GetDocumentContent`：返回正文内容。
+- `GetDocumentMeta`：返回标题/路径/更新时间等元信息。
+
+### 7.4 模块归属（建议）
+
+- services::workspace
+  - `GetCurrentWorkspace` / `ListWorkspace`
+- services::document
+  - `OpenDocument` / `GetDocumentContent` / `GetDocumentMeta`
+- services::index 或 services::search
+  - `ListWorkspaceFiles`（从索引或元数据生成文件树）
+- storage
+  - `WorkspaceRepository` / `DocumentRepository`
+  - `WorkspaceStateRepository` / `WorkspaceRecentFilesRepository`
+
+## 7. 扩展点
 
 - 解析前后钩子（自定义语法）
 - 渲染前后钩子（主题、节点样式）
 - 导出前后钩子（模板、打包）
 
-## 7. 可选演进
+## 8. 可选演进
 
 - 多用户协作：权限、审计、同步协议
 - 云同步：storage 增加远端实现
@@ -671,9 +703,9 @@ Hook/Observer（事件钩子）
 
 ---
 
-## 8. 状态建模（以“变化”为单位）
+## 9. 状态建模（以“变化”为单位）
 
-### 8.1 单一变化：Workspace 变化
+### 9.1 单一变化：Workspace 变化
 
 只关心与 Workspace 相关的变化：
 
@@ -681,7 +713,7 @@ Hook/Observer（事件钩子）
 - 最近打开 workspace
 - 最近打开文件（可视为 workspace 范围内的行为）
 
-### 8.2 对应的数据结构（建议）
+### 9.2 对应的数据结构（建议）
 
 `workspace_state`（只描述 workspace 相关状态）
 
@@ -705,7 +737,7 @@ CREATE TABLE workspace_recent_files (
 );
 ```
 
-### 8.3 设计原则与扩展
+### 9.3 设计原则与扩展
 
 - `workspace_state` 只跟 workspace 变化有关。
 - `workspace_recent_files` 只跟 workspace 内文件访问变化有关。
