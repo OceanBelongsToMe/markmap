@@ -1,5 +1,6 @@
 import type { Accessor } from "solid-js";
 import { createMemo, Show } from "solid-js";
+import { ChevronIcon } from "../../../ui/components/ChevronIcon";
 import { StableList } from "../../../ui/components/StableList";
 import { useCollapsible } from "../../../ui/components/useCollapsible";
 import type { FileTreeIcon, FileTreeNode } from "./types";
@@ -62,11 +63,14 @@ const FileTreeNodeRow = (props: FileTreeNodeRowProps) => {
     >
       <button
         type="button"
-        class="file-tree-row"
+        class="file-tree-row collapsible-trigger"
         style={{ "--depth": `${props.depth}` }}
         onClick={onClickRow}
+        data-collapsed={isFolder() ? (isCollapsed() ? "true" : "false") : undefined}
       >
-        <span class="file-tree-caret collapsible-chevron" aria-hidden="true" />
+        <span class="file-tree-caret collapsible-chevron" aria-hidden="true">
+          <ChevronIcon class="collapsible-chevron-icon" />
+        </span>
         <span class="file-tree-icon" aria-hidden="true">
           {renderIcon(props.node())}
         </span>

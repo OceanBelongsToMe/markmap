@@ -12,12 +12,31 @@
   padding-bottom: 0;
 }
 .collapsible-chevron {
-  display: inline-block;
-  transition: transform 160ms ease, opacity 160ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 160ms ease;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+}
+
+.collapsible-chevron-icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  transition: transform 160ms ease;
   transform-origin: 50% 50%;
 }
 
-.collapsible {
-  --collapsible-chevron-translate-collapsed: 0.5px;
-  --collapsible-chevron-translate-expanded: -3.5px;
+.collapsible-trigger[data-collapsed="true"] .collapsible-chevron-icon {
+  transform: rotate(-90deg);
+}
+
+.collapsible-trigger[data-collapsed="false"] .collapsible-chevron-icon {
+  transform: rotate(0deg);
 }

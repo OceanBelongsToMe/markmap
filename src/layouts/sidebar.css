@@ -66,20 +66,10 @@
 }
 
 .sidebar-section-chevron {
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid var(--color-text-muted);
-  border-bottom: 2px solid var(--color-text-muted);
   margin-right: 2px;
+  color: var(--color-text-muted);
 }
 
-.sidebar-section[data-collapsed="true"] .sidebar-section-chevron {
-  transform: translateY(var(--collapsible-chevron-translate-collapsed, 0)) rotate(-45deg);
-}
-
-.sidebar-section[data-collapsed="false"] .sidebar-section-chevron {
-  transform: translateY(var(--collapsible-chevron-translate-expanded, 0)) rotate(45deg);
-}
 
 .sidebar-section-body {
   display: flex;

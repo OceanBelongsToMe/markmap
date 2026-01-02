@@ -58,13 +58,7 @@
 }
 
 .file-tree-caret {
-  width: 10px;
-  height: 10px;
-  border-right: 1.5px solid var(--color-text-muted);
-  border-bottom: 1.5px solid var(--color-text-muted);
-  transform: translateY(var(--collapsible-chevron-translate-collapsed, 0)) rotate(-45deg);
   opacity: 0.7;
-  transition: transform 160ms ease, opacity 160ms ease;
 }
 
 .file-tree-node[data-type="file"] > .file-tree-row > .file-tree-caret {
@@ -72,7 +66,7 @@
 }
 
 .file-tree-node[data-collapsed="false"] > .file-tree-row > .file-tree-caret {
-  transform: translateY(var(--collapsible-chevron-translate-expanded, 0)) rotate(45deg);
+  opacity: 1;
 }
 
 .file-tree-icon {

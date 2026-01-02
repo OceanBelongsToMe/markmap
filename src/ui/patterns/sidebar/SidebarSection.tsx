@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+import { ChevronIcon } from "../../components/ChevronIcon";
 import { useCollapsible } from "../../components/useCollapsible";
 
 export type SidebarSectionProps = {
@@ -30,11 +31,14 @@ export const SidebarSection = (props: SidebarSectionProps) => {
             type="button"
             onClick={toggle}
             aria-expanded={isOpen()}
+            data-collapsed={isCollapsed() ? "true" : "false"}
           >
             <span
               class="sidebar-section-chevron collapsible-chevron"
               aria-hidden="true"
-            />
+            >
+              <ChevronIcon class="collapsible-chevron-icon" />
+            </span>
             <span class="sidebar-section-title">{props.title}</span>
           </button>
         </div>
