@@ -1,12 +1,8 @@
-export type FileTreeNode = {
-  id: string;
-  label: string;
-  children?: FileTreeNode[];
-};
+import type { FileTreeNode } from "./types";
 
 export const useFileTreeData = () => {
   const data: FileTreeNode[] = [
-    { id: "root", label: "Workspace", children: [] }
+    { id: "root", name: "Workspace", type: "folder", children: [] }
   ];
 
   return {

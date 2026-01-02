@@ -4,13 +4,15 @@ import { FileTreeView } from "./FileTreeView";
 
 export const FileTreeSection = () => {
   const { data } = useFileTreeData();
-  const { selectedId, setSelectedId } = useFileTreeState();
+  const { expandedIds, selectedId, setSelectedId, toggleExpanded } = useFileTreeState();
 
   return (
     <FileTreeView
-      nodes={data}
-      selectedId={selectedId()}
+      nodes={() => data}
+      expandedIds={expandedIds}
+      selectedId={selectedId}
       onSelect={(id) => setSelectedId(id)}
+      onToggle={(id) => toggleExpanded(id)}
     />
   );
 };

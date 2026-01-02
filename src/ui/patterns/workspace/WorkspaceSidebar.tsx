@@ -7,6 +7,9 @@ import { SidebarSection } from "../sidebar/SidebarSection";
 import { useI18n } from "../../../i18n/context";
 import { useWorkspaceTreeState } from "../../../state/workspace/useWorkspaceTree";
 import { useWorkspaceTreeActions } from "../../../features/workspace/hooks/useWorkspaceTreeActions";
+import { FileTreeView } from "../../../features/sidebar/file-tree/FileTreeView";
+import { useFileTreeState } from "../../../features/sidebar/file-tree/useFileTreeState";
+import type { FileTreeNode } from "../../../features/sidebar/file-tree/types";
 
 export type WorkspaceSidebarProps = {
   collapsed?: boolean;
@@ -19,6 +22,7 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
   const [filesCollapsed, setFilesCollapsed] = createSignal(false);
   const { fileTree, loading } = useWorkspaceTreeState();
   const { loadCurrentWorkspace } = useWorkspaceTreeActions();
+  const { expandedIds, selectedId, setSelectedId, toggleExpanded } = useFileTreeState();
   const nodes = createMemo<TreeNode[]>(() =>
     navModel.map((item) => ({
       id: item.id,
@@ -29,12 +33,13 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
       }))
     }))
   );
-  const fileNodes = createMemo<TreeNode[]>(() => {
+  const fileNodes = createMemo<FileTreeNode[]>(() => {
     const tree = fileTree();
     if (!tree) return [];
     return tree.folders.map((folder) => ({
       id: folder.id,
-      label: baseName(folder.rootPath),
+      name: baseName(folder.rootPath),
+      type: "folder",
       children: buildPathTree(folder.id, folder.documents.map((doc) => ({
         id: doc.id,
         path: doc.path
@@ -62,7 +67,17 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
             collapsed={filesCollapsed()}
             onToggle={() => setFilesCollapsed(!filesCollapsed())}
           >
-            {loading() ? <div>{t("loading")}</div> : <TreeView nodes={fileNodes()} />}
+            {loading() ? (
+              <div>{t("loading")}</div>
+            ) : (
+              <FileTreeView
+                nodes={fileNodes}
+                expandedIds={expandedIds}
+                selectedId={selectedId}
+                onSelect={(id) => setSelectedId(id)}
+                onToggle={(id) => toggleExpanded(id)}
+              />
+            )}
           </SidebarSection>
         </nav>
       </SidebarShell>
@@ -81,9 +96,9 @@ type FileEntry = {
   path: string;
 };
 
-const buildPathTree = (folderId: string, files: FileEntry[]): TreeNode[] => {
-  const root: TreeNode[] = [];
-  const nodeMap = new Map<string, TreeNode>();
+const buildPathTree = (folderId: string, files: FileEntry[]): FileTreeNode[] => {
+  const root: FileTreeNode[] = [];
+  const nodeMap = new Map<string, FileTreeNode>();
 
   for (const file of files) {
     const parts = file.path.split("/").filter(Boolean);
@@ -94,13 +109,14 @@ const buildPathTree = (folderId: string, files: FileEntry[]): TreeNode[] => {
       const key = `${parentKey}/${part}`;
       let node = nodeMap.get(key);
       if (!node) {
-        node = { id: key, label: part };
+        node = { id: key, name: part, type: "folder" };
         nodeMap.set(key, node);
         siblings.push(node);
       }
 
       if (index === parts.length - 1) {
         node.id = file.id;
+        node.type = "file";
         return;
       }
 

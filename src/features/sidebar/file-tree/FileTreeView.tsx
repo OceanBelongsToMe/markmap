@@ -1,26 +1,123 @@
-import type { JSX } from "solid-js";
+import type { Accessor } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import { StableList } from "../../../ui/components/StableList";
-import type { FileTreeNode } from "./useFileTreeData";
+import { useCollapsible } from "../../../ui/components/useCollapsible";
+import type { FileTreeIcon, FileTreeNode } from "./types";
+import "./fileTree.css";
 
 export type FileTreeViewProps = {
-  nodes: FileTreeNode[];
-  selectedId?: string | null;
+  nodes: Accessor<FileTreeNode[]>;
+  expandedIds: Accessor<string[]>;
+  selectedId?: Accessor<string | null>;
+  onToggle?: (id: string) => void;
   onSelect?: (id: string) => void;
-  renderLabel?: (node: FileTreeNode) => JSX.Element;
 };
 
 export const FileTreeView = (props: FileTreeViewProps) => {
   return (
-    <div>
-      <StableList each={() => props.nodes}>
+    <ul class="file-tree" role="tree">
+      <StableList each={props.nodes}>
         {(node) => (
-          <div>
-            <button type="button" onClick={() => props.onSelect?.(node().id)}>
-              {props.renderLabel ? props.renderLabel(node()) : node().label}
-            </button>
-          </div>
+          <FileTreeNodeRow
+            node={node}
+            depth={0}
+            expandedIds={props.expandedIds}
+            selectedId={props.selectedId}
+            onToggle={props.onToggle}
+            onSelect={props.onSelect}
+          />
         )}
       </StableList>
-    </div>
+    </ul>
   );
+};
+
+type FileTreeNodeRowProps = {
+  node: Accessor<FileTreeNode>;
+  depth: number;
+  expandedIds: Accessor<string[]>;
+  selectedId?: Accessor<string | null>;
+  onToggle?: (id: string) => void;
+  onSelect?: (id: string) => void;
+};
+
+const FileTreeNodeRow = (props: FileTreeNodeRowProps) => {
+  const isFolder = createMemo(() => props.node().type === "folder");
+  const isExpanded = createMemo(() =>
+    props.expandedIds().includes(props.node().id)
+  );
+  const isSelected = createMemo(() => props.selectedId?.() === props.node().id);
+  const { isOpen, isCollapsed, toggle } = useCollapsible(isExpanded, () => {
+    if (isFolder()) {
+      props.onToggle?.(props.node().id);
+    }
+  });
+
+  const onClickRow = () => {
+    if (isFolder()) {
+      toggle();
+    }
+    props.onSelect?.(props.node().id);
+  };
+
+  return (
+    <li
+      class="file-tree-node"
+      data-type={props.node().type}
+      data-selected={isSelected()}
+      data-expanded={isOpen()}
+      role="treeitem"
+      aria-expanded={isFolder() ? isOpen() : undefined}
+      aria-selected={isSelected()}
+    >
+      <button
+        type="button"
+        class="file-tree-row"
+        style={{ "--depth": `${props.depth}` }}
+        onClick={onClickRow}
+      >
+        <span class="file-tree-caret" aria-hidden="true" />
+        <span class="file-tree-icon" aria-hidden="true">
+          {renderIcon(props.node())}
+        </span>
+        <span class="file-tree-label">{props.node().name}</span>
+      </button>
+      <Show when={isFolder()}>
+        <div class="file-tree-children" data-expanded={!isCollapsed()}>
+          <Show when={!isCollapsed()}>
+            <ul role="group">
+              <StableList each={() => props.node().children ?? []}>
+                {(child) => (
+                  <FileTreeNodeRow
+                    node={child}
+                    depth={props.depth + 1}
+                    expandedIds={props.expandedIds}
+                    selectedId={props.selectedId}
+                    onToggle={props.onToggle}
+                    onSelect={props.onSelect}
+                  />
+                )}
+              </StableList>
+            </ul>
+          </Show>
+        </div>
+      </Show>
+    </li>
+  );
+};
+
+const renderIcon = (node: FileTreeNode) => {
+  const icon = resolveIcon(node);
+  if (icon.kind === "image") {
+    return <img src={icon.src} alt={icon.alt ?? ""} />;
+  }
+  return icon.value;
+};
+
+const resolveIcon = (node: FileTreeNode): FileTreeIcon => {
+  if (node.icon) return node.icon;
+  if (node.type === "folder") {
+    return { kind: "emoji", value: "📁" };
+  }
+  return { kind: "emoji", value: "📄" };
 };
