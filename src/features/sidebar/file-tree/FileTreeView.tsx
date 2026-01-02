@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+import { StableList } from "../../../ui/components/StableList";
 import type { FileTreeNode } from "./useFileTreeData";
 
 export type FileTreeViewProps = {
@@ -11,13 +12,15 @@ export type FileTreeViewProps = {
 export const FileTreeView = (props: FileTreeViewProps) => {
   return (
     <div>
-      {props.nodes.map((node) => (
-        <div>
-          <button type="button" onClick={() => props.onSelect?.(node.id)}>
-            {props.renderLabel ? props.renderLabel(node) : node.label}
-          </button>
-        </div>
-      ))}
+      <StableList each={() => props.nodes}>
+        {(node) => (
+          <div>
+            <button type="button" onClick={() => props.onSelect?.(node().id)}>
+              {props.renderLabel ? props.renderLabel(node()) : node().label}
+            </button>
+          </div>
+        )}
+      </StableList>
     </div>
   );
 };

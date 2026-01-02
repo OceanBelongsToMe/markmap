@@ -183,8 +183,13 @@
   - 拖拽期间为 pane 启用 `contain: layout paint` 与 `will-change: width`，限制重排范围。
   - `Sash` 拖拽开始/结束设置 `html[data-resizing]`，作为样式提示。
 - 渲染稳定性规范（MUST）：
-  - 频繁更新且顺序稳定的列表/容器必须使用 `Index` 渲染，禁止直接 `map` 生成子节点。
+  - 频繁更新且顺序稳定的列表/容器必须使用基础设施组件（如 `StableList`），禁止直接 `map` 生成子节点。
+  - 禁止在业务组件内直接使用 `Index`，仅允许在基础设施组件内部使用。
   - 动态增删的列表使用 `For` 并提供稳定 key，避免节点重建与动画抖动。
+- 渲染稳定性排查清单（当前项目）：
+  - MUST（高频更新 + 顺序稳定）：`src/ui/patterns/SashContainer.tsx` 的分割线渲染需迁移到 `Index`。
+  - SHOULD（更新频率中等或视图抖动风险较高）：`src/features/sidebar/file-tree/FileTreeView.tsx`、`src/ui/components/TreeView.tsx`。
+  - OK（低频/静态）：`src/ui/components/Select.tsx`、`src/App.tsx`（routes）、`src/ui/patterns/workspace/WorkspaceSidebar.tsx`（导航模型映射）。
 - 通用工具栏（patterns）：
   - `ToolbarShell`：通用工具栏骨架（left/center/right slots）。
 - 通用工具栏（components）：

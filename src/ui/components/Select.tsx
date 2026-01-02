@@ -1,3 +1,5 @@
+import { StableList } from "./StableList";
+
 export type SelectOption = {
   value: string;
   label: string;
@@ -17,9 +19,11 @@ export const Select = (props: SelectProps) => {
       value={props.value}
       onChange={(e) => props.onChange(e.currentTarget.value)}
     >
-      {props.options.map((option) => (
-        <option value={option.value}>{option.label}</option>
-      ))}
+      <StableList each={() => props.options}>
+        {(option) => (
+          <option value={option().value}>{option().label}</option>
+        )}
+      </StableList>
     </select>
   );
 };

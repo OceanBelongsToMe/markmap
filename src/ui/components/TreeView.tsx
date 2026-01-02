@@ -1,3 +1,5 @@
+import { StableList } from "./StableList";
+
 export type TreeNode = {
   id: string;
   label: string;
@@ -11,12 +13,14 @@ export type TreeViewProps = {
 export const TreeView = (props: TreeViewProps) => {
   return (
     <ul>
-      {props.nodes.map((node) => (
-        <li>
-          {node.label}
-          {node.children ? <TreeView nodes={node.children} /> : null}
-        </li>
-      ))}
+      <StableList each={() => props.nodes}>
+        {(node) => (
+          <li>
+            {node().label}
+            {node().children ? <TreeView nodes={node().children ?? []} /> : null}
+          </li>
+        )}
+      </StableList>
     </ul>
   );
 };

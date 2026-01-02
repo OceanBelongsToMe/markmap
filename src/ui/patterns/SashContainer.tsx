@@ -1,5 +1,6 @@
 import { createMemo } from "solid-js";
 import { Sash } from "../../layouts/Sash";
+import { StableList } from "../components/StableList";
 
 export type SashContainerProps = {
   sizes: number[];
@@ -22,13 +23,15 @@ export const SashContainer = (props: SashContainerProps) => {
 
   return (
     <div class={props.class ?? "sash-container"}>
-      {positions().map((left, index) => (
-        <Sash
-          left={left + (props.offsetLeft ?? 0)}
-          onDrag={(x) => props.onDrag(index, x)}
-          onDragEnd={() => props.onDragEnd?.(props.sizes)}
-        />
-      ))}
+      <StableList each={positions}>
+        {(left, index) => (
+          <Sash
+            left={left() + (props.offsetLeft ?? 0)}
+            onDrag={(x) => props.onDrag(index, x)}
+            onDragEnd={() => props.onDragEnd?.(props.sizes)}
+          />
+        )}
+      </StableList>
     </div>
   );
 };
