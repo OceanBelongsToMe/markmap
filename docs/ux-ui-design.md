@@ -115,7 +115,7 @@
   - 模式层只定义容器与分区，不包含业务数据或加载逻辑。
 - 业务层示例（文件树，SRP 拆分）：
   - 领域层：`src/features/sidebar/file-tree/types.ts`（节点类型定义）。
-  - 数据层：`useFileTreeData`（数据获取/结构转换）。
+  - 数据层：`useWorkspaceFileTree`（工作区数据获取与结构转换）。
   - 状态层：`useFileTreeState`（展开/选中）。
   - 行为层：`useFileTreeActions`（点击策略与展开/选中动作）。
   - 视图层：`FileTreeView`（渲染与事件绑定）。
