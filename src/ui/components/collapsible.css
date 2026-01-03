@@ -12,14 +12,14 @@
   align-items: center;
   justify-content: center;
   transition: opacity 160ms ease;
-  width: 16px;
-  height: 16px;
+  width: var(--collapsible-icon-size, 16px);
+  height: var(--collapsible-icon-size, 16px);
   color: var(--color-text-muted);
 }
 
 .collapsible-chevron-icon {
-  width: 16px;
-  height: 16px;
+  width: var(--collapsible-icon-size, 16px);
+  height: var(--collapsible-icon-size, 16px);
   stroke: currentColor;
   stroke-width: 1.6;
   stroke-linecap: round;
@@ -30,9 +30,9 @@
 }
 
 .collapsible-trigger[data-collapsed="true"] .collapsible-chevron-icon {
-  transform: rotate(-90deg);
+  transform: rotate(0deg);
 }
 
 .collapsible-trigger[data-collapsed="false"] .collapsible-chevron-icon {
-  transform: rotate(0deg);
+  transform: rotate(90deg);
 }

@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import { ChevronIcon } from "../../components/ChevronIcon";
+import { ChevronRight } from "lucide-solid";
 import { useCollapsible } from "../../components/useCollapsible";
 
 export type SidebarSectionProps = {
@@ -39,7 +39,7 @@ export const SidebarSection = (props: SidebarSectionProps) => {
               class="sidebar-section-chevron collapsible-chevron"
               aria-hidden="true"
             >
-              <ChevronIcon class="collapsible-chevron-icon" />
+              <ChevronRight class="collapsible-chevron-icon" />
             </span>
             <span class="sidebar-section-title">{props.title}</span>
           </button>
