@@ -102,8 +102,8 @@ async fn document_list_and_delete() {
 
     let listed = document_repo.list_by_folder(folder.id).await.unwrap();
     assert_eq!(listed.len(), 2);
-    assert_eq!(listed[0].id, doc1.id);
-    assert_eq!(listed[1].id, doc2.id);
+    assert_eq!(listed[0].id, doc2.id);
+    assert_eq!(listed[1].id, doc1.id);
 
     document_repo.delete(doc1.id).await.unwrap();
     assert!(document_repo.get(doc1.id).await.unwrap().is_none());

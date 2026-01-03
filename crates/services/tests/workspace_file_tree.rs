@@ -67,8 +67,8 @@ fn list_workspace_file_tree_includes_empty_folders_and_sorts_files() {
             .find(|node| node.id == folder_a.id)
             .expect("folder a");
         assert_eq!(folder_a_node.documents.len(), 2);
-        assert_eq!(folder_a_node.documents[0].path, "a.md");
-        assert_eq!(folder_a_node.documents[1].path, "b.md");
+        assert_eq!(folder_a_node.documents[0].path, "b.md");
+        assert_eq!(folder_a_node.documents[1].path, "a.md");
 
         let folder_b_node = tree
             .folders

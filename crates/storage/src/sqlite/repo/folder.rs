@@ -17,7 +17,7 @@ impl FolderRepository for SqliteRepositories {
             SELECT id, workspace_id, root_path, created_at, updated_at
             FROM folders
             WHERE workspace_id = ?
-            ORDER BY created_at ASC
+            ORDER BY root_path DESC
             "#,
         )
         .bind(workspace_id.as_uuid().as_bytes().to_vec())

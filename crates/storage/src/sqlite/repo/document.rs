@@ -17,7 +17,7 @@ impl DocumentRepository for SqliteRepositories {
             SELECT id, folder_id, path, title, content_hash, lang, updated_at, tree_id, ext
             FROM documents
             WHERE folder_id = ?
-            ORDER BY updated_at ASC
+            ORDER BY path DESC
             "#,
         )
         .bind(folder_id.as_uuid().as_bytes().to_vec())

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use common::types::AppResult;
-use knowlattice_core::model::document::Document;
 use knowlattice_core::model::{DocumentId, FolderId, Timestamp, WorkspaceId};
 use knowlattice_storage::repo::{DocumentRepository, FolderRepository};
 
@@ -48,13 +47,11 @@ impl ListWorkspaceFileTree {
     }
 
     pub async fn execute(&self, workspace_id: WorkspaceId) -> AppResult<WorkspaceFileTree> {
-        let mut folders = self.folder_repo.list_by_workspace(workspace_id).await?;
-        folders.sort_by(|a, b| a.root_path.cmp(&b.root_path));
+        let folders = self.folder_repo.list_by_workspace(workspace_id).await?;
 
         let mut nodes = Vec::with_capacity(folders.len());
         for folder in folders {
-            let mut documents = self.document_repo.list_by_folder(folder.id).await?;
-            documents.sort_by(|a, b| file_name(a).cmp(file_name(b)));
+            let documents = self.document_repo.list_by_folder(folder.id).await?;
 
             nodes.push(WorkspaceFolderNode {
                 id: folder.id,
@@ -79,12 +76,4 @@ impl ListWorkspaceFileTree {
             folders: nodes,
         })
     }
-}
-
-fn file_name(doc: &Document) -> &str {
-    doc.path
-        .as_str()
-        .rsplit('/')
-        .next()
-        .unwrap_or(doc.path.as_str())
 }
