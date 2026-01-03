@@ -115,12 +115,22 @@
   - 模式层只定义容器与分区，不包含业务数据或加载逻辑。
 - 业务层示例（文件树，SRP 拆分）：
   - 领域层：`src/features/sidebar/file-tree/types.ts`（节点类型定义）。
-  - 数据层：`useWorkspaceFileTree`（工作区数据获取与结构转换）。
+  - 数据层：`useWorkspaceFileTreeData`（工作区数据获取）。
+  - 映射层：`mapWorkspaceTreeToFileNodes`（结构转换为文件树节点）。
   - 状态层：`useFileTreeState`（展开/选中）。
-  - 行为层：`useFileTreeActions`（点击策略与展开/选中动作）。
-  - 视图层：`FileTreeView`（渲染与事件绑定，使用 `VirtualList` 进行虚拟化）。
-  - 样式层：`fileTree.css`（视觉与交互细节）。
-  - 组合层：`FileTreeSection`（组装数据 + 状态 + 视图）。
+  - 初始化层：`useInitialExpand`（首次展开策略）。
+  - 行为层：`useFileTreeActions` + `useTogglePulse`（点击策略与展开/选中动作、动效节奏）。
+  - 视图层：`FileTreeView` + `useFileTreeCollection`（TreeView 适配与事件桥接）。
+  - 虚拟化层：`FileTreeVirtualList`（虚拟列表渲染）。
+  - 样式层：
+    - 基础：`styles/base.css`（结构与布局）
+    - 交互：`styles/interaction.css`（hover/selected/focus）
+    - 内容：`styles/content.css`（图标/文本/缩进）
+    - 主题：`styles/theme-ark.css` / `styles/theme-dense.css` / `styles/theme-classic.css`
+  - 主题切换：`style/useFileTreeStyle.ts`（样式选择与切换）
+  - 组合层：`FileTreeSection`（组装数据 + 状态 + 视图）
+  - 入口透传：`WorkspaceSidebar` 透传 `fileTreeStyle`
+  - 测试 UI：`WorkspaceEditorPane` 提供样式切换下拉
 - IA 与侧栏 Section 对齐（SRP）：
   - IA 层：`navModel` 定义静态入口与层级结构。
   - 模式层：`SidebarSection` 只负责分区与渲染容器。
