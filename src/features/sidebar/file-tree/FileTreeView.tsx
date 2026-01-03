@@ -54,7 +54,7 @@ export const FileTreeView = (props: FileTreeViewProps) => {
       }
     });
     resizeObserver.observe(el);
-    onScroll({ target: el } as Event);
+    onScroll({ target: el } as unknown as Event);
   };
 
   onCleanup(() => {
@@ -79,7 +79,7 @@ export const FileTreeView = (props: FileTreeViewProps) => {
           <For each={virtualState()?.visibleItems ?? []} fallback={null}>
             {(id) => {
               const entry = () => entryMap().get(id);
-            return (
+              return (
                 <div class="file-tree-item">
                   <FileTreeNodeRow
                     entry={entry}

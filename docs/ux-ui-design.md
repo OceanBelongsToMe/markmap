@@ -286,6 +286,28 @@
   - `features` 承载业务内容与交互逻辑，可调用 `src/a11y/` 工具。
   - 通用状态（如布局模式）放在 `src/state/`，不归于 `layouts` 或 `ia`。
 
+#### 4.1 Ark UI 引入的 SRP 分层建议
+
+- 目标：将交互状态机、视觉样式、业务语义解耦，确保每层只有一个变化理由。
+- 分层边界：
+  - 行为层（Ark）：只负责可访问性与状态机交互，不引入业务语义与样式。
+  - 组件层（项目 API）：只暴露项目语义 props（如 `size`/`variant`），内部组合行为层并绑定样式 class。
+  - 样式层（CSS）：只定义视觉规则，依赖 `data-*` 状态钩子与主题变量。
+  - 业务层（features）：只使用项目组件，不直接依赖 Ark。
+- 推荐目录结构：
+  - `src/ui/ark/`：Ark primitives 组合层（行为层）
+  - `src/ui/components/`：项目对外组件 API
+  - `src/ui/styles/`：组件视觉样式
+  - `src/ui/theme/`：主题 tokens 与 CSS 变量
+- 变更理由映射（SRP）：
+  - Ark API 变化 → 仅修改 `src/ui/ark/`
+  - 视觉主题变化 → 仅修改 `src/ui/styles/` 或 `src/ui/theme/`
+  - 业务语义变化 → 仅修改 `src/ui/components/` 或 `src/features/`
+- Select 的层级样例：
+  - 行为层：`src/ui/ark/select/Select.tsx`（组合 Ark Select primitives）
+  - 组件层：`src/ui/components/Select.tsx`（封装 props + class）
+  - 样式层：`src/ui/styles/select.css`（基于 `data-state`/`data-disabled`）
+
 ### 5. 可用性与无障碍
 
 - 责任边界：可访问性策略（ARIA）、键盘可达性、可理解性与容错。
