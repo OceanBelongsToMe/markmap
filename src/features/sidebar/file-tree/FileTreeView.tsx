@@ -1,11 +1,17 @@
 import type { Accessor } from "solid-js";
 import { createMemo } from "solid-js";
-import { TreeView, createTreeCollection } from "@ark-ui/solid/tree-view";
+import { TreeView } from "@ark-ui/solid/tree-view";
 import { flattenFileTree } from "./flattenFileTree";
 import type { FileTreeNode } from "./types";
-import { VirtualTreeList } from "../../../ui/virtual/VirtualTreeList";
-import { FileTreeItem } from "./FileTreeItem";
-import "./fileTree.css";
+import { useFileTreeCollection } from "./useFileTreeCollection";
+import { FileTreeVirtualList } from "./FileTreeVirtualList";
+import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
+import "./styles/base.css";
+import "./styles/interaction.css";
+import "./styles/content.css";
+import "./styles/theme-ark.css";
+import "./styles/theme-dense.css";
+import "./styles/theme-classic.css";
 
 export type FileTreeViewProps = {
   nodes: Accessor<FileTreeNode[]>;
@@ -14,6 +20,7 @@ export type FileTreeViewProps = {
   ariaLabel?: string;
   onSelect?: (id: string) => void;
   onExpandedChange?: (ids: string[]) => void;
+  style?: FileTreeStyle;
 };
 
 const ROW_HEIGHT = 28;
@@ -31,59 +38,32 @@ export const FileTreeView = (props: FileTreeViewProps) => {
     return map;
   });
 
-  const collection = createMemo(() =>
-    createTreeCollection<FileTreeNode>({
-      nodeToValue: (node) => node.id,
-      nodeToString: (node) => node.name,
-      rootNode: {
-        id: "ROOT",
-        name: "",
-        type: "folder",
-        children: props.nodes()
-      }
-    })
-  );
-
-
-  const selectedValue = () =>
-    props.selectedId?.() ? [props.selectedId?.() as string] : undefined;
+  const { collection, selectedValue, handleExpandedChange, handleSelectionChange } =
+    useFileTreeCollection({
+      nodes: props.nodes,
+      selectedId: props.selectedId,
+      onSelect: props.onSelect,
+      onExpandedChange: props.onExpandedChange
+    });
 
   return (
     <TreeView.Root
       class="file-tree-root"
+      data-style={props.style ?? "ark"}
       collection={collection()}
       aria-label={props.ariaLabel}
       expandedValue={props.expandedIds()}
-      onExpandedChange={
-        props.onExpandedChange
-          ? ({ expandedValue }) => props.onExpandedChange?.(expandedValue)
-          : undefined
-      }
+      onExpandedChange={handleExpandedChange}
       selectedValue={selectedValue()}
-      onSelectionChange={
-        props.onSelect
-          ? ({ selectedValue }) => {
-              const next = selectedValue[0];
-              if (next) props.onSelect?.(next);
-            }
-          : undefined
-      }
+      onSelectionChange={handleSelectionChange}
     >
       <TreeView.Tree class="file-tree-tree">
-        <VirtualTreeList
-          class="file-tree"
-          innerClass="file-tree-inner"
-          windowClass="file-tree-window"
-          items={flatIds}
+        <FileTreeVirtualList
+          flatIds={flatIds}
+          entryMap={entryMap}
           rowHeight={ROW_HEIGHT}
-        >
-          {(id) => {
-            const entry = () => entryMap().get(id);
-            const current = entry();
-            if (!current) return null;
-            return <FileTreeItem entry={current} />;
-          }}
-        </VirtualTreeList>
+          style={props.style}
+        />
       </TreeView.Tree>
     </TreeView.Root>
   );

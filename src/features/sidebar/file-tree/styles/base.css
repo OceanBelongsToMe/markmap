@@ -1,0 +1,82 @@
+.file-tree-root {
+  --file-tree-row-height: 28px;
+  --file-tree-indent: 14px;
+  --file-tree-text: var(--color-text-primary);
+  --file-tree-hover-bg: var(--color-bg-subtle);
+  --file-tree-selected-bg: var(--color-bg-subtle);
+  --file-tree-accent: var(--color-accent-focus);
+  --file-tree-caret-opacity: 0.7;
+  --file-tree-focus-outline-width: 2px;
+  --file-tree-focus-outline-offset: 2px;
+
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.file-tree-tree {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.file-tree {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  height: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.file-tree-inner {
+  position: relative;
+  width: 100%;
+}
+
+.file-tree-window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.file-tree [data-part="item"],
+.file-tree [data-part="branch-control"] {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--file-tree-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 calc(8px + var(--depth, 0) * var(--file-tree-indent));
+  height: var(--file-tree-row-height);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  position: relative;
+}
+
+.file-tree [data-part="item"]::before,
+.file-tree [data-part="branch-control"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.file-tree [data-part="branch-content"] {
+  padding-left: var(--file-tree-indent);
+}

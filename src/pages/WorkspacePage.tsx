@@ -12,6 +12,7 @@ import { WorkspacePreviewPane } from "../ui/patterns/workspace/WorkspacePreviewP
 import { WorkspaceSidebar } from "../ui/patterns/workspace/WorkspaceSidebar";
 import { WorkspaceSplitShell } from "../ui/patterns/workspace/WorkspaceSplitShell";
 import { ToolbarShell } from "../ui/patterns/ToolbarShell";
+import { useFileTreeStyle } from "../features/sidebar/file-tree/style/useFileTreeStyle";
 
 export const WorkspacePage = () => {
   const { layoutMode } = useLayoutState();
@@ -26,6 +27,7 @@ export const WorkspacePage = () => {
     () => shellRef(),
     workspaceLayoutMins
   );
+  const { style: fileTreeStyle, setStyle: setFileTreeStyle } = useFileTreeStyle();
   const showPreview = () => layoutMode() === "split" && layoutVariant() === "three-pane";
   const showSidebar = () => layoutVariant() !== "single-pane";
 
@@ -59,11 +61,17 @@ export const WorkspacePage = () => {
                 <WorkspaceSidebar
                   collapsed={collapsed()}
                   onToggle={() => setCollapsed(!collapsed())}
+                  fileTreeStyle={fileTreeStyle()}
                 />
               ) : undefined
             }
             sidebarWidth={sidebarWidth()}
-            editor={<WorkspaceEditorPane />}
+            editor={
+              <WorkspaceEditorPane
+                fileTreeStyle={fileTreeStyle()}
+                onFileTreeStyleChange={setFileTreeStyle}
+              />
+            }
             preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
             onSizesChange={(sizes) => {
               if (!showSidebar()) return;

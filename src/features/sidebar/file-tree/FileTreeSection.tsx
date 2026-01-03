@@ -1,12 +1,14 @@
-import { createEffect } from "solid-js";
 import { useFileTreeState } from "./useFileTreeState";
 import { useFileTreeActions } from "./useFileTreeActions";
 import { useWorkspaceFileTree } from "./useWorkspaceFileTree";
 import { FileTreeView } from "./FileTreeView";
+import { useInitialExpand } from "./useInitialExpand";
+import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
 
 export type FileTreeSectionProps = {
   loadingLabel?: string;
   ariaLabel?: string;
+  style?: FileTreeStyle;
 };
 
 export const FileTreeSection = (props: FileTreeSectionProps) => {
@@ -17,12 +19,10 @@ export const FileTreeSection = (props: FileTreeSectionProps) => {
     setExpandedIds,
     setSelectedId
   });
-
-  createEffect(() => {
-    if (expandedIds().length > 0) return;
-    const roots = fileNodes();
-    if (roots.length === 0) return;
-    setExpandedIds(roots.map((node) => node.id));
+  useInitialExpand({
+    nodes: fileNodes,
+    expandedIds,
+    setExpandedIds
   });
 
   if (loading()) {
@@ -37,6 +37,7 @@ export const FileTreeSection = (props: FileTreeSectionProps) => {
       expandedIds={expandedIds}
       onSelect={handleSelectId}
       onExpandedChange={handleExpandedChange}
+      style={props.style}
     />
   );
 };

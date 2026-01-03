@@ -1,0 +1,10 @@
+.file-tree-root[data-style="classic"] {
+  --file-tree-row-height: 30px;
+  --file-tree-indent: 16px;
+  --file-tree-hover-bg: rgba(0, 0, 0, 0.08);
+  --file-tree-selected-bg: rgba(0, 0, 0, 0.14);
+  --file-tree-accent: #2f6bff;
+  --file-tree-caret-opacity: 0.8;
+  --file-tree-focus-outline-width: 2px;
+  --file-tree-focus-outline-offset: 2px;
+}

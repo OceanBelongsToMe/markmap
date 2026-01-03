@@ -6,10 +6,12 @@ import { TreeView, type TreeNode } from "../../components/TreeView";
 import { SidebarSection } from "../sidebar/SidebarSection";
 import { useI18n } from "../../../i18n/context";
 import { FileTreeSection } from "../../../features/sidebar/file-tree/FileTreeSection";
+import type { FileTreeStyle } from "../../../features/sidebar/file-tree/style/fileTreeStyleTypes";
 
 export type WorkspaceSidebarProps = {
   collapsed?: boolean;
   onToggle?: () => void;
+  fileTreeStyle?: FileTreeStyle;
 };
 
 export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
@@ -54,6 +56,7 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
             <FileTreeSection
               loadingLabel={t("loading")}
               ariaLabel={t("files")}
+              style={props.fileTreeStyle}
             />
           </SidebarSection>
         </nav>

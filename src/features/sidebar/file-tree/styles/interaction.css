@@ -1,0 +1,38 @@
+.file-tree [data-part="item"][data-selected="true"],
+.file-tree [data-part="item"][aria-selected="true"],
+.file-tree [data-part="branch-control"][data-selected="true"],
+.file-tree [data-part="branch-control"][aria-selected="true"] {
+  background: var(--file-tree-selected-bg);
+}
+
+.file-tree [data-part="item"][data-selected="true"]::before,
+.file-tree [data-part="item"][aria-selected="true"]::before,
+.file-tree [data-part="branch-control"][data-selected="true"]::before,
+.file-tree [data-part="branch-control"][aria-selected="true"]::before {
+  background: var(--file-tree-accent);
+}
+
+.file-tree [data-part="item"]:hover,
+.file-tree [data-part="branch-control"]:hover {
+  background: var(--file-tree-hover-bg);
+}
+
+.file-tree [data-part="item"]:focus-visible,
+.file-tree [data-part="branch-control"]:focus-visible {
+  outline: var(--file-tree-focus-outline-width) solid var(--file-tree-accent);
+  outline-offset: var(--file-tree-focus-outline-offset);
+}
+
+.file-tree [data-part="item"]:focus-visible::before,
+.file-tree [data-part="branch-control"]:focus-visible::before {
+  background: var(--file-tree-accent);
+}
+
+.file-tree .collapsible-chevron-icon {
+  transform: rotate(0deg);
+  transition: transform 120ms ease;
+}
+
+.file-tree [data-part="branch"][data-state="open"] .collapsible-chevron-icon {
+  transform: rotate(90deg);
+}

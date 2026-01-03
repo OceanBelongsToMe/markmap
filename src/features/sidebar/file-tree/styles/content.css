@@ -1,0 +1,41 @@
+.file-tree-caret {
+  opacity: var(--file-tree-caret-opacity);
+}
+
+.file-tree-row-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.file-tree-icon {
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.file-tree-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.6px;
+}
+
+.file-tree-icon img {
+  width: 14px;
+  height: 14px;
+  display: block;
+  object-fit: contain;
+}
+
+.file-tree-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

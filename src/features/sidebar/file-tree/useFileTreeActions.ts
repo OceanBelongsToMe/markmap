@@ -1,6 +1,6 @@
-import { createSignal, onCleanup } from "solid-js";
 import type { Accessor, Setter } from "solid-js";
 import type { FileTreeNode } from "./types";
+import { useTogglePulse } from "./useTogglePulse";
 
 export type FileTreeActionsArgs = {
   expandedIds: Accessor<string[]>;
@@ -9,17 +9,7 @@ export type FileTreeActionsArgs = {
 };
 
 export const useFileTreeActions = (args: FileTreeActionsArgs) => {
-  const [lastToggledId, setLastToggledId] = createSignal<string | null>(null);
-  let clearTimer: number | undefined;
-
-  const markToggled = (id: string | null) => {
-    if (!id) return;
-    setLastToggledId(id);
-    if (clearTimer) {
-      window.clearTimeout(clearTimer);
-    }
-    clearTimer = window.setTimeout(() => setLastToggledId(null), 220);
-  };
+  const { lastToggledId, markToggled } = useTogglePulse();
 
   const toggleExpanded = (id: string) => {
     args.setExpandedIds((current) =>
@@ -27,12 +17,6 @@ export const useFileTreeActions = (args: FileTreeActionsArgs) => {
     );
     markToggled(id);
   };
-
-  onCleanup(() => {
-    if (clearTimer) {
-      window.clearTimeout(clearTimer);
-    }
-  });
 
   const handleNodeClick = (node: FileTreeNode) => {
     if (node.type === "folder") {

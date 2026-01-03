@@ -1,3 +1,5 @@
+import type { JSX } from "solid-js";
+
 export type FileTreeNode = {
   id: string;
   name: string;
@@ -8,4 +10,5 @@ export type FileTreeNode = {
 
 export type FileTreeIcon =
   | { kind: "emoji"; value: string }
-  | { kind: "image"; src: string; alt?: string };
+  | { kind: "image"; src: string; alt?: string }
+  | { kind: "lucide"; node: JSX.Element };
