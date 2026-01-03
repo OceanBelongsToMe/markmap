@@ -16,6 +16,9 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
   const { t } = useI18n();
   const [navCollapsed, setNavCollapsed] = createSignal(false);
   const [filesCollapsed, setFilesCollapsed] = createSignal(false);
+  const [navExpandedIds, setNavExpandedIds] = createSignal(
+    navModel.map((item) => item.id)
+  );
   const nodes = createMemo<TreeNode[]>(() =>
     navModel.map((item) => ({
       id: item.id,
@@ -35,7 +38,12 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
             collapsed={navCollapsed()}
             onToggle={() => setNavCollapsed(!navCollapsed())}
           >
-            <TreeView nodes={nodes()} />
+            <TreeView
+              nodes={nodes()}
+              ariaLabel={t("navigation")}
+              expandedIds={navExpandedIds()}
+              onExpandedChange={setNavExpandedIds}
+            />
           </SidebarSection>
           <SidebarSection
             title={t("files")}
@@ -43,7 +51,10 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
             onToggle={() => setFilesCollapsed(!filesCollapsed())}
             class="is-grow"
           >
-            <FileTreeSection loadingLabel={t("loading")} />
+            <FileTreeSection
+              loadingLabel={t("loading")}
+              ariaLabel={t("files")}
+            />
           </SidebarSection>
         </nav>
       </SidebarShell>

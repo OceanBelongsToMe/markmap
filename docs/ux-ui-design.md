@@ -308,6 +308,68 @@
   - 组件层：`src/ui/components/Select.tsx`（封装 props + class）
   - 样式层：`src/ui/styles/select.css`（基于 `data-state`/`data-disabled`）
 
+#### 4.2 Ark 组件迁移清单与优先级（建议）
+
+- 原则：先迁移交互复杂度高、可访问性风险高、复用频率高的组件。
+- P0（立即收益）：
+  - TreeView（当前自研递归渲染，交互与可访问性风险高）
+  - Dialog/Popover/Tooltip（焦点管理与可访问性边界复杂）
+  - Menu/Select/Combobox（键盘交互复杂，状态组合多）
+- P1（中期收益）：
+  - Tabs/Accordion/Splitter（结构性强，适合统一状态）
+  - Switch/Checkbox/RadioGroup（表单一致性）
+  - Slider/NumberInput/Editable（输入与状态一致性）
+- P2（可选增强）：
+  - Pagination/Carousel/Rating/ColorPicker/DatePicker（依赖业务价值再评估）
+  - QRCode/Marquee 等展示组件（需求驱动）
+- 项目映射建议（先对齐现有目录）：
+  - `src/ui/components/TreeView.tsx` → Ark Tree View（P0）
+  - `src/ui/components/Select.tsx` → Ark Select（P0）
+  - `src/ui/components/Toolbar.tsx` → 保留自研（P2，结构稳定）
+  - `src/ui/components/TextInput.tsx` → 保留自研（P1 之后再评估）
+  - `src/ui/components/Button.tsx` → 保留自研（P2，样式优先）
+  - `src/ui/components/useCollapsible.ts` → 可对接 Ark Collapsible（P1）
+
+#### 4.3 TreeView 组件分层草图（SRP）
+
+- 目标：将树形交互（展开/选中/焦点/键盘）与业务语义、视觉样式分离。
+- 行为层（Ark）：`src/ui/ark/tree-view/TreeView.tsx`
+  - 只组合 Ark Tree View primitives，暴露稳定的 slots 与状态钩子。
+  - 不引入业务语义（如文件/标签）、不包含样式。
+  - 输入最小化：`items`、`selectedIds`、`expandedIds`、`on*` 事件。
+- 组件层（项目 API）：`src/ui/components/TreeView.tsx`
+  - 对外暴露项目语义 props（如 `variant`/`density`/`onNodeAction`）。
+  - 内部组合行为层，映射业务结构到 Ark item 结构。
+  - 仅绑定 class 与 slot props，不直接写样式规则。
+- 样式层（CSS）：`src/ui/styles/tree-view.css`
+  - 只定义视觉表现，依赖 `data-state`/`data-selected`/`data-focused`。
+  - 颜色与间距只来自 `src/ui/theme/theme.css` 变量。
+- 业务层（features）：`src/features/sidebar/file-tree/*`
+  - 只依赖 `src/ui/components/TreeView.tsx`，不直接触碰 Ark。
+
+示意结构（非代码）：
+```
+src/ui/ark/tree-view/TreeView.tsx
+  - <TreeView.Root>
+      <TreeView.Tree>
+        <TreeView.Item>
+          <TreeView.ItemText />
+          <TreeView.BranchIndicator />
+        </TreeView.Item>
+      </TreeView.Tree>
+    </TreeView.Root>
+
+src/ui/components/TreeView.tsx
+  - props: nodes, selectedId(s), onSelect, variant, density
+  - map nodes -> ark items
+  - class: "ui-tree-view" + variant/density modifiers
+
+src/ui/styles/tree-view.css
+  - .ui-tree-view [data-selected]
+  - .ui-tree-view [data-focused]
+  - .ui-tree-view [data-branch]
+```
+
 ### 5. 可用性与无障碍
 
 - 责任边界：可访问性策略（ARIA）、键盘可达性、可理解性与容错。

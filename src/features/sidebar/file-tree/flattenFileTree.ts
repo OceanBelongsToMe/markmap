@@ -5,6 +5,7 @@ export type FlatFileTreeNode = {
   depth: number;
   isFolder: boolean;
   isExpanded: boolean;
+  indexPath: number[];
 };
 
 export const flattenFileTree = (
@@ -14,17 +15,18 @@ export const flattenFileTree = (
   const result: FlatFileTreeNode[] = [];
   const expanded = new Set(expandedIds);
 
-  const walk = (items: FileTreeNode[], depth: number) => {
-    for (const node of items) {
+  const walk = (items: FileTreeNode[], depth: number, path: number[]) => {
+    items.forEach((node, index) => {
+      const indexPath = [...path, index];
       const isFolder = node.type === "folder";
       const isExpanded = isFolder && expanded.has(node.id);
-      result.push({ node, depth, isFolder, isExpanded });
+      result.push({ node, depth, isFolder, isExpanded, indexPath });
       if (isExpanded && node.children?.length) {
-        walk(node.children, depth + 1);
+        walk(node.children, depth + 1, indexPath);
       }
-    }
+    });
   };
 
-  walk(nodes, 0);
+  walk(nodes, 0, []);
   return result;
 };

@@ -1,0 +1,68 @@
+.ui-tree-view {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+
+.ui-tree-view [data-part="tree"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ui-tree-view [data-part="item"],
+.ui-tree-view [data-part="branch"] {
+  margin: 0;
+  padding: 0;
+}
+
+.ui-tree-view [data-part="item"],
+.ui-tree-view [data-part="branch-control"] {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+  width: 100%;
+}
+
+.ui-tree-view--compact [data-part="item"],
+.ui-tree-view--compact [data-part="branch-control"] {
+  padding: 2px var(--space-2);
+}
+
+.ui-tree-view--comfortable [data-part="item"],
+.ui-tree-view--comfortable [data-part="branch-control"] {
+  padding: var(--space-2) var(--space-2);
+}
+
+.ui-tree-view [data-part="item"]:hover,
+.ui-tree-view [data-part="branch-control"]:hover {
+  background: var(--color-bg-subtle);
+}
+
+.ui-tree-view [data-part="item"]:focus-visible,
+.ui-tree-view [data-part="branch-control"]:focus-visible {
+  outline: 2px solid var(--color-accent-focus);
+  outline-offset: 2px;
+}
+
+.ui-tree-view [data-part="item"]:focus-visible::before,
+.ui-tree-view [data-part="branch-control"]:focus-visible::before {
+  background: var(--color-accent-focus);
+}
+
+.ui-tree-view [data-part="item"][data-selected="true"],
+.ui-tree-view [data-part="item"][aria-selected="true"],
+.ui-tree-view [data-part="branch-control"][data-selected="true"],
+.ui-tree-view [data-part="branch-control"][aria-selected="true"] {
+  background: var(--color-accent-subtle);
+  color: var(--color-text-primary);
+}
+
+.ui-tree-view [data-part="branch-content"] {
+  padding-left: var(--space-4);
+}

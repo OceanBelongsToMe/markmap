@@ -4,6 +4,7 @@ import { routes } from "./routes";
 import { StableList } from "./ui/components/StableList";
 import "./App.css";
 import "./ui/components/collapsible.css";
+import "./ui/styles/tree-view.css";
 import "./ui/typography/typography.css";
 import "./ui/theme/theme.css";
 import "./layouts/sidebar.css";
