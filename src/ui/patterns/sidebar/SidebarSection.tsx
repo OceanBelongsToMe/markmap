@@ -1,6 +1,7 @@
 import type { JSX } from "solid-js";
-import { ChevronRight } from "lucide-solid";
 import { useCollapsible } from "../../components/useCollapsible";
+import { StateIcon } from "../../icons/state/StateIcon";
+import { resolveCollapsibleState } from "../../icons/state/resolveCollapsibleState";
 
 export type SidebarSectionProps = {
   title?: string;
@@ -39,7 +40,10 @@ export const SidebarSection = (props: SidebarSectionProps) => {
               class="sidebar-section-chevron collapsible-chevron"
               aria-hidden="true"
             >
-              <ChevronRight class="collapsible-chevron-icon" />
+              <StateIcon
+                context="collapsible"
+                state={resolveCollapsibleState(isOpen())}
+              />
             </span>
             <span class="sidebar-section-title">{props.title}</span>
           </button>

@@ -122,6 +122,11 @@
   - 行为层：`useFileTreeActions` + `useTogglePulse`（点击策略与展开/选中动作、动效节奏）。
   - 视图层：`FileTreeView` + `useFileTreeCollection`（TreeView 适配与事件桥接）。
   - 虚拟化层：`FileTreeVirtualList`（虚拟列表渲染）。
+  - 行级交互与布局（SRP）：
+    - 交互触发：`FileTreeBranchControl`（统一触发入口，内部使用 `BranchTrigger` 确保首次点击稳定）
+    - 布局结构：`FileTreeBranchContent`（leading/content/trailing 分区）
+    - 状态映射：`resolveBranchState`（open/closed 状态归一）
+    - 图标渲染：`StateIcon`（统一状态图标组件，主题感知）
   - 样式层：
     - 基础：`styles/base.css`（结构与布局）
     - 交互：`styles/interaction.css`（hover/selected/focus）
@@ -131,6 +136,27 @@
   - 组合层：`FileTreeSection`（组装数据 + 状态 + 视图）
   - 入口透传：`WorkspaceSidebar` 透传 `fileTreeStyle`
   - 测试 UI：`WorkspaceEditorPane` 提供样式切换下拉
+
+- 折叠触发与布局策略（文件树）：
+  - 交互触发：使用 `TreeView.BranchTrigger` 作为唯一触发入口，保证点击图标/文本/空白均可展开，且首次点击稳定。
+  - 箭头位置：通过 `FileTreeBranchContent` 将箭头放在行末，并保留固定右侧内边距。
+  - 缩进策略：内容区域单独处理 `padding-left`，箭头列不随 depth 移动。
+  - 视觉一致性：折叠/展开图标尺寸固定，避免状态切换带来抖动。
+
+- FileTreeBranch 交互流程（Mermaid）：
+```mermaid
+flowchart TD
+  A[FileTreeItem: isFolder?] -->|true| B[TreeView.Branch]
+  B --> C[FileTreeBranchControl]
+  C --> D[TreeView.BranchTrigger]
+  D --> E[Click -> expanded toggle]
+  E --> F[TreeView.NodeContext.expanded]
+  F --> G[resolveBranchState -> open/closed]
+  G --> H[StateIcon render]
+  F --> I[FileTreeRow render]
+  H --> J[FileTreeBranchContent layout]
+  I --> J
+```
 - IA 与侧栏 Section 对齐（SRP）：
   - IA 层：`navModel` 定义静态入口与层级结构。
   - 模式层：`SidebarSection` 只负责分区与渲染容器。

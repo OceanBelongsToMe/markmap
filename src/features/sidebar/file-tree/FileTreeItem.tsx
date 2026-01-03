@@ -1,8 +1,11 @@
 import { TreeView } from "@ark-ui/solid/tree-view";
-import { ChevronRight } from "lucide-solid";
 import { FileTreeRow } from "./FileTreeRow";
 import type { FlatFileTreeNode } from "./flattenFileTree";
 import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
+import { StateIcon } from "../../../ui/icons/state/StateIcon";
+import { FileTreeBranchControl } from "./FileTreeBranchControl";
+import { FileTreeBranchContent } from "./FileTreeBranchContent";
+import { resolveBranchState } from "./resolveBranchState";
 
 export type FileTreeItemProps = {
   entry: FlatFileTreeNode;
@@ -10,23 +13,35 @@ export type FileTreeItemProps = {
 };
 
 export const FileTreeItem = (props: FileTreeItemProps) => {
-  const { node, depth, isFolder, indexPath } = props.entry;
+  const { node, depth, isFolder, isExpanded, indexPath } = props.entry;
   return (
     <TreeView.NodeProvider node={node} indexPath={indexPath}>
       {isFolder ? (
         <TreeView.Branch>
-          <TreeView.BranchControl style={{ "--depth": `${depth}` }}>
-          <TreeView.BranchText>
-            <FileTreeRow node={node} style={props.style} />
-          </TreeView.BranchText>
-          <TreeView.BranchIndicator
-            class="file-tree-caret collapsible-chevron"
-            aria-hidden="true"
-          >
-            <ChevronRight class="collapsible-chevron-icon" />
-          </TreeView.BranchIndicator>
-        </TreeView.BranchControl>
-      </TreeView.Branch>
+          <TreeView.NodeContext>
+            {(ctx) => (
+              <FileTreeBranchControl depth={depth}>
+                <FileTreeBranchContent
+                  content={
+                    <FileTreeRow
+                      node={node}
+                      style={props.style}
+                      isExpanded={ctx().expanded}
+                    />
+                  }
+                  trailing={
+                    <span class="file-tree-branch-caret collapsible-chevron">
+                      <StateIcon
+                        context="collapsible"
+                        state={resolveBranchState(ctx().expanded)}
+                      />
+                    </span>
+                  }
+                />
+              </FileTreeBranchControl>
+            )}
+          </TreeView.NodeContext>
+        </TreeView.Branch>
       ) : (
         <TreeView.Item style={{ "--depth": `${depth}` }}>
           <TreeView.ItemText>

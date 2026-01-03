@@ -8,6 +8,7 @@
   gap: 6px;
   min-width: 0;
   flex: 1;
+  width: 100%;
 }
 
 .file-tree-icon {
@@ -27,6 +28,16 @@
   stroke-width: 1.6px;
 }
 
+.file-tree-emoji {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  line-height: 18px;
+  font-size: 15px;
+}
+
 .file-tree-caret svg {
   width: 18px;
   height: 18px;
@@ -36,6 +47,49 @@
 .file-tree {
   --collapsible-icon-size: 18px;
 }
+
+.file-tree-branch-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--collapsible-icon-size, 18px);
+  height: var(--file-tree-row-height, 28px);
+}
+
+.file-tree-branch-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+  padding-left: calc(8px + var(--depth, 0) * var(--file-tree-indent));
+}
+
+.file-tree-branch-leading,
+.file-tree-branch-trailing {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.file-tree-branch-trailing {
+  margin-left: auto;
+}
+
+.file-tree-branch-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.file-tree [data-part="branch-control"],
+.file-tree [data-part="branch-trigger"] {
+  padding-right: var(--file-tree-right-padding, 8px);
+  padding-left: 0;
+  gap: 6px;
+}
+
 
 .file-tree-icon img {
   width: 14px;
@@ -48,4 +102,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.file-tree-row-suffix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-left: auto;
+  margin-right: 4px;
+  width: var(--collapsible-icon-size, 18px);
 }

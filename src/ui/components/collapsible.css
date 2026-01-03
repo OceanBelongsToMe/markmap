@@ -25,14 +25,4 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
-  transition: transform 160ms ease;
-  transform-origin: 50% 50%;
-}
-
-.collapsible-trigger[data-collapsed="true"] .collapsible-chevron-icon {
-  transform: rotate(0deg);
-}
-
-.collapsible-trigger[data-collapsed="false"] .collapsible-chevron-icon {
-  transform: rotate(90deg);
 }

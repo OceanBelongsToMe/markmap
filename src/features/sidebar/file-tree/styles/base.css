@@ -1,6 +1,7 @@
 .file-tree-root {
   --file-tree-row-height: 28px;
   --file-tree-indent: 14px;
+  --file-tree-right-padding: 8px;
   --file-tree-text: var(--color-text-primary);
   --file-tree-hover-bg: var(--color-bg-subtle);
   --file-tree-selected-bg: var(--color-bg-subtle);
@@ -48,7 +49,8 @@
 }
 
 .file-tree [data-part="item"],
-.file-tree [data-part="branch-control"] {
+.file-tree [data-part="branch-control"],
+.file-tree [data-part="branch-trigger"] {
   width: 100%;
   border: 0;
   background: transparent;
@@ -56,7 +58,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 8px 0 calc(8px + var(--depth, 0) * var(--file-tree-indent));
+  padding: 0 var(--file-tree-right-padding) 0
+    calc(8px + var(--depth, 0) * var(--file-tree-indent));
   height: var(--file-tree-row-height);
   border-radius: 6px;
   cursor: pointer;
@@ -66,7 +69,8 @@
 }
 
 .file-tree [data-part="item"]::before,
-.file-tree [data-part="branch-control"]::before {
+.file-tree [data-part="branch-control"]::before,
+.file-tree [data-part="branch-trigger"]::before {
   content: "";
   position: absolute;
   left: 0;
