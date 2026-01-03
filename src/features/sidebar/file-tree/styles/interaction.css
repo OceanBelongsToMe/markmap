@@ -23,6 +23,12 @@
   outline-offset: var(--file-tree-focus-outline-offset);
 }
 
+.file-tree [data-part="item"],
+.file-tree [data-part="branch-control"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .file-tree [data-part="item"]:focus-visible::before,
 .file-tree [data-part="branch-control"]:focus-visible::before {
   background: var(--file-tree-accent);
