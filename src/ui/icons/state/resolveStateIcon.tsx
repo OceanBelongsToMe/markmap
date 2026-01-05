@@ -1,4 +1,8 @@
-import { ChevronDown, ChevronRight, FileText, Folder, FolderOpen } from "lucide-solid";
+import ChevronDown from "lucide-solid/icons/chevron-down";
+import ChevronRight from "lucide-solid/icons/chevron-right";
+import FileText from "lucide-solid/icons/file-text";
+import Folder from "lucide-solid/icons/folder";
+import FolderOpen from "lucide-solid/icons/folder-open";
 import type { JSX } from "solid-js";
 import type { StateIconContext, StateIconState, StateIconTheme } from "./types";
 

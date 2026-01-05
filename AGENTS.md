@@ -35,5 +35,5 @@ Violating a principle is acceptable if intentional and justified.
 ## Agent Expectations
 
 - Cite concrete evidence
-- Prefer minimal, reversible refactors
 - Explain trade-offs
+- Generate Action Checklist: For any complex task, derive a prioritized execution checklist based on this document's principles before implementation.
