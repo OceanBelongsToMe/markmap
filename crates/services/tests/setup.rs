@@ -7,11 +7,11 @@ use tokio::runtime::Builder;
 
 use common::time::{millis_to_timestamp, timestamp_to_millis, Clock, UtcTimestamp};
 use knowlattice_services::builder::{Services, ServicesBuilder};
-use knowlattice_storage::factory::{build_sqlite_repositories, RepositoryProvider};
+use knowlattice_storage::factory::{build_sqlite_repositories, Repositories};
 
 pub struct TestContext {
     pub services: Services,
-    pub repos: RepositoryProvider,
+    pub repos: Repositories,
 }
 
 pub struct FixedClock {

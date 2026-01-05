@@ -3,20 +3,25 @@ use common::types::AppResult;
 use crate::error::map_sqlx_error;
 use crate::mapper::workspace_state::{WorkspaceStateMapper, WorkspaceStateRecord};
 use crate::repo::WorkspaceStateRepository;
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::workspace_state as workspace_state_sql;
+
+pub(crate) struct SqliteWorkspaceStateRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteWorkspaceStateRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl WorkspaceStateRepository for SqliteRepositories {
+impl WorkspaceStateRepository for SqliteWorkspaceStateRepo {
     async fn get(&self) -> AppResult<Option<crate::repo::WorkspaceState>> {
         common::log_info!("workspace_state repo get");
 
-        let record = sqlx::query_as::<_, WorkspaceStateRecord>(
-            r#"
-            SELECT current_workspace_id, updated_at
-            FROM workspace_state
-            WHERE id = 1
-            "#,
-        )
+        let record = sqlx::query_as::<_, WorkspaceStateRecord>(workspace_state_sql::GET)
         .fetch_optional(self.pool.pool())
         .await
         .map_err(|err| {
@@ -33,15 +38,7 @@ impl WorkspaceStateRepository for SqliteRepositories {
         common::log_info!("workspace_state repo save");
 
         let params = WorkspaceStateMapper::to_params(state);
-        sqlx::query(
-            r#"
-            INSERT INTO workspace_state (id, current_workspace_id, updated_at)
-            VALUES (1, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                current_workspace_id = excluded.current_workspace_id,
-                updated_at = excluded.updated_at
-            "#,
-        )
+        sqlx::query(workspace_state_sql::UPSERT)
         .bind(params.current_workspace_id)
         .bind(params.updated_at)
         .execute(self.pool.pool())

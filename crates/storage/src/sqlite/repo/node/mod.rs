@@ -10,3 +10,16 @@ pub mod node_task;
 pub mod node_text;
 pub mod node_type;
 pub mod node_wiki;
+
+pub(crate) use node_base::SqliteNodeBaseRepo;
+pub(crate) use node_code_block::SqliteNodeCodeBlockRepo;
+pub(crate) use node_heading::SqliteNodeHeadingRepo;
+pub(crate) use node_image::SqliteNodeImageRepo;
+pub(crate) use node_link::SqliteNodeLinkRepo;
+pub(crate) use node_list::SqliteNodeListRepo;
+pub(crate) use node_range::SqliteNodeRangeRepo;
+pub(crate) use node_table::SqliteNodeTableRepo;
+pub(crate) use node_task::SqliteNodeTaskRepo;
+pub(crate) use node_text::SqliteNodeTextRepo;
+pub(crate) use node_type::SqliteNodeTypeRepo;
+pub(crate) use node_wiki::SqliteNodeWikiRepo;

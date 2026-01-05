@@ -12,8 +12,8 @@ async fn folder_save_get_roundtrip() {
     init_tracing();
     let _guard = enter_test_span();
     let repos = setup_repos().await;
-    let workspace_repo: Arc<dyn WorkspaceRepository> = repos.expect_repo();
-    let folder_repo: Arc<dyn FolderRepository> = repos.expect_repo();
+    let workspace_repo = Arc::clone(&repos.workspace);
+    let folder_repo = Arc::clone(&repos.folder);
     let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
 
     let workspace =
@@ -37,8 +37,8 @@ async fn folder_list_and_delete() {
     let _guard = enter_test_span();
 
     let repos = setup_repos().await;
-    let workspace_repo: Arc<dyn WorkspaceRepository> = repos.expect_repo();
-    let folder_repo: Arc<dyn FolderRepository> = repos.expect_repo();
+    let workspace_repo = Arc::clone(&repos.workspace);
+    let folder_repo = Arc::clone(&repos.folder);
     let t1 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
     let t2 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 1).unwrap();
 

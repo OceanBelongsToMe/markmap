@@ -16,8 +16,8 @@ pub struct SwitchWorkspace {
 
 impl SwitchWorkspace {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
-        let state_repo: Arc<dyn WorkspaceStateRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
+        let state_repo = Arc::clone(&ctx.repos.workspace_state);
         registry.register(Arc::new(SwitchWorkspace {
             workspace_repo,
             state_repo,

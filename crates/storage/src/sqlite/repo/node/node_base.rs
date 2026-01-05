@@ -5,22 +5,26 @@ use knowlattice_core::model::{DocumentId, NodeId};
 use crate::error::map_sqlx_error;
 use crate::mapper::node::node_base::{NodeBaseMapper, NodeBaseRecord};
 use crate::repo::node::NodeBaseRepository;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::node_base as node_base_sql;
 use knowlattice_core::model::node_base::NodeBase;
-use crate::sqlite::repo::SqliteRepositories;
+
+pub(crate) struct SqliteNodeBaseRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteNodeBaseRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl NodeBaseRepository for SqliteRepositories {
+impl NodeBaseRepository for SqliteNodeBaseRepo {
     async fn list_by_doc(&self, doc_id: DocumentId) -> AppResult<Vec<NodeBase>> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node repo list_by_doc");
 
-        let records = sqlx::query_as::<_, NodeBaseRecord>(
-            r#"
-            SELECT id, doc_id, parent_id, node_type_id, created_at, updated_at
-            FROM nodes
-            WHERE doc_id = ?
-            ORDER BY created_at ASC
-            "#,
-        )
+        let records = sqlx::query_as::<_, NodeBaseRecord>(node_base_sql::LIST_BY_DOC)
         .bind(uuid_to_blob(doc_id.as_uuid()))
         .fetch_all(self.pool.pool())
         .await
@@ -38,13 +42,7 @@ impl NodeBaseRepository for SqliteRepositories {
     async fn get(&self, id: NodeId) -> AppResult<Option<NodeBase>> {
         common::log_info!(node_id = %id.as_uuid(), "node repo get");
 
-        let record = sqlx::query_as::<_, NodeBaseRecord>(
-            r#"
-            SELECT id, doc_id, parent_id, node_type_id, created_at, updated_at
-            FROM nodes
-            WHERE id = ?
-            "#,
-        )
+        let record = sqlx::query_as::<_, NodeBaseRecord>(node_base_sql::GET)
         .bind(uuid_to_blob(id.as_uuid()))
         .fetch_optional(self.pool.pool())
         .await
@@ -70,18 +68,7 @@ impl NodeBaseRepository for SqliteRepositories {
 
         for node in nodes {
             let params = NodeBaseMapper::to_params(node);
-            sqlx::query(
-                r#"
-                INSERT INTO nodes (id, doc_id, parent_id, node_type_id, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT(id) DO UPDATE SET
-                    doc_id = excluded.doc_id,
-                    parent_id = excluded.parent_id,
-                    node_type_id = excluded.node_type_id,
-                    created_at = excluded.created_at,
-                    updated_at = excluded.updated_at
-                "#,
-            )
+            sqlx::query(node_base_sql::UPSERT)
             .bind(params.id)
             .bind(params.doc_id)
             .bind(params.parent_id)
@@ -107,7 +94,7 @@ impl NodeBaseRepository for SqliteRepositories {
     async fn delete_by_doc(&self, doc_id: DocumentId) -> AppResult<()> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node repo delete_by_doc");
 
-        sqlx::query("DELETE FROM nodes WHERE doc_id = ?")
+        sqlx::query(node_base_sql::DELETE_BY_DOC)
             .bind(uuid_to_blob(doc_id.as_uuid()))
             .execute(self.pool.pool())
             .await

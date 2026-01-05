@@ -9,7 +9,7 @@ async fn node_type_list_and_get() {
     init_tracing();
     let _guard = enter_test_span();
     let repos = setup_repos().await;
-    let type_repo: Arc<dyn NodeTypeRepository> = repos.expect_repo();
+    let type_repo = Arc::clone(&repos.node.r#type);
 
     let listed = type_repo.list().await.unwrap();
     assert!(listed.len() >= 9);

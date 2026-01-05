@@ -14,7 +14,8 @@ async fn workspace_save_get_roundtrip() {
     init_tracing();
     let _guard = enter_test_span();
 
-    let repo: Arc<dyn WorkspaceRepository> = setup_repos().await.expect_repo();
+    let repos = setup_repos().await;
+    let repo = Arc::clone(&repos.workspace);
     let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
 
     let mut workspace = Workspace::new(WorkspaceId::new(), "Main", now, now).unwrap();
@@ -38,7 +39,8 @@ async fn workspace_list_and_delete() {
     init_tracing();
     let _guard = enter_test_span();
 
-    let repo: Arc<dyn WorkspaceRepository> = setup_repos().await.expect_repo();
+    let repos = setup_repos().await;
+    let repo = Arc::clone(&repos.workspace);
     let t1 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
     let t2 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 1).unwrap();
 

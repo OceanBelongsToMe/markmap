@@ -27,17 +27,17 @@ pub struct ApplyIndex {
 
 impl ApplyIndex {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let node_repo: Arc<dyn NodeBaseRepository> = ctx.repos.expect_repo();
-        let node_text_repo: Arc<dyn NodeTextRepository> = ctx.repos.expect_repo();
-        let node_range_repo: Arc<dyn NodeRangeRepository> = ctx.repos.expect_repo();
-        let node_heading_repo: Arc<dyn NodeHeadingRepository> = ctx.repos.expect_repo();
-        let node_list_repo: Arc<dyn NodeListRepository> = ctx.repos.expect_repo();
-        let node_code_block_repo: Arc<dyn NodeCodeBlockRepository> = ctx.repos.expect_repo();
-        let node_table_repo: Arc<dyn NodeTableRepository> = ctx.repos.expect_repo();
-        let node_image_repo: Arc<dyn NodeImageRepository> = ctx.repos.expect_repo();
-        let node_link_repo: Arc<dyn NodeLinkRepository> = ctx.repos.expect_repo();
-        let node_task_repo: Arc<dyn NodeTaskRepository> = ctx.repos.expect_repo();
-        let node_wiki_repo: Arc<dyn NodeWikiRepository> = ctx.repos.expect_repo();
+        let node_repo = Arc::clone(&ctx.repos.node.base);
+        let node_text_repo = Arc::clone(&ctx.repos.node.text);
+        let node_range_repo = Arc::clone(&ctx.repos.node.range);
+        let node_heading_repo = Arc::clone(&ctx.repos.node.heading);
+        let node_list_repo = Arc::clone(&ctx.repos.node.list);
+        let node_code_block_repo = Arc::clone(&ctx.repos.node.code_block);
+        let node_table_repo = Arc::clone(&ctx.repos.node.table);
+        let node_image_repo = Arc::clone(&ctx.repos.node.image);
+        let node_link_repo = Arc::clone(&ctx.repos.node.link);
+        let node_task_repo = Arc::clone(&ctx.repos.node.task);
+        let node_wiki_repo = Arc::clone(&ctx.repos.node.wiki);
         registry.register(Arc::new(ApplyIndex {
             node_repo,
             node_text_repo,

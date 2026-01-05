@@ -5,7 +5,7 @@ use std::sync::Arc;
 use common::error::{AppError, ErrorCode};
 use common::time::{Clock, SystemClock};
 use common::types::AppResult;
-use knowlattice_storage::factory::{build_sqlite_repositories, RepositoryProvider};
+use knowlattice_storage::factory::{build_sqlite_repositories, Repositories};
 use sqlx::SqlitePool as SqlxPool;
 
 use crate::index::queue::IndexQueue;
@@ -39,7 +39,7 @@ pub struct ServicesBuilder {
 }
 
 pub struct ServiceContext {
-    pub repos: RepositoryProvider,
+    pub repos: Repositories,
     pub clock: Arc<dyn Clock>,
     pub coordinator: Arc<IndexCoordinator>,
     pub index_queue: Arc<IndexQueue>,

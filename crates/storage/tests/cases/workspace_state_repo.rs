@@ -14,8 +14,8 @@ async fn workspace_state_save_and_get() {
     let _guard = enter_test_span();
 
     let repos = setup_repos().await;
-    let workspace_repo: Arc<dyn WorkspaceRepository> = repos.expect_repo();
-    let state_repo: Arc<dyn WorkspaceStateRepository> = repos.expect_repo();
+    let workspace_repo = Arc::clone(&repos.workspace);
+    let state_repo = Arc::clone(&repos.workspace_state);
 
     let now = Utc.with_ymd_and_hms(2024, 2, 1, 0, 0, 0).unwrap();
     let workspace = Workspace::new(WorkspaceId::new(), "Main", now, now).unwrap();

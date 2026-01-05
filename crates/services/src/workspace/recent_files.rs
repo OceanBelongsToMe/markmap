@@ -21,10 +21,10 @@ pub struct RecordRecentFile {
 
 impl RecordRecentFile {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
-        let folder_repo: Arc<dyn FolderRepository> = ctx.repos.expect_repo();
-        let recent_repo: Arc<dyn WorkspaceRecentFilesRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
+        let document_repo = Arc::clone(&ctx.repos.document);
+        let folder_repo = Arc::clone(&ctx.repos.folder);
+        let recent_repo = Arc::clone(&ctx.repos.workspace_recent_files);
         registry.register(Arc::new(RecordRecentFile {
             workspace_repo,
             document_repo,
@@ -82,7 +82,7 @@ pub struct ListRecentFiles {
 
 impl ListRecentFiles {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let recent_repo: Arc<dyn WorkspaceRecentFilesRepository> = ctx.repos.expect_repo();
+        let recent_repo = Arc::clone(&ctx.repos.workspace_recent_files);
         registry.register(Arc::new(ListRecentFiles { recent_repo }));
         Ok(())
     }

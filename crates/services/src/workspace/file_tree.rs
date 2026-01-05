@@ -37,8 +37,8 @@ pub struct ListWorkspaceFileTree {
 
 impl ListWorkspaceFileTree {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let folder_repo: Arc<dyn FolderRepository> = ctx.repos.expect_repo();
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
+        let folder_repo = Arc::clone(&ctx.repos.folder);
+        let document_repo = Arc::clone(&ctx.repos.document);
         registry.register(Arc::new(ListWorkspaceFileTree {
             folder_repo,
             document_repo,

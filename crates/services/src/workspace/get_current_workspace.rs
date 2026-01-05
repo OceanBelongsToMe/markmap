@@ -13,8 +13,8 @@ pub struct GetCurrentWorkspace {
 
 impl GetCurrentWorkspace {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let state_repo: Arc<dyn WorkspaceStateRepository> = ctx.repos.expect_repo();
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
+        let state_repo = Arc::clone(&ctx.repos.workspace_state);
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
         registry.register(Arc::new(GetCurrentWorkspace {
             state_repo,
             workspace_repo,

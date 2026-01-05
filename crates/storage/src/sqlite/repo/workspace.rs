@@ -5,20 +5,26 @@ use knowlattice_core::model::WorkspaceId;
 use crate::error::map_sqlx_error;
 use crate::mapper::workspace::{WorkspaceMapper, WorkspaceRecord};
 use crate::repo::WorkspaceRepository;
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::workspace as workspace_sql;
+
+pub(crate) struct SqliteWorkspaceRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteWorkspaceRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl WorkspaceRepository for SqliteRepositories {
+impl WorkspaceRepository for SqliteWorkspaceRepo {
     async fn list(&self) -> AppResult<Vec<Workspace>> {
         common::log_info!("workspace repo list");
 
-        let records = sqlx::query_as::<_, WorkspaceRecord>(
-            r#"
-            SELECT id, name, config_profile_id, config_override_json, created_at, updated_at
-            FROM workspaces
-            ORDER BY created_at ASC
-            "#,
-        )
+        let records =
+            sqlx::query_as::<_, WorkspaceRecord>(workspace_sql::LIST)
         .fetch_all(self.pool.pool())
         .await
         .map_err(|err| {
@@ -36,13 +42,7 @@ impl WorkspaceRepository for SqliteRepositories {
         common::log_info!(workspace_id = %id.as_uuid(), "workspace repo get");
 
         let pool = self.pool.pool();
-        let record = sqlx::query_as::<_, WorkspaceRecord>(
-            r#"
-            SELECT id, name, config_profile_id, config_override_json, created_at, updated_at
-            FROM workspaces
-            WHERE id = ?
-            "#,
-        )
+        let record = sqlx::query_as::<_, WorkspaceRecord>(workspace_sql::GET)
         .bind(id.as_uuid().as_bytes().to_vec())
         .fetch_optional(pool)
         .await
@@ -62,18 +62,7 @@ impl WorkspaceRepository for SqliteRepositories {
         common::log_info!(workspace_id = %workspace.id.as_uuid(), "workspace repo save");
 
         let params = WorkspaceMapper::to_params(workspace)?;
-        sqlx::query(
-            r#"
-            INSERT INTO workspaces (id, name, config_profile_id, config_override_json, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                name = excluded.name,
-                config_profile_id = excluded.config_profile_id,
-                config_override_json = excluded.config_override_json,
-                created_at = excluded.created_at,
-                updated_at = excluded.updated_at
-            "#,
-        )
+        sqlx::query(workspace_sql::UPSERT)
         .bind(params.id)
         .bind(params.name)
         .bind(params.config_profile_id)
@@ -93,7 +82,7 @@ impl WorkspaceRepository for SqliteRepositories {
     async fn delete(&self, id: WorkspaceId) -> AppResult<()> {
         common::log_info!(workspace_id = %id.as_uuid(), "workspace repo delete");
 
-        sqlx::query("DELETE FROM workspaces WHERE id = ?")
+        sqlx::query(workspace_sql::DELETE)
             .bind(id.as_uuid().as_bytes().to_vec())
             .execute(self.pool.pool())
             .await

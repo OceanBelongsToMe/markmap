@@ -16,7 +16,7 @@ pub struct CreateWorkspace {
 
 impl CreateWorkspace {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
         registry.register(Arc::new(CreateWorkspace {
             workspace_repo,
             clock: ctx.clock.clone(),

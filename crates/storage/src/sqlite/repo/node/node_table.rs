@@ -5,22 +5,25 @@ use knowlattice_core::model::{DocumentId, NodeId};
 use crate::error::map_sqlx_error;
 use crate::mapper::node::node_table::{NodeTableMapper, NodeTableRecord};
 use crate::repo::node::{NodeTable, NodeTableRepository};
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::node_table as node_table_sql;
+
+pub(crate) struct SqliteNodeTableRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteNodeTableRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl NodeTableRepository for SqliteRepositories {
+impl NodeTableRepository for SqliteNodeTableRepo {
     async fn list_by_doc(&self, doc_id: DocumentId) -> AppResult<Vec<NodeTable>> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node table repo list_by_doc");
 
-        let records = sqlx::query_as::<_, NodeTableRecord>(
-            r#"
-            SELECT t.node_id, t.align_json
-            FROM node_table t
-            INNER JOIN nodes n ON n.id = t.node_id
-            WHERE n.doc_id = ?
-            ORDER BY n.created_at ASC
-            "#,
-        )
+        let records = sqlx::query_as::<_, NodeTableRecord>(node_table_sql::LIST_BY_DOC)
         .bind(uuid_to_blob(doc_id.as_uuid()))
         .fetch_all(self.pool.pool())
         .await
@@ -38,13 +41,7 @@ impl NodeTableRepository for SqliteRepositories {
     async fn get(&self, node_id: NodeId) -> AppResult<Option<NodeTable>> {
         common::log_info!(node_id = %node_id.as_uuid(), "node table repo get");
 
-        let record = sqlx::query_as::<_, NodeTableRecord>(
-            r#"
-            SELECT node_id, align_json
-            FROM node_table
-            WHERE node_id = ?
-            "#,
-        )
+        let record = sqlx::query_as::<_, NodeTableRecord>(node_table_sql::GET)
         .bind(uuid_to_blob(node_id.as_uuid()))
         .fetch_optional(self.pool.pool())
         .await
@@ -60,14 +57,7 @@ impl NodeTableRepository for SqliteRepositories {
         common::log_info!(node_id = %table.node_id.as_uuid(), "node table repo save");
 
         let params = NodeTableMapper::to_params(table);
-        sqlx::query(
-            r#"
-            INSERT INTO node_table (node_id, align_json)
-            VALUES (?, ?)
-            ON CONFLICT(node_id) DO UPDATE SET
-                align_json = excluded.align_json
-            "#,
-        )
+        sqlx::query(node_table_sql::UPSERT)
         .bind(params.node_id)
         .bind(params.align_json)
         .execute(self.pool.pool())
@@ -83,7 +73,7 @@ impl NodeTableRepository for SqliteRepositories {
     async fn delete(&self, node_id: NodeId) -> AppResult<()> {
         common::log_info!(node_id = %node_id.as_uuid(), "node table repo delete");
 
-        sqlx::query("DELETE FROM node_table WHERE node_id = ?")
+        sqlx::query(node_table_sql::DELETE)
             .bind(uuid_to_blob(node_id.as_uuid()))
             .execute(self.pool.pool())
             .await
@@ -98,16 +88,7 @@ impl NodeTableRepository for SqliteRepositories {
     async fn delete_by_doc(&self, doc_id: DocumentId) -> AppResult<()> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node table repo delete_by_doc");
 
-        sqlx::query(
-            r#"
-            DELETE FROM node_table
-            WHERE node_id IN (
-                SELECT id
-                FROM nodes
-                WHERE doc_id = ?
-            )
-            "#,
-        )
+        sqlx::query(node_table_sql::DELETE_BY_DOC)
         .bind(uuid_to_blob(doc_id.as_uuid()))
         .execute(self.pool.pool())
         .await
@@ -133,14 +114,7 @@ impl NodeTableRepository for SqliteRepositories {
 
         for table in tables {
             let params = NodeTableMapper::to_params(table);
-            sqlx::query(
-                r#"
-                INSERT INTO node_table (node_id, align_json)
-                VALUES (?, ?)
-                ON CONFLICT(node_id) DO UPDATE SET
-                    align_json = excluded.align_json
-                "#,
-            )
+            sqlx::query(node_table_sql::UPSERT)
             .bind(params.node_id)
             .bind(params.align_json)
             .execute(&mut *tx)

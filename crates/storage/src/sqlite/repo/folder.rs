@@ -5,21 +5,25 @@ use knowlattice_core::model::{FolderId, WorkspaceId};
 use crate::error::map_sqlx_error;
 use crate::mapper::folder::{FolderMapper, FolderRecord};
 use crate::repo::FolderRepository;
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::folder as folder_sql;
+
+pub(crate) struct SqliteFolderRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteFolderRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl FolderRepository for SqliteRepositories {
+impl FolderRepository for SqliteFolderRepo {
     async fn list_by_workspace(&self, workspace_id: WorkspaceId) -> AppResult<Vec<Folder>> {
         common::log_info!("folder repo list_by_workspace");
 
-        let records = sqlx::query_as::<_, FolderRecord>(
-            r#"
-            SELECT id, workspace_id, root_path, created_at, updated_at
-            FROM folders
-            WHERE workspace_id = ?
-            ORDER BY root_path DESC
-            "#,
-        )
+        let records = sqlx::query_as::<_, FolderRecord>(folder_sql::LIST_BY_WORKSPACE)
         .bind(workspace_id.as_uuid().as_bytes().to_vec())
         .fetch_all(self.pool.pool())
         .await
@@ -37,13 +41,7 @@ impl FolderRepository for SqliteRepositories {
     async fn get(&self, id: FolderId) -> AppResult<Option<Folder>> {
         common::log_info!("folder repo get");
 
-        let record = sqlx::query_as::<_, FolderRecord>(
-            r#"
-            SELECT id, workspace_id, root_path, created_at, updated_at
-            FROM folders
-            WHERE id = ?
-            "#,
-        )
+        let record = sqlx::query_as::<_, FolderRecord>(folder_sql::GET)
         .bind(id.as_uuid().as_bytes().to_vec())
         .fetch_optional(self.pool.pool())
         .await
@@ -61,17 +59,7 @@ impl FolderRepository for SqliteRepositories {
         common::log_info!("folder repo save");
 
         let params = FolderMapper::to_params(folder);
-        sqlx::query(
-            r#"
-            INSERT INTO folders (id, workspace_id, root_path, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                workspace_id = excluded.workspace_id,
-                root_path = excluded.root_path,
-                created_at = excluded.created_at,
-                updated_at = excluded.updated_at
-            "#,
-        )
+        sqlx::query(folder_sql::UPSERT)
         .bind(params.id)
         .bind(params.workspace_id)
         .bind(params.root_path)
@@ -89,7 +77,7 @@ impl FolderRepository for SqliteRepositories {
     async fn delete(&self, id: FolderId) -> AppResult<()> {
         common::log_info!("folder repo delete");
 
-        sqlx::query("DELETE FROM folders WHERE id = ?")
+        sqlx::query(folder_sql::DELETE)
             .bind(id.as_uuid().as_bytes().to_vec())
             .execute(self.pool.pool())
             .await

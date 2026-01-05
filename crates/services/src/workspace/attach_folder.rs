@@ -18,8 +18,8 @@ pub struct AttachFolder {
 
 impl AttachFolder {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
-        let folder_repo: Arc<dyn FolderRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
+        let folder_repo = Arc::clone(&ctx.repos.folder);
         registry.register(Arc::new(AttachFolder {
             workspace_repo,
             folder_repo,

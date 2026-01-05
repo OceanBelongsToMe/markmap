@@ -22,7 +22,7 @@ pub struct CreateDocument {
 
 impl CreateDocument {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
+        let document_repo = Arc::clone(&ctx.repos.document);
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
         registry.register(Arc::new(CreateDocument {
             document_repo,
@@ -57,7 +57,7 @@ pub struct UpdateDocument {
 
 impl UpdateDocument {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
+        let document_repo = Arc::clone(&ctx.repos.document);
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
         registry.register(Arc::new(UpdateDocument {
             document_repo,
@@ -92,7 +92,7 @@ pub struct DeleteDocument {
 
 impl DeleteDocument {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
+        let document_repo = Arc::clone(&ctx.repos.document);
         let invalidate_cache: Arc<crate::index::service::InvalidateCache> = registry.get()?;
         registry.register(Arc::new(DeleteDocument {
             document_repo,
@@ -116,7 +116,7 @@ pub struct MoveDocument {
 
 impl MoveDocument {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
+        let document_repo = Arc::clone(&ctx.repos.document);
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
         registry.register(Arc::new(MoveDocument {
             document_repo,
@@ -148,7 +148,7 @@ pub struct BatchImport {
 
 impl BatchImport {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
+        let document_repo = Arc::clone(&ctx.repos.document);
         let invalidate_cache: Arc<InvalidateCache> = registry.get()?;
         registry.register(Arc::new(BatchImport {
             document_repo,

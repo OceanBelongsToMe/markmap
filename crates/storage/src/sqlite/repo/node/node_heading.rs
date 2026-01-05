@@ -5,22 +5,25 @@ use knowlattice_core::model::{DocumentId, NodeId};
 use crate::error::map_sqlx_error;
 use crate::mapper::node::node_heading::{NodeHeadingMapper, NodeHeadingRecord};
 use crate::repo::node::{NodeHeading, NodeHeadingRepository};
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::node_heading as node_heading_sql;
+
+pub(crate) struct SqliteNodeHeadingRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteNodeHeadingRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl NodeHeadingRepository for SqliteRepositories {
+impl NodeHeadingRepository for SqliteNodeHeadingRepo {
     async fn list_by_doc(&self, doc_id: DocumentId) -> AppResult<Vec<NodeHeading>> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node heading repo list_by_doc");
 
-        let records = sqlx::query_as::<_, NodeHeadingRecord>(
-            r#"
-            SELECT h.node_id, h.level
-            FROM node_heading h
-            INNER JOIN nodes n ON n.id = h.node_id
-            WHERE n.doc_id = ?
-            ORDER BY n.created_at ASC
-            "#,
-        )
+        let records = sqlx::query_as::<_, NodeHeadingRecord>(node_heading_sql::LIST_BY_DOC)
         .bind(uuid_to_blob(doc_id.as_uuid()))
         .fetch_all(self.pool.pool())
         .await
@@ -38,13 +41,7 @@ impl NodeHeadingRepository for SqliteRepositories {
     async fn get(&self, node_id: NodeId) -> AppResult<Option<NodeHeading>> {
         common::log_info!(node_id = %node_id.as_uuid(), "node heading repo get");
 
-        let record = sqlx::query_as::<_, NodeHeadingRecord>(
-            r#"
-            SELECT node_id, level
-            FROM node_heading
-            WHERE node_id = ?
-            "#,
-        )
+        let record = sqlx::query_as::<_, NodeHeadingRecord>(node_heading_sql::GET)
         .bind(uuid_to_blob(node_id.as_uuid()))
         .fetch_optional(self.pool.pool())
         .await
@@ -60,14 +57,7 @@ impl NodeHeadingRepository for SqliteRepositories {
         common::log_info!(node_id = %heading.node_id.as_uuid(), "node heading repo save");
 
         let params = NodeHeadingMapper::to_params(heading);
-        sqlx::query(
-            r#"
-            INSERT INTO node_heading (node_id, level)
-            VALUES (?, ?)
-            ON CONFLICT(node_id) DO UPDATE SET
-                level = excluded.level
-            "#,
-        )
+        sqlx::query(node_heading_sql::UPSERT)
         .bind(params.node_id)
         .bind(params.level)
         .execute(self.pool.pool())
@@ -83,7 +73,7 @@ impl NodeHeadingRepository for SqliteRepositories {
     async fn delete(&self, node_id: NodeId) -> AppResult<()> {
         common::log_info!(node_id = %node_id.as_uuid(), "node heading repo delete");
 
-        sqlx::query("DELETE FROM node_heading WHERE node_id = ?")
+        sqlx::query(node_heading_sql::DELETE)
             .bind(uuid_to_blob(node_id.as_uuid()))
             .execute(self.pool.pool())
             .await
@@ -98,16 +88,7 @@ impl NodeHeadingRepository for SqliteRepositories {
     async fn delete_by_doc(&self, doc_id: DocumentId) -> AppResult<()> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node heading repo delete_by_doc");
 
-        sqlx::query(
-            r#"
-            DELETE FROM node_heading
-            WHERE node_id IN (
-                SELECT id
-                FROM nodes
-                WHERE doc_id = ?
-            )
-            "#,
-        )
+        sqlx::query(node_heading_sql::DELETE_BY_DOC)
         .bind(uuid_to_blob(doc_id.as_uuid()))
         .execute(self.pool.pool())
         .await
@@ -133,14 +114,7 @@ impl NodeHeadingRepository for SqliteRepositories {
 
         for heading in headings {
             let params = NodeHeadingMapper::to_params(heading);
-            sqlx::query(
-                r#"
-                INSERT INTO node_heading (node_id, level)
-                VALUES (?, ?)
-                ON CONFLICT(node_id) DO UPDATE SET
-                    level = excluded.level
-                "#,
-            )
+            sqlx::query(node_heading_sql::UPSERT)
             .bind(params.node_id)
             .bind(params.level)
             .execute(&mut *tx)

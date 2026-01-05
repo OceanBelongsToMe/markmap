@@ -4,24 +4,29 @@ use knowlattice_core::model::{DocumentId, WorkspaceId};
 use crate::error::map_sqlx_error;
 use crate::mapper::workspace_recent_files::{WorkspaceRecentFileMapper, WorkspaceRecentFileRecord};
 use crate::repo::{WorkspaceRecentFile, WorkspaceRecentFilesRepository};
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::workspace_recent_files as recent_files_sql;
+
+pub(crate) struct SqliteWorkspaceRecentFilesRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteWorkspaceRecentFilesRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl WorkspaceRecentFilesRepository for SqliteRepositories {
+impl WorkspaceRecentFilesRepository for SqliteWorkspaceRecentFilesRepo {
     async fn list_by_workspace(&self, workspace_id: WorkspaceId) -> AppResult<Vec<WorkspaceRecentFile>> {
         common::log_info!(
             workspace_id = %workspace_id.as_uuid(),
             "workspace_recent_files repo list_by_workspace"
         );
 
-        let records = sqlx::query_as::<_, WorkspaceRecentFileRecord>(
-            r#"
-            SELECT workspace_id, document_id, last_opened_at, position
-            FROM workspace_recent_files
-            WHERE workspace_id = ?
-            ORDER BY position ASC
-            "#,
-        )
+        let records =
+            sqlx::query_as::<_, WorkspaceRecentFileRecord>(recent_files_sql::LIST_BY_WORKSPACE)
         .bind(workspace_id.as_uuid().as_bytes().to_vec())
         .fetch_all(self.pool.pool())
         .await
@@ -44,15 +49,7 @@ impl WorkspaceRecentFilesRepository for SqliteRepositories {
         );
 
         let params = WorkspaceRecentFileMapper::to_params(entry);
-        sqlx::query(
-            r#"
-            INSERT INTO workspace_recent_files (workspace_id, document_id, last_opened_at, position)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(workspace_id, document_id) DO UPDATE SET
-                last_opened_at = excluded.last_opened_at,
-                position = excluded.position
-            "#,
-        )
+        sqlx::query(recent_files_sql::UPSERT)
         .bind(params.workspace_id)
         .bind(params.document_id)
         .bind(params.last_opened_at)
@@ -74,12 +71,7 @@ impl WorkspaceRecentFilesRepository for SqliteRepositories {
             "workspace_recent_files repo delete"
         );
 
-        sqlx::query(
-            r#"
-            DELETE FROM workspace_recent_files
-            WHERE workspace_id = ? AND document_id = ?
-            "#,
-        )
+        sqlx::query(recent_files_sql::DELETE)
         .bind(workspace_id.as_uuid().as_bytes().to_vec())
         .bind(document_id.as_uuid().as_bytes().to_vec())
         .execute(self.pool.pool())
@@ -98,12 +90,7 @@ impl WorkspaceRecentFilesRepository for SqliteRepositories {
             "workspace_recent_files repo clear_by_workspace"
         );
 
-        sqlx::query(
-            r#"
-            DELETE FROM workspace_recent_files
-            WHERE workspace_id = ?
-            "#,
-        )
+        sqlx::query(recent_files_sql::CLEAR_BY_WORKSPACE)
         .bind(workspace_id.as_uuid().as_bytes().to_vec())
         .execute(self.pool.pool())
         .await

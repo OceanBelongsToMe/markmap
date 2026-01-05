@@ -18,10 +18,10 @@ async fn workspace_recent_files_roundtrip() {
     let _guard = enter_test_span();
 
     let repos = setup_repos().await;
-    let workspace_repo: Arc<dyn WorkspaceRepository> = repos.expect_repo();
-    let folder_repo: Arc<dyn FolderRepository> = repos.expect_repo();
-    let document_repo: Arc<dyn DocumentRepository> = repos.expect_repo();
-    let recent_repo: Arc<dyn WorkspaceRecentFilesRepository> = repos.expect_repo();
+    let workspace_repo = Arc::clone(&repos.workspace);
+    let folder_repo = Arc::clone(&repos.folder);
+    let document_repo = Arc::clone(&repos.document);
+    let recent_repo = Arc::clone(&repos.workspace_recent_files);
 
     let now = Utc.with_ymd_and_hms(2024, 2, 1, 0, 0, 0).unwrap();
     let workspace = knowlattice_core::model::workspace::Workspace::new(

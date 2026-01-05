@@ -16,8 +16,8 @@ pub struct DetachFolder {
 
 impl DetachFolder {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
-        let folder_repo: Arc<dyn FolderRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
+        let folder_repo = Arc::clone(&ctx.repos.folder);
         registry.register(Arc::new(DetachFolder {
             workspace_repo,
             folder_repo,

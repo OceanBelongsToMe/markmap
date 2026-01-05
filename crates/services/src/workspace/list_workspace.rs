@@ -12,7 +12,7 @@ pub struct ListWorkspace {
 
 impl ListWorkspace {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
         registry.register(Arc::new(ListWorkspace { workspace_repo }));
         Ok(())
     }

@@ -14,11 +14,11 @@ async fn node_list_save_get_roundtrip() {
     init_tracing();
     let _guard = enter_test_span();
     let repos = setup_repos().await;
-    let workspace_repo: Arc<dyn WorkspaceRepository> = repos.expect_repo();
-    let folder_repo: Arc<dyn FolderRepository> = repos.expect_repo();
-    let document_repo: Arc<dyn DocumentRepository> = repos.expect_repo();
-    let node_repo: Arc<dyn NodeBaseRepository> = repos.expect_repo();
-    let list_repo: Arc<dyn NodeListRepository> = repos.expect_repo();
+    let workspace_repo = Arc::clone(&repos.workspace);
+    let folder_repo = Arc::clone(&repos.folder);
+    let document_repo = Arc::clone(&repos.document);
+    let node_repo = Arc::clone(&repos.node.base);
+    let list_repo = Arc::clone(&repos.node.list);
     let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
 
     let workspace = Workspace::new(WorkspaceId::new(), "Main", now, now).unwrap();
@@ -66,11 +66,11 @@ async fn node_list_list_and_delete_by_doc() {
     init_tracing();
     let _guard = enter_test_span();
     let repos = setup_repos().await;
-    let workspace_repo: Arc<dyn WorkspaceRepository> = repos.expect_repo();
-    let folder_repo: Arc<dyn FolderRepository> = repos.expect_repo();
-    let document_repo: Arc<dyn DocumentRepository> = repos.expect_repo();
-    let node_repo: Arc<dyn NodeBaseRepository> = repos.expect_repo();
-    let list_repo: Arc<dyn NodeListRepository> = repos.expect_repo();
+    let workspace_repo = Arc::clone(&repos.workspace);
+    let folder_repo = Arc::clone(&repos.folder);
+    let document_repo = Arc::clone(&repos.document);
+    let node_repo = Arc::clone(&repos.node.base);
+    let list_repo = Arc::clone(&repos.node.list);
     let t1 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
     let t2 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 1).unwrap();
     let t3 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 2).unwrap();
@@ -170,11 +170,11 @@ async fn node_list_batch_upsert_updates_fields() {
     init_tracing();
     let _guard = enter_test_span();
     let repos = setup_repos().await;
-    let workspace_repo: Arc<dyn WorkspaceRepository> = repos.expect_repo();
-    let folder_repo: Arc<dyn FolderRepository> = repos.expect_repo();
-    let document_repo: Arc<dyn DocumentRepository> = repos.expect_repo();
-    let node_repo: Arc<dyn NodeBaseRepository> = repos.expect_repo();
-    let list_repo: Arc<dyn NodeListRepository> = repos.expect_repo();
+    let workspace_repo = Arc::clone(&repos.workspace);
+    let folder_repo = Arc::clone(&repos.folder);
+    let document_repo = Arc::clone(&repos.document);
+    let node_repo = Arc::clone(&repos.node.base);
+    let list_repo = Arc::clone(&repos.node.list);
     let t1 = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
 
     let workspace = Workspace::new(WorkspaceId::new(), "Main", t1, t1).unwrap();

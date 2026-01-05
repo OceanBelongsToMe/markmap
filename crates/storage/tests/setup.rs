@@ -4,7 +4,7 @@ use sqlx::sqlite::SqlitePoolOptions;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 use common::log::{span, LogContext, SpanName, TraceId};
-use knowlattice_storage::factory::RepositoryProvider;
+use knowlattice_storage::factory::Repositories;
 
 pub fn init_tracing() {
     let _ = tracing_subscriber::fmt()
@@ -21,7 +21,7 @@ pub fn enter_test_span() -> tracing::span::EnteredSpan {
     span.entered()
 }
 
-pub async fn setup_repos() -> RepositoryProvider {
+pub async fn setup_repos() -> Repositories {
     let pool = SqlitePoolOptions::new()
         .max_connections(1)
         .connect("sqlite::memory:")

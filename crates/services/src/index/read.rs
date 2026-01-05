@@ -15,8 +15,8 @@ pub struct ReadDocument {
 
 impl ReadDocument {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
-        let folder_repo: Arc<dyn FolderRepository> = ctx.repos.expect_repo();
+        let document_repo = Arc::clone(&ctx.repos.document);
+        let folder_repo = Arc::clone(&ctx.repos.folder);
         registry.register(Arc::new(ReadDocument {
             document_repo,
             folder_repo,

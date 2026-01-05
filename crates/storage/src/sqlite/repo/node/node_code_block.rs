@@ -5,22 +5,26 @@ use knowlattice_core::model::{DocumentId, NodeId};
 use crate::error::map_sqlx_error;
 use crate::mapper::node::node_code_block::{NodeCodeBlockMapper, NodeCodeBlockRecord};
 use crate::repo::node::{NodeCodeBlock, NodeCodeBlockRepository};
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::node_code_block as node_code_block_sql;
+
+pub(crate) struct SqliteNodeCodeBlockRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteNodeCodeBlockRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl NodeCodeBlockRepository for SqliteRepositories {
+impl NodeCodeBlockRepository for SqliteNodeCodeBlockRepo {
     async fn list_by_doc(&self, doc_id: DocumentId) -> AppResult<Vec<NodeCodeBlock>> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node code block repo list_by_doc");
 
-        let records = sqlx::query_as::<_, NodeCodeBlockRecord>(
-            r#"
-            SELECT cb.node_id, cb.language
-            FROM node_code_block cb
-            INNER JOIN nodes n ON n.id = cb.node_id
-            WHERE n.doc_id = ?
-            ORDER BY n.created_at ASC
-            "#,
-        )
+        let records =
+            sqlx::query_as::<_, NodeCodeBlockRecord>(node_code_block_sql::LIST_BY_DOC)
         .bind(uuid_to_blob(doc_id.as_uuid()))
         .fetch_all(self.pool.pool())
         .await
@@ -38,13 +42,7 @@ impl NodeCodeBlockRepository for SqliteRepositories {
     async fn get(&self, node_id: NodeId) -> AppResult<Option<NodeCodeBlock>> {
         common::log_info!(node_id = %node_id.as_uuid(), "node code block repo get");
 
-        let record = sqlx::query_as::<_, NodeCodeBlockRecord>(
-            r#"
-            SELECT node_id, language
-            FROM node_code_block
-            WHERE node_id = ?
-            "#,
-        )
+        let record = sqlx::query_as::<_, NodeCodeBlockRecord>(node_code_block_sql::GET)
         .bind(uuid_to_blob(node_id.as_uuid()))
         .fetch_optional(self.pool.pool())
         .await
@@ -60,14 +58,7 @@ impl NodeCodeBlockRepository for SqliteRepositories {
         common::log_info!(node_id = %block.node_id.as_uuid(), "node code block repo save");
 
         let params = NodeCodeBlockMapper::to_params(block);
-        sqlx::query(
-            r#"
-            INSERT INTO node_code_block (node_id, language)
-            VALUES (?, ?)
-            ON CONFLICT(node_id) DO UPDATE SET
-                language = excluded.language
-            "#,
-        )
+        sqlx::query(node_code_block_sql::UPSERT)
         .bind(params.node_id)
         .bind(params.language)
         .execute(self.pool.pool())
@@ -83,7 +74,7 @@ impl NodeCodeBlockRepository for SqliteRepositories {
     async fn delete(&self, node_id: NodeId) -> AppResult<()> {
         common::log_info!(node_id = %node_id.as_uuid(), "node code block repo delete");
 
-        sqlx::query("DELETE FROM node_code_block WHERE node_id = ?")
+        sqlx::query(node_code_block_sql::DELETE)
             .bind(uuid_to_blob(node_id.as_uuid()))
             .execute(self.pool.pool())
             .await
@@ -98,16 +89,7 @@ impl NodeCodeBlockRepository for SqliteRepositories {
     async fn delete_by_doc(&self, doc_id: DocumentId) -> AppResult<()> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node code block repo delete_by_doc");
 
-        sqlx::query(
-            r#"
-            DELETE FROM node_code_block
-            WHERE node_id IN (
-                SELECT id
-                FROM nodes
-                WHERE doc_id = ?
-            )
-            "#,
-        )
+        sqlx::query(node_code_block_sql::DELETE_BY_DOC)
         .bind(uuid_to_blob(doc_id.as_uuid()))
         .execute(self.pool.pool())
         .await
@@ -133,14 +115,7 @@ impl NodeCodeBlockRepository for SqliteRepositories {
 
         for block in blocks {
             let params = NodeCodeBlockMapper::to_params(block);
-            sqlx::query(
-                r#"
-                INSERT INTO node_code_block (node_id, language)
-                VALUES (?, ?)
-                ON CONFLICT(node_id) DO UPDATE SET
-                    language = excluded.language
-                "#,
-            )
+            sqlx::query(node_code_block_sql::UPSERT)
             .bind(params.node_id)
             .bind(params.language)
             .execute(&mut *tx)

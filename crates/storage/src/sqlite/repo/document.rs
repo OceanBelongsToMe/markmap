@@ -5,21 +5,25 @@ use knowlattice_core::model::{DocumentId, FolderId};
 use crate::error::map_sqlx_error;
 use crate::mapper::document::{DocumentMapper, DocumentRecord};
 use crate::repo::DocumentRepository;
-use crate::sqlite::repo::SqliteRepositories;
+use crate::sqlite::pool::SqlitePool;
+use crate::sqlite::sql::document as document_sql;
+
+pub(crate) struct SqliteDocumentRepo {
+    pool: SqlitePool,
+}
+
+impl SqliteDocumentRepo {
+    pub(crate) fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait::async_trait]
-impl DocumentRepository for SqliteRepositories {
+impl DocumentRepository for SqliteDocumentRepo {
     async fn list_by_folder(&self, folder_id: FolderId) -> AppResult<Vec<Document>> {
         common::log_info!(folder_id = %folder_id.as_uuid(), "document repo list_by_folder");
 
-        let records = sqlx::query_as::<_, DocumentRecord>(
-            r#"
-            SELECT id, folder_id, path, title, content_hash, lang, updated_at, tree_id, ext
-            FROM documents
-            WHERE folder_id = ?
-            ORDER BY path DESC
-            "#,
-        )
+        let records = sqlx::query_as::<_, DocumentRecord>(document_sql::LIST_BY_FOLDER)
         .bind(folder_id.as_uuid().as_bytes().to_vec())
         .fetch_all(self.pool.pool())
         .await
@@ -37,13 +41,7 @@ impl DocumentRepository for SqliteRepositories {
     async fn get(&self, id: DocumentId) -> AppResult<Option<Document>> {
         common::log_info!(document_id = %id.as_uuid(), "document repo get");
 
-        let record = sqlx::query_as::<_, DocumentRecord>(
-            r#"
-            SELECT id, folder_id, path, title, content_hash, lang, updated_at, tree_id, ext
-            FROM documents
-            WHERE id = ?
-            "#,
-        )
+        let record = sqlx::query_as::<_, DocumentRecord>(document_sql::GET)
         .bind(id.as_uuid().as_bytes().to_vec())
         .fetch_optional(self.pool.pool())
         .await
@@ -61,21 +59,7 @@ impl DocumentRepository for SqliteRepositories {
         common::log_info!(document_id = %document.id.as_uuid(), "document repo save");
 
         let params = DocumentMapper::to_params(document);
-        sqlx::query(
-            r#"
-            INSERT INTO documents (id, folder_id, path, title, content_hash, lang, updated_at, tree_id, ext)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                folder_id = excluded.folder_id,
-                path = excluded.path,
-                title = excluded.title,
-                content_hash = excluded.content_hash,
-                lang = excluded.lang,
-                updated_at = excluded.updated_at,
-                tree_id = excluded.tree_id,
-                ext = excluded.ext
-            "#,
-        )
+        sqlx::query(document_sql::UPSERT)
         .bind(params.id)
         .bind(params.folder_id)
         .bind(params.path)
@@ -98,7 +82,7 @@ impl DocumentRepository for SqliteRepositories {
     async fn delete(&self, id: DocumentId) -> AppResult<()> {
         common::log_info!(document_id = %id.as_uuid(), "document repo delete");
 
-        sqlx::query("DELETE FROM documents WHERE id = ?")
+        sqlx::query(document_sql::DELETE)
             .bind(id.as_uuid().as_bytes().to_vec())
             .execute(self.pool.pool())
             .await
@@ -123,21 +107,7 @@ impl DocumentRepository for SqliteRepositories {
 
         for document in documents {
             let params = DocumentMapper::to_params(document);
-            sqlx::query(
-                r#"
-                INSERT INTO documents (id, folder_id, path, title, content_hash, lang, updated_at, tree_id, ext)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(id) DO UPDATE SET
-                    folder_id = excluded.folder_id,
-                    path = excluded.path,
-                    title = excluded.title,
-                    content_hash = excluded.content_hash,
-                    lang = excluded.lang,
-                    updated_at = excluded.updated_at,
-                    tree_id = excluded.tree_id,
-                    ext = excluded.ext
-                "#,
-            )
+            sqlx::query(document_sql::UPSERT)
             .bind(params.id)
             .bind(params.folder_id)
             .bind(params.path)
