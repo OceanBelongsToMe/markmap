@@ -11,14 +11,27 @@ pub struct GetCurrentWorkspace {
     workspace_repo: Arc<dyn WorkspaceRepository>,
 }
 
+pub struct GetCurrentWorkspaceDeps {
+    pub state_repo: Arc<dyn WorkspaceStateRepository>,
+    pub workspace_repo: Arc<dyn WorkspaceRepository>,
+}
+
 impl GetCurrentWorkspace {
+    pub fn new(deps: GetCurrentWorkspaceDeps) -> Self {
+        Self {
+            state_repo: deps.state_repo,
+            workspace_repo: deps.workspace_repo,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let state_repo = Arc::clone(&ctx.repos.workspace_state);
         let workspace_repo = Arc::clone(&ctx.repos.workspace);
-        registry.register(Arc::new(GetCurrentWorkspace {
+        let deps = GetCurrentWorkspaceDeps {
             state_repo,
             workspace_repo,
-        }));
+        };
+        registry.register(Arc::new(GetCurrentWorkspace::new(deps)));
         Ok(())
     }
 

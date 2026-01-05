@@ -48,12 +48,25 @@ pub struct EnqueueParse {
     queue: Arc<IndexQueue>,
 }
 
+pub struct EnqueueParseDeps {
+    pub coordinator: Arc<IndexCoordinator>,
+    pub queue: Arc<IndexQueue>,
+}
+
 impl EnqueueParse {
+    pub fn new(deps: EnqueueParseDeps) -> Self {
+        Self {
+            coordinator: deps.coordinator,
+            queue: deps.queue,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        registry.register(Arc::new(EnqueueParse {
+        let deps = EnqueueParseDeps {
             coordinator: ctx.coordinator.clone(),
             queue: ctx.index_queue.clone(),
-        }));
+        };
+        registry.register(Arc::new(EnqueueParse::new(deps)));
         Ok(())
     }
 
@@ -88,11 +101,22 @@ pub struct RunParse {
     coordinator: Arc<IndexCoordinator>,
 }
 
+pub struct RunParseDeps {
+    pub coordinator: Arc<IndexCoordinator>,
+}
+
 impl RunParse {
+    pub fn new(deps: RunParseDeps) -> Self {
+        Self {
+            coordinator: deps.coordinator,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        registry.register(Arc::new(RunParse {
+        let deps = RunParseDeps {
             coordinator: ctx.coordinator.clone(),
-        }));
+        };
+        registry.register(Arc::new(RunParse::new(deps)));
         Ok(())
     }
 
@@ -112,17 +136,34 @@ pub struct RunIndex {
     read_document: Arc<super::read::ReadDocument>,
 }
 
+pub struct RunIndexDeps {
+    pub coordinator: Arc<IndexCoordinator>,
+    pub parse_document: Arc<super::parse::ParseDocument>,
+    pub apply_index: Arc<super::apply::ApplyIndex>,
+    pub read_document: Arc<super::read::ReadDocument>,
+}
+
 impl RunIndex {
+    pub fn new(deps: RunIndexDeps) -> Self {
+        Self {
+            coordinator: deps.coordinator,
+            parse_document: deps.parse_document,
+            apply_index: deps.apply_index,
+            read_document: deps.read_document,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let parse_document: Arc<super::parse::ParseDocument> = registry.get()?;
         let apply_index: Arc<super::apply::ApplyIndex> = registry.get()?;
         let read_document: Arc<super::read::ReadDocument> = registry.get()?;
-        registry.register(Arc::new(RunIndex {
+        let deps = RunIndexDeps {
             coordinator: ctx.coordinator.clone(),
             parse_document,
             apply_index,
             read_document,
-        }));
+        };
+        registry.register(Arc::new(RunIndex::new(deps)));
         Ok(())
     }
 
@@ -160,13 +201,26 @@ pub struct RunIndexNext {
     run_index: Arc<RunIndex>,
 }
 
+pub struct RunIndexNextDeps {
+    pub queue: Arc<IndexQueue>,
+    pub run_index: Arc<RunIndex>,
+}
+
 impl RunIndexNext {
+    pub fn new(deps: RunIndexNextDeps) -> Self {
+        Self {
+            queue: deps.queue,
+            run_index: deps.run_index,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let run_index: Arc<RunIndex> = registry.get()?;
-        registry.register(Arc::new(RunIndexNext {
+        let deps = RunIndexNextDeps {
             queue: ctx.index_queue.clone(),
             run_index,
-        }));
+        };
+        registry.register(Arc::new(RunIndexNext::new(deps)));
         Ok(())
     }
 
@@ -183,13 +237,26 @@ pub struct RunIndexWorker {
     concurrency: usize,
 }
 
+pub struct RunIndexWorkerDeps {
+    pub run_next: Arc<RunIndexNext>,
+    pub concurrency: usize,
+}
+
 impl RunIndexWorker {
+    pub fn new(deps: RunIndexWorkerDeps) -> Self {
+        Self {
+            run_next: deps.run_next,
+            concurrency: deps.concurrency,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let run_next: Arc<RunIndexNext> = registry.get()?;
-        let worker = Arc::new(RunIndexWorker {
+        let deps = RunIndexWorkerDeps {
             run_next,
             concurrency: ctx.index_workers.max(1),
-        });
+        };
+        let worker = Arc::new(RunIndexWorker::new(deps));
         worker.clone().start();
         registry.register(worker);
         Ok(())
@@ -218,12 +285,25 @@ pub struct RefreshIndex {
     queue: Arc<IndexQueue>,
 }
 
+pub struct RefreshIndexDeps {
+    pub coordinator: Arc<IndexCoordinator>,
+    pub queue: Arc<IndexQueue>,
+}
+
 impl RefreshIndex {
+    pub fn new(deps: RefreshIndexDeps) -> Self {
+        Self {
+            coordinator: deps.coordinator,
+            queue: deps.queue,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        registry.register(Arc::new(RefreshIndex {
+        let deps = RefreshIndexDeps {
             coordinator: ctx.coordinator.clone(),
             queue: ctx.index_queue.clone(),
-        }));
+        };
+        registry.register(Arc::new(RefreshIndex::new(deps)));
         Ok(())
     }
 
@@ -259,12 +339,25 @@ pub struct InvalidateCache {
     queue: Arc<IndexQueue>,
 }
 
+pub struct InvalidateCacheDeps {
+    pub coordinator: Arc<IndexCoordinator>,
+    pub queue: Arc<IndexQueue>,
+}
+
 impl InvalidateCache {
+    pub fn new(deps: InvalidateCacheDeps) -> Self {
+        Self {
+            coordinator: deps.coordinator,
+            queue: deps.queue,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        registry.register(Arc::new(InvalidateCache {
+        let deps = InvalidateCacheDeps {
             coordinator: ctx.coordinator.clone(),
             queue: ctx.index_queue.clone(),
-        }));
+        };
+        registry.register(Arc::new(InvalidateCache::new(deps)));
         Ok(())
     }
 
@@ -285,11 +378,22 @@ pub struct GetIndexStatus {
     coordinator: Arc<IndexCoordinator>,
 }
 
+pub struct GetIndexStatusDeps {
+    pub coordinator: Arc<IndexCoordinator>,
+}
+
 impl GetIndexStatus {
+    pub fn new(deps: GetIndexStatusDeps) -> Self {
+        Self {
+            coordinator: deps.coordinator,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
-        registry.register(Arc::new(GetIndexStatus {
+        let deps = GetIndexStatusDeps {
             coordinator: ctx.coordinator.clone(),
-        }));
+        };
+        registry.register(Arc::new(GetIndexStatus::new(deps)));
         Ok(())
     }
 

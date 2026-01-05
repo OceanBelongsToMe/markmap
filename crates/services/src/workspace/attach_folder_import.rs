@@ -25,7 +25,27 @@ pub struct AttachFolderAndImport {
     switch_workspace: Arc<SwitchWorkspace>,
 }
 
+pub struct AttachFolderAndImportDeps {
+    pub create_workspace: Arc<CreateWorkspace>,
+    pub attach_folder: Arc<AttachFolder>,
+    pub scan_folder: Arc<ScanFolder>,
+    pub batch_import: Arc<BatchImport>,
+    pub enqueue_parse: Arc<EnqueueParse>,
+    pub switch_workspace: Arc<SwitchWorkspace>,
+}
+
 impl AttachFolderAndImport {
+    pub fn new(deps: AttachFolderAndImportDeps) -> Self {
+        Self {
+            create_workspace: deps.create_workspace,
+            attach_folder: deps.attach_folder,
+            scan_folder: deps.scan_folder,
+            batch_import: deps.batch_import,
+            enqueue_parse: deps.enqueue_parse,
+            switch_workspace: deps.switch_workspace,
+        }
+    }
+
     pub fn register(_ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let create_workspace: Arc<CreateWorkspace> = registry.get()?;
         let attach_folder: Arc<AttachFolder> = registry.get()?;
@@ -34,14 +54,15 @@ impl AttachFolderAndImport {
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
         let switch_workspace: Arc<SwitchWorkspace> = registry.get()?;
 
-        registry.register(Arc::new(AttachFolderAndImport {
+        let deps = AttachFolderAndImportDeps {
             create_workspace,
             attach_folder,
             scan_folder,
             batch_import,
             enqueue_parse,
             switch_workspace,
-        }));
+        };
+        registry.register(Arc::new(AttachFolderAndImport::new(deps)));
         Ok(())
     }
 

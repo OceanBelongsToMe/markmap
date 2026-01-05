@@ -35,14 +35,27 @@ pub struct ListWorkspaceFileTree {
     document_repo: Arc<dyn DocumentRepository>,
 }
 
+pub struct ListWorkspaceFileTreeDeps {
+    pub folder_repo: Arc<dyn FolderRepository>,
+    pub document_repo: Arc<dyn DocumentRepository>,
+}
+
 impl ListWorkspaceFileTree {
+    pub fn new(deps: ListWorkspaceFileTreeDeps) -> Self {
+        Self {
+            folder_repo: deps.folder_repo,
+            document_repo: deps.document_repo,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let folder_repo = Arc::clone(&ctx.repos.folder);
         let document_repo = Arc::clone(&ctx.repos.document);
-        registry.register(Arc::new(ListWorkspaceFileTree {
+        let deps = ListWorkspaceFileTreeDeps {
             folder_repo,
             document_repo,
-        }));
+        };
+        registry.register(Arc::new(ListWorkspaceFileTree::new(deps)));
         Ok(())
     }
 

@@ -7,7 +7,6 @@ use knowlattice_core::model::document::Document;
 use knowlattice_core::model::folder::Folder;
 use knowlattice_core::model::{ContentHash, DocumentId, FolderId, RelativePath, WorkspaceId};
 use knowlattice_services::workspace::{ListRecentFiles, RecordRecentFile};
-use knowlattice_storage::repo::{DocumentRepository, FolderRepository, WorkspaceRepository};
 
 use setup::{normalize_timestamp, run_async, setup_services_with_clock, FixedClock};
 
@@ -17,9 +16,9 @@ fn record_and_list_recent_files() {
         let now = normalize_timestamp(SystemClock.now());
         let ctx = setup_services_with_clock(Arc::new(FixedClock { now })).await;
 
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
-        let folder_repo: Arc<dyn FolderRepository> = ctx.repos.expect_repo();
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
+        let folder_repo = Arc::clone(&ctx.repos.folder);
+        let document_repo = Arc::clone(&ctx.repos.document);
 
         let recorder = ctx.services.get::<RecordRecentFile>().expect("service");
         let lister = ctx.services.get::<ListRecentFiles>().expect("service");

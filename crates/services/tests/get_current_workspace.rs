@@ -6,7 +6,7 @@ use common::time::{Clock, SystemClock};
 use knowlattice_core::model::workspace::Workspace;
 use knowlattice_core::model::WorkspaceId;
 use knowlattice_services::workspace::GetCurrentWorkspace;
-use knowlattice_storage::repo::{WorkspaceRepository, WorkspaceState, WorkspaceStateRepository};
+use knowlattice_storage::repo::WorkspaceState;
 
 use setup::{normalize_timestamp, run_async, setup_services_with_clock, FixedClock};
 
@@ -28,8 +28,8 @@ fn get_current_workspace_returns_workspace() {
         let now = normalize_timestamp(SystemClock.now());
         let ctx = setup_services_with_clock(Arc::new(FixedClock { now })).await;
 
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
-        let state_repo: Arc<dyn WorkspaceStateRepository> = ctx.repos.expect_repo();
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
+        let state_repo = Arc::clone(&ctx.repos.workspace_state);
         let getter = ctx.services.get::<GetCurrentWorkspace>().expect("service");
 
         let workspace = Workspace::new(WorkspaceId::new(), "Main", now, now).unwrap();

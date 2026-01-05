@@ -16,15 +16,30 @@ pub struct AttachFolder {
     clock: Arc<dyn Clock>,
 }
 
+pub struct AttachFolderDeps {
+    pub workspace_repo: Arc<dyn WorkspaceRepository>,
+    pub folder_repo: Arc<dyn FolderRepository>,
+    pub clock: Arc<dyn Clock>,
+}
+
 impl AttachFolder {
+    pub fn new(deps: AttachFolderDeps) -> Self {
+        Self {
+            workspace_repo: deps.workspace_repo,
+            folder_repo: deps.folder_repo,
+            clock: deps.clock,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let workspace_repo = Arc::clone(&ctx.repos.workspace);
         let folder_repo = Arc::clone(&ctx.repos.folder);
-        registry.register(Arc::new(AttachFolder {
+        let deps = AttachFolderDeps {
             workspace_repo,
             folder_repo,
             clock: ctx.clock.clone(),
-        }));
+        };
+        registry.register(Arc::new(AttachFolder::new(deps)));
         Ok(())
     }
 

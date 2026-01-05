@@ -43,6 +43,15 @@
 - 成本：多 1 个文件与适配逻辑
 - 收益：更强的变更隔离与本地推理能力，后续切换组件库代价低
 
+## 2.3 Services 层的严格模块边界
+
+目标：usecase 清晰、依赖显式、注册集中，避免跨模块耦合。
+
+- 每个 usecase 显式 `Deps` 结构体，依赖在构造时注入，禁止在执行路径中隐式取依赖。
+- `register` 只负责组装 deps 与注册，业务逻辑只在 `execute`。
+- 工作流型行为（如 attach+import）保留在 `workspace` 的 orchestration 模块中，依赖明确列出。
+- `ServiceContext` 仅承载稳定的共享依赖（repos/clock/queue），避免膨胀。
+
 ## 3. 目录与模块职责
 
 ### 3.0 目录结构管理

@@ -25,7 +25,37 @@ pub struct ApplyIndex {
     node_wiki_repo: Arc<dyn NodeWikiRepository>,
 }
 
+pub struct ApplyIndexDeps {
+    pub node_repo: Arc<dyn NodeBaseRepository>,
+    pub node_text_repo: Arc<dyn NodeTextRepository>,
+    pub node_range_repo: Arc<dyn NodeRangeRepository>,
+    pub node_heading_repo: Arc<dyn NodeHeadingRepository>,
+    pub node_list_repo: Arc<dyn NodeListRepository>,
+    pub node_code_block_repo: Arc<dyn NodeCodeBlockRepository>,
+    pub node_table_repo: Arc<dyn NodeTableRepository>,
+    pub node_image_repo: Arc<dyn NodeImageRepository>,
+    pub node_link_repo: Arc<dyn NodeLinkRepository>,
+    pub node_task_repo: Arc<dyn NodeTaskRepository>,
+    pub node_wiki_repo: Arc<dyn NodeWikiRepository>,
+}
+
 impl ApplyIndex {
+    pub fn new(deps: ApplyIndexDeps) -> Self {
+        Self {
+            node_repo: deps.node_repo,
+            node_text_repo: deps.node_text_repo,
+            node_range_repo: deps.node_range_repo,
+            node_heading_repo: deps.node_heading_repo,
+            node_list_repo: deps.node_list_repo,
+            node_code_block_repo: deps.node_code_block_repo,
+            node_table_repo: deps.node_table_repo,
+            node_image_repo: deps.node_image_repo,
+            node_link_repo: deps.node_link_repo,
+            node_task_repo: deps.node_task_repo,
+            node_wiki_repo: deps.node_wiki_repo,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let node_repo = Arc::clone(&ctx.repos.node.base);
         let node_text_repo = Arc::clone(&ctx.repos.node.text);
@@ -38,7 +68,7 @@ impl ApplyIndex {
         let node_link_repo = Arc::clone(&ctx.repos.node.link);
         let node_task_repo = Arc::clone(&ctx.repos.node.task);
         let node_wiki_repo = Arc::clone(&ctx.repos.node.wiki);
-        registry.register(Arc::new(ApplyIndex {
+        let deps = ApplyIndexDeps {
             node_repo,
             node_text_repo,
             node_range_repo,
@@ -50,7 +80,8 @@ impl ApplyIndex {
             node_link_repo,
             node_task_repo,
             node_wiki_repo,
-        }));
+        };
+        registry.register(Arc::new(ApplyIndex::new(deps)));
         Ok(())
     }
 

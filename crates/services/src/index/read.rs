@@ -13,14 +13,27 @@ pub struct ReadDocument {
     folder_repo: Arc<dyn FolderRepository>,
 }
 
+pub struct ReadDocumentDeps {
+    pub document_repo: Arc<dyn DocumentRepository>,
+    pub folder_repo: Arc<dyn FolderRepository>,
+}
+
 impl ReadDocument {
+    pub fn new(deps: ReadDocumentDeps) -> Self {
+        Self {
+            document_repo: deps.document_repo,
+            folder_repo: deps.folder_repo,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let document_repo = Arc::clone(&ctx.repos.document);
         let folder_repo = Arc::clone(&ctx.repos.folder);
-        registry.register(Arc::new(ReadDocument {
+        let deps = ReadDocumentDeps {
             document_repo,
             folder_repo,
-        }));
+        };
+        registry.register(Arc::new(ReadDocument::new(deps)));
         Ok(())
     }
 

@@ -14,13 +14,26 @@ pub struct UpdateWorkspaceConfigOverrides {
     clock: Arc<dyn Clock>,
 }
 
+pub struct UpdateWorkspaceConfigOverridesDeps {
+    pub workspace_repo: Arc<dyn WorkspaceRepository>,
+    pub clock: Arc<dyn Clock>,
+}
+
 impl UpdateWorkspaceConfigOverrides {
+    pub fn new(deps: UpdateWorkspaceConfigOverridesDeps) -> Self {
+        Self {
+            workspace_repo: deps.workspace_repo,
+            clock: deps.clock,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let workspace_repo = Arc::clone(&ctx.repos.workspace);
-        registry.register(Arc::new(UpdateWorkspaceConfigOverrides {
+        let deps = UpdateWorkspaceConfigOverridesDeps {
             workspace_repo,
             clock: ctx.clock.clone(),
-        }));
+        };
+        registry.register(Arc::new(UpdateWorkspaceConfigOverrides::new(deps)));
         Ok(())
     }
 

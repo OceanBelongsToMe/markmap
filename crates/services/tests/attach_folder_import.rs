@@ -6,9 +6,6 @@ use std::sync::Arc;
 use common::time::{timestamp_to_millis, Clock, SystemClock};
 use knowlattice_core::model::RelativePath;
 use knowlattice_services::workspace::AttachFolderAndImport;
-use knowlattice_storage::repo::{
-    DocumentRepository, FolderRepository, WorkspaceRepository, WorkspaceStateRepository,
-};
 
 use setup::{normalize_timestamp, run_async, setup_services_with_clock, FixedClock};
 
@@ -19,10 +16,10 @@ fn attach_folder_imports_documents() {
         let ctx = setup_services_with_clock(Arc::new(FixedClock { now })).await;
 
         let attach_flow = ctx.services.get::<AttachFolderAndImport>().expect("service");
-        let folder_repo: Arc<dyn FolderRepository> = ctx.repos.expect_repo();
-        let document_repo: Arc<dyn DocumentRepository> = ctx.repos.expect_repo();
-        let workspace_repo: Arc<dyn WorkspaceRepository> = ctx.repos.expect_repo();
-        let state_repo: Arc<dyn WorkspaceStateRepository> = ctx.repos.expect_repo();
+        let folder_repo = Arc::clone(&ctx.repos.folder);
+        let document_repo = Arc::clone(&ctx.repos.document);
+        let workspace_repo = Arc::clone(&ctx.repos.workspace);
+        let state_repo = Arc::clone(&ctx.repos.workspace_state);
 
         let temp_root = std::env::temp_dir()
             .join(format!("knowlattice-test-{}", timestamp_to_millis(now)));

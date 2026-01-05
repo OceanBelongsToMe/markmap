@@ -19,19 +19,38 @@ pub struct RecordRecentFile {
     clock: Arc<dyn Clock>,
 }
 
+pub struct RecordRecentFileDeps {
+    pub workspace_repo: Arc<dyn WorkspaceRepository>,
+    pub document_repo: Arc<dyn DocumentRepository>,
+    pub folder_repo: Arc<dyn FolderRepository>,
+    pub recent_repo: Arc<dyn WorkspaceRecentFilesRepository>,
+    pub clock: Arc<dyn Clock>,
+}
+
 impl RecordRecentFile {
+    pub fn new(deps: RecordRecentFileDeps) -> Self {
+        Self {
+            workspace_repo: deps.workspace_repo,
+            document_repo: deps.document_repo,
+            folder_repo: deps.folder_repo,
+            recent_repo: deps.recent_repo,
+            clock: deps.clock,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let workspace_repo = Arc::clone(&ctx.repos.workspace);
         let document_repo = Arc::clone(&ctx.repos.document);
         let folder_repo = Arc::clone(&ctx.repos.folder);
         let recent_repo = Arc::clone(&ctx.repos.workspace_recent_files);
-        registry.register(Arc::new(RecordRecentFile {
+        let deps = RecordRecentFileDeps {
             workspace_repo,
             document_repo,
             folder_repo,
             recent_repo,
             clock: ctx.clock.clone(),
-        }));
+        };
+        registry.register(Arc::new(RecordRecentFile::new(deps)));
         Ok(())
     }
 
@@ -80,10 +99,21 @@ pub struct ListRecentFiles {
     recent_repo: Arc<dyn WorkspaceRecentFilesRepository>,
 }
 
+pub struct ListRecentFilesDeps {
+    pub recent_repo: Arc<dyn WorkspaceRecentFilesRepository>,
+}
+
 impl ListRecentFiles {
+    pub fn new(deps: ListRecentFilesDeps) -> Self {
+        Self {
+            recent_repo: deps.recent_repo,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let recent_repo = Arc::clone(&ctx.repos.workspace_recent_files);
-        registry.register(Arc::new(ListRecentFiles { recent_repo }));
+        let deps = ListRecentFilesDeps { recent_repo };
+        registry.register(Arc::new(ListRecentFiles::new(deps)));
         Ok(())
     }
 

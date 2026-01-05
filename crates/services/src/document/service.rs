@@ -20,15 +20,30 @@ pub struct CreateDocument {
     enqueue_parse: Arc<EnqueueParse>,
 }
 
+pub struct CreateDocumentDeps {
+    pub document_repo: Arc<dyn DocumentRepository>,
+    pub clock: Arc<dyn Clock>,
+    pub enqueue_parse: Arc<EnqueueParse>,
+}
+
 impl CreateDocument {
+    pub fn new(deps: CreateDocumentDeps) -> Self {
+        Self {
+            document_repo: deps.document_repo,
+            clock: deps.clock,
+            enqueue_parse: deps.enqueue_parse,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let document_repo = Arc::clone(&ctx.repos.document);
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
-        registry.register(Arc::new(CreateDocument {
+        let deps = CreateDocumentDeps {
             document_repo,
             clock: ctx.clock.clone(),
             enqueue_parse,
-        }));
+        };
+        registry.register(Arc::new(CreateDocument::new(deps)));
         Ok(())
     }
 
@@ -55,15 +70,30 @@ pub struct UpdateDocument {
     enqueue_parse: Arc<EnqueueParse>,
 }
 
+pub struct UpdateDocumentDeps {
+    pub document_repo: Arc<dyn DocumentRepository>,
+    pub clock: Arc<dyn Clock>,
+    pub enqueue_parse: Arc<EnqueueParse>,
+}
+
 impl UpdateDocument {
+    pub fn new(deps: UpdateDocumentDeps) -> Self {
+        Self {
+            document_repo: deps.document_repo,
+            clock: deps.clock,
+            enqueue_parse: deps.enqueue_parse,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let document_repo = Arc::clone(&ctx.repos.document);
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
-        registry.register(Arc::new(UpdateDocument {
+        let deps = UpdateDocumentDeps {
             document_repo,
             clock: ctx.clock.clone(),
             enqueue_parse,
-        }));
+        };
+        registry.register(Arc::new(UpdateDocument::new(deps)));
         Ok(())
     }
 
@@ -90,14 +120,27 @@ pub struct DeleteDocument {
     invalidate_cache: Arc<crate::index::service::InvalidateCache>,
 }
 
+pub struct DeleteDocumentDeps {
+    pub document_repo: Arc<dyn DocumentRepository>,
+    pub invalidate_cache: Arc<crate::index::service::InvalidateCache>,
+}
+
 impl DeleteDocument {
+    pub fn new(deps: DeleteDocumentDeps) -> Self {
+        Self {
+            document_repo: deps.document_repo,
+            invalidate_cache: deps.invalidate_cache,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let document_repo = Arc::clone(&ctx.repos.document);
         let invalidate_cache: Arc<crate::index::service::InvalidateCache> = registry.get()?;
-        registry.register(Arc::new(DeleteDocument {
+        let deps = DeleteDocumentDeps {
             document_repo,
             invalidate_cache,
-        }));
+        };
+        registry.register(Arc::new(DeleteDocument::new(deps)));
         Ok(())
     }
 
@@ -114,15 +157,30 @@ pub struct MoveDocument {
     enqueue_parse: Arc<EnqueueParse>,
 }
 
+pub struct MoveDocumentDeps {
+    pub document_repo: Arc<dyn DocumentRepository>,
+    pub clock: Arc<dyn Clock>,
+    pub enqueue_parse: Arc<EnqueueParse>,
+}
+
 impl MoveDocument {
+    pub fn new(deps: MoveDocumentDeps) -> Self {
+        Self {
+            document_repo: deps.document_repo,
+            clock: deps.clock,
+            enqueue_parse: deps.enqueue_parse,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let document_repo = Arc::clone(&ctx.repos.document);
         let enqueue_parse: Arc<EnqueueParse> = registry.get()?;
-        registry.register(Arc::new(MoveDocument {
+        let deps = MoveDocumentDeps {
             document_repo,
             clock: ctx.clock.clone(),
             enqueue_parse,
-        }));
+        };
+        registry.register(Arc::new(MoveDocument::new(deps)));
         Ok(())
     }
 
@@ -146,15 +204,30 @@ pub struct BatchImport {
     invalidate_cache: Arc<InvalidateCache>,
 }
 
+pub struct BatchImportDeps {
+    pub document_repo: Arc<dyn DocumentRepository>,
+    pub clock: Arc<dyn Clock>,
+    pub invalidate_cache: Arc<InvalidateCache>,
+}
+
 impl BatchImport {
+    pub fn new(deps: BatchImportDeps) -> Self {
+        Self {
+            document_repo: deps.document_repo,
+            clock: deps.clock,
+            invalidate_cache: deps.invalidate_cache,
+        }
+    }
+
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let document_repo = Arc::clone(&ctx.repos.document);
         let invalidate_cache: Arc<InvalidateCache> = registry.get()?;
-        registry.register(Arc::new(BatchImport {
+        let deps = BatchImportDeps {
             document_repo,
             clock: ctx.clock.clone(),
             invalidate_cache,
-        }));
+        };
+        registry.register(Arc::new(BatchImport::new(deps)));
         Ok(())
     }
 
