@@ -45,7 +45,11 @@
 - 验收指标：多语言覆盖率、缺失文案占比、切换一致性。
 - 文件说明：
   - `src/i18n/index.ts`：语言切换与回退策略（`t(key, locale)`）
+  - `src/i18n/context.tsx`：I18n Provider + locale 上下文封装（内部接入 Ark `LocaleProvider`）
+  - `src/i18n/locale.ts`：locale 规范化与方向性（`rtl/ltr`）映射
+  - `src/i18n/formatters.ts`：日期/数字/货币格式化（`Intl.*`）
   - `src/i18n/zh-CN.ts`：中文翻译资源
+  - 全局方向性接入：在 `src/App.tsx` 根节点设置 `dir={direction()}` 统一 RTL/LTR
 
 ### 2. 任务流与交互
 
