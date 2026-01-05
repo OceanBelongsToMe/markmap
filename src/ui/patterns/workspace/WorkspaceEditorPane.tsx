@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 import { EditorPane } from "../../../layouts/Regions";
 import { useResponsiveContent } from "../../../state/useResponsiveContent";
 import { WorkspacePanel } from "../../../features/workspace/WorkspacePanel";
-import type { FileTreeStyle } from "../../../features/sidebar/file-tree/style/fileTreeStyleTypes";
+import type { FileTreeStyle } from "../../../features/sidebar/file-tree";
 
 export type WorkspaceEditorPaneProps = {
   fileTreeStyle: FileTreeStyle;

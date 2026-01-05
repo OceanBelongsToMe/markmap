@@ -1,8 +1,8 @@
 import { TreeView } from "@ark-ui/solid/tree-view";
 import { FileTreeRow } from "./FileTreeRow";
-import type { FlatFileTreeNode } from "./flattenFileTree";
-import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
-import { StateIcon } from "../../../ui/icons/state/StateIcon";
+import type { FlatFileTreeNode } from "../domain/flattenFileTree";
+import type { FileTreeStyle } from "../style/fileTreeStyleTypes";
+import { StateIcon } from "../../../../ui/icons/state/StateIcon";
 import { FileTreeBranchControl } from "./FileTreeBranchControl";
 import { FileTreeBranchContent } from "./FileTreeBranchContent";
 import { resolveBranchState } from "./resolveBranchState";

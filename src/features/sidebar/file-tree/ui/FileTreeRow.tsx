@@ -1,7 +1,7 @@
 import type { JSX } from "solid-js";
-import type { FileTreeNode } from "./types";
+import type { FileTreeNode } from "../domain/types";
 import { renderIcon } from "./renderIcon";
-import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
+import type { FileTreeStyle } from "../style/fileTreeStyleTypes";
 
 export type FileTreeRowProps = {
   node: FileTreeNode;

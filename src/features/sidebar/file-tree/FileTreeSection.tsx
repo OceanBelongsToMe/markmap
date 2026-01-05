@@ -1,8 +1,8 @@
-import { useFileTreeState } from "./useFileTreeState";
-import { useFileTreeActions } from "./useFileTreeActions";
-import { useWorkspaceFileTree } from "./useWorkspaceFileTree";
-import { FileTreeView } from "./FileTreeView";
-import { useInitialExpand } from "./useInitialExpand";
+import { useFileTreeState } from "./state/useFileTreeState";
+import { useFileTreeActions } from "./state/useFileTreeActions";
+import { useWorkspaceFileTree } from "./data/useWorkspaceFileTree";
+import { FileTreeView } from "./ui/FileTreeView";
+import { useInitialExpand } from "./state/useInitialExpand";
 import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
 
 export type FileTreeSectionProps = {

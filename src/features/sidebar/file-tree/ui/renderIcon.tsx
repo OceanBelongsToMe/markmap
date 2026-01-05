@@ -1,6 +1,6 @@
-import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
-import type { FileTreeIcon, FileTreeNode } from "./types";
-import { StateIcon } from "../../../ui/icons/state/StateIcon";
+import type { FileTreeStyle } from "../style/fileTreeStyleTypes";
+import type { FileTreeIcon, FileTreeNode } from "../domain/types";
+import { StateIcon } from "../../../../ui/icons/state/StateIcon";
 import { resolveFileNodeState } from "./resolveFileNodeState";
 
 export const renderIcon = (

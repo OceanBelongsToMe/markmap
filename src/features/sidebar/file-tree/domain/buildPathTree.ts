@@ -1,23 +1,17 @@
-import type { WorkspaceFileTree } from "../../../state/workspace/useWorkspaceTree";
 import type { FileTreeNode } from "./types";
+import { parsePath } from "./parsePath";
 
 type FileEntry = {
   id: string;
   path: string;
 };
 
-const baseName = (value: string) => {
-  const trimmed = value.replace(/\/+$/, "");
-  const parts = trimmed.split(/[\\/]/).filter(Boolean);
-  return parts[parts.length - 1] ?? value;
-};
-
-const buildPathTree = (folderId: string, files: FileEntry[]): FileTreeNode[] => {
+export const buildPathTree = (folderId: string, files: FileEntry[]): FileTreeNode[] => {
   const root: FileTreeNode[] = [];
   const nodeMap = new Map<string, FileTreeNode>();
 
   for (const file of files) {
-    const parts = file.path.split("/").filter(Boolean);
+    const parts = parsePath(file.path);
     let parentKey = folderId;
     let siblings = root;
 
@@ -45,20 +39,4 @@ const buildPathTree = (folderId: string, files: FileEntry[]): FileTreeNode[] => 
   }
 
   return root;
-};
-
-export const mapWorkspaceTreeToFileNodes = (tree: WorkspaceFileTree | null): FileTreeNode[] => {
-  if (!tree) return [];
-  return tree.folders.map((folder) => ({
-    id: folder.id,
-    name: baseName(folder.rootPath),
-    type: "folder",
-    children: buildPathTree(
-      folder.id,
-      folder.documents.map((doc) => ({
-        id: doc.id,
-        path: doc.path
-      }))
-    )
-  }));
 };

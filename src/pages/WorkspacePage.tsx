@@ -12,7 +12,7 @@ import { WorkspacePreviewPane } from "../ui/patterns/workspace/WorkspacePreviewP
 import { WorkspaceSidebar } from "../ui/patterns/workspace/WorkspaceSidebar";
 import { WorkspaceSplitShell } from "../ui/patterns/workspace/WorkspaceSplitShell";
 import { ToolbarShell } from "../ui/patterns/ToolbarShell";
-import { useFileTreeStyle } from "../features/sidebar/file-tree/style/useFileTreeStyle";
+import type { FileTreeStyle } from "../features/sidebar/file-tree";
 
 export const WorkspacePage = () => {
   const { layoutMode } = useLayoutState();
@@ -27,7 +27,7 @@ export const WorkspacePage = () => {
     () => shellRef(),
     workspaceLayoutMins
   );
-  const { style: fileTreeStyle, setStyle: setFileTreeStyle } = useFileTreeStyle();
+  const [fileTreeStyle, setFileTreeStyle] = createSignal<FileTreeStyle>("ark");
   const showPreview = () => layoutMode() === "split" && layoutVariant() === "three-pane";
   const showSidebar = () => layoutVariant() !== "single-pane";
 

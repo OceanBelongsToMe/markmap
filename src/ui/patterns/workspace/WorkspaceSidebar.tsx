@@ -5,8 +5,7 @@ import { SidebarShell } from "../../../layouts/SidebarShell";
 import { TreeView, type TreeNode } from "../../components/TreeView";
 import { SidebarSection } from "../sidebar/SidebarSection";
 import { useI18n } from "../../../i18n/context";
-import { FileTreeSection } from "../../../features/sidebar/file-tree/FileTreeSection";
-import type { FileTreeStyle } from "../../../features/sidebar/file-tree/style/fileTreeStyleTypes";
+import { FileTreeSection, type FileTreeStyle } from "../../../features/sidebar/file-tree";
 
 export type WorkspaceSidebarProps = {
   collapsed?: boolean;

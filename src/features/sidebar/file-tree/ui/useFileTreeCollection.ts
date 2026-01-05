@@ -1,7 +1,7 @@
 import { createMemo } from "solid-js";
 import type { Accessor } from "solid-js";
 import { createTreeCollection } from "@ark-ui/solid/tree-view";
-import type { FileTreeNode } from "./types";
+import type { FileTreeNode } from "../domain/types";
 
 type UseFileTreeCollectionArgs = {
   nodes: Accessor<FileTreeNode[]>;

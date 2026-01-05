@@ -1,8 +1,8 @@
 import type { Accessor } from "solid-js";
-import { VirtualTreeList } from "../../../ui/virtual/VirtualTreeList";
+import { VirtualTreeList } from "../../../../ui/virtual/VirtualTreeList";
 import { FileTreeItem } from "./FileTreeItem";
-import type { FlatFileTreeNode } from "./flattenFileTree";
-import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
+import type { FlatFileTreeNode } from "../domain/flattenFileTree";
+import type { FileTreeStyle } from "../style/fileTreeStyleTypes";
 
 export type FileTreeVirtualListProps = {
   flatIds: Accessor<string[]>;

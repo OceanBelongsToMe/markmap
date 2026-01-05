@@ -1,5 +1,5 @@
 import type { Accessor, Setter } from "solid-js";
-import type { FileTreeNode } from "./types";
+import type { FileTreeNode } from "../domain/types";
 import { useTogglePulse } from "./useTogglePulse";
 
 export type FileTreeActionsArgs = {

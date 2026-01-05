@@ -1,5 +1,5 @@
 import { createMemo } from "solid-js";
-import type { FileTreeNode } from "./types";
+import type { FileTreeNode } from "../domain/types";
 import { mapWorkspaceTreeToFileNodes } from "./mapWorkspaceTreeToFileNodes";
 import { useWorkspaceFileTreeData } from "./useWorkspaceFileTreeData";
 

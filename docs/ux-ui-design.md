@@ -136,6 +136,24 @@
   - 组合层：`FileTreeSection`（组装数据 + 状态 + 视图）
   - 入口透传：`WorkspaceSidebar` 透传 `fileTreeStyle`
   - 测试 UI：`WorkspaceEditorPane` 提供样式切换下拉
+  - Public API 约束：外部仅允许通过 `features/sidebar/file-tree/index.ts` 导入，禁止直接引用 `domain/`、`data/`、`state/`、`ui/` 内部模块以保持边界稳定。
+
+- 稳定性迁移建议（文件树目录结构）
+  - 目标：在不影响用户行为的前提下，降低改动影响面与回归风险。
+  - 迁移顺序（最小风险）：
+    1. 纯函数先行：将 `mapWorkspaceTreeToFileNodes` 内的路径解析与树构建拆分为独立纯函数（新建文件，旧函数仅转调）。
+    2. 目录落位：新增 `domain/` 目录放置纯函数与 `types.ts`，保持对外 API 不变。
+    3. hook 分层：将 `useWorkspaceFileTreeData`、`useWorkspaceFileTree` 移入 `data/`，`useFileTreeState`/`useFileTreeActions`/`useInitialExpand` 移入 `state/`。
+    4. UI 组件搬迁：将 `FileTree*` 组件移动到 `ui/`，仅调整 import 路径。
+    5. 收尾校验：确认所有导出入口与消费方路径一致，无行为变化。
+  - 风险清单（按优先级）：
+    - import 路径调整导致构建失败或循环依赖（需逐步迁移并运行类型检查）。
+    - 导出重排造成外部引用断裂（可保留旧路径 re-export 过渡）。
+    - 迁移过程中误改逻辑（必须保持“纯重构、行为不变”）。
+  - 回滚点（每步可撤）：
+    - 每一步都只做“单目录 + 单责任”的改动；若出现问题，只回滚当前步文件移动与 import 变更。
+    - 关键纯函数拆分后，保留原函数作为薄封装，便于回退。
+    - 如需临时稳定，可新增 `index.ts` 做 re-export 保持旧路径可用。
 
 - 折叠触发与布局策略（文件树）：
   - 交互触发：使用 `TreeView.BranchTrigger` 作为唯一触发入口，保证点击图标/文本/空白均可展开，且首次点击稳定。

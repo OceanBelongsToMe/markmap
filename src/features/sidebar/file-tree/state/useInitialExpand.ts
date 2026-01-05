@@ -1,6 +1,6 @@
 import { createEffect, createSignal } from "solid-js";
 import type { Accessor, Setter } from "solid-js";
-import type { FileTreeNode } from "./types";
+import type { FileTreeNode } from "../domain/types";
 
 type UseInitialExpandArgs = {
   nodes: Accessor<FileTreeNode[]>;

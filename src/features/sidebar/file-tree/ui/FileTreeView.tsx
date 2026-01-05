@@ -1,17 +1,17 @@
 import type { Accessor } from "solid-js";
 import { createMemo } from "solid-js";
 import { TreeView } from "@ark-ui/solid/tree-view";
-import { flattenFileTree } from "./flattenFileTree";
-import type { FileTreeNode } from "./types";
+import { flattenFileTree } from "../domain/flattenFileTree";
+import type { FileTreeNode } from "../domain/types";
 import { useFileTreeCollection } from "./useFileTreeCollection";
 import { FileTreeVirtualList } from "./FileTreeVirtualList";
-import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
-import "./styles/base.css";
-import "./styles/interaction.css";
-import "./styles/content.css";
-import "./styles/theme-ark.css";
-import "./styles/theme-dense.css";
-import "./styles/theme-classic.css";
+import type { FileTreeStyle } from "../style/fileTreeStyleTypes";
+import "../styles/base.css";
+import "../styles/interaction.css";
+import "../styles/content.css";
+import "../styles/theme-ark.css";
+import "../styles/theme-dense.css";
+import "../styles/theme-classic.css";
 
 export type FileTreeViewProps = {
   nodes: Accessor<FileTreeNode[]>;
