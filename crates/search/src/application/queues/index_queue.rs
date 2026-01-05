@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use knowlattice_core::model::DocumentId;
 
-use super::indexer::IndexTask;
+use crate::domain::indexer::IndexTask;
 
 #[derive(Debug, Default)]
 pub struct IndexQueue {

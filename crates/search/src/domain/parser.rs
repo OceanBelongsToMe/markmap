@@ -1,4 +1,3 @@
-use common::error::{AppError, ErrorCode};
 use common::types::AppResult;
 use knowlattice_core::model::{DocumentId, NodeId, Timestamp};
 use knowlattice_core::model::node_base::NodeBase;
@@ -39,15 +38,4 @@ pub struct ParseResult {
 
 pub trait Parser {
     fn parse(&self, task: ParseTask, sink: &mut dyn NodeSink) -> AppResult<ParseResult>;
-}
-
-pub struct NullParser;
-
-impl Parser for NullParser {
-    fn parse(&self, _task: ParseTask, _sink: &mut dyn NodeSink) -> AppResult<ParseResult> {
-        Err(AppError::new(
-            ErrorCode::Internal,
-            "search parser not configured",
-        ))
-    }
 }

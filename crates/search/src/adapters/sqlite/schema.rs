@@ -1,10 +1,8 @@
 use common::types::AppResult;
 
-use super::fts_schema::FTS_SCHEMA_SQL;
+use crate::domain::schema::SchemaExecutor;
 
-pub trait SchemaExecutor {
-    fn execute(&self, sql: &str) -> AppResult<()>;
-}
+use super::sql::fts_schema::FTS_SCHEMA_SQL;
 
 pub fn migrate(executor: &dyn SchemaExecutor) -> AppResult<()> {
     executor.execute(FTS_SCHEMA_SQL)

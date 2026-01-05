@@ -1,4 +1,3 @@
-use common::error::{AppError, ErrorCode};
 use common::types::AppResult;
 use knowlattice_core::model::{DocumentId, FolderId, NodeId, WorkspaceId};
 
@@ -34,22 +33,4 @@ pub struct Fragment {
 pub trait QueryEngine {
     fn search(&self, input: QueryInput) -> AppResult<Vec<Hit>>;
     fn highlights(&self, doc_id: DocumentId, query: String) -> AppResult<Vec<Fragment>>;
-}
-
-pub struct NullQueryEngine;
-
-impl QueryEngine for NullQueryEngine {
-    fn search(&self, _input: QueryInput) -> AppResult<Vec<Hit>> {
-        Err(AppError::new(
-            ErrorCode::Internal,
-            "search query not configured",
-        ))
-    }
-
-    fn highlights(&self, _doc_id: DocumentId, _query: String) -> AppResult<Vec<Fragment>> {
-        Err(AppError::new(
-            ErrorCode::Internal,
-            "search query not configured",
-        ))
-    }
 }

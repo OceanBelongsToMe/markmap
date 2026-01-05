@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use super::parser::ParseTask;
+use crate::domain::parser::ParseTask;
 use knowlattice_core::model::DocumentId;
 
 #[derive(Debug, Default)]

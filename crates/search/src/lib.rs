@@ -1,4 +1,4 @@
-pub mod parser;
-pub mod indexer;
-pub mod query;
-pub mod schema;
+pub mod adapters;
+pub mod application;
+pub mod domain;
+pub mod error;

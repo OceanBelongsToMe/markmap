@@ -1,8 +1,8 @@
 use common::time::{Clock, SystemClock};
 use common::types::AppResult;
 use knowlattice_core::model::DocumentId;
-use knowlattice_search::parser::markdown_parser::MarkdownParser;
-use knowlattice_search::parser::parser::{ParseTask, Parser};
+use knowlattice_search::adapters::markdown::MarkdownParser;
+use knowlattice_search::domain::parser::{ParseTask, Parser};
 
 use super::node_sink::{NodeCollectingResult, NodeCollectingSink};
 

@@ -149,24 +149,38 @@
 │  ├─ search/
 │  │  ├─ src/
 │  │  │  ├─ lib.rs
-│  │  │  ├─ parser/
+│  │  │  ├─ domain/
 │  │  │  │  ├─ mod.rs
 │  │  │  │  ├─ parser.rs
-│  │  │  │  ├─ markdown_parser.rs
-│  │  │  │  └─ parse_queue.rs
-│  │  │  ├─ indexer/
-│  │  │  │  ├─ mod.rs
 │  │  │  │  ├─ indexer.rs
-│  │  │  │  ├─ sqlite_indexer.rs
-│  │  │  │  └─ index_queue.rs
-│  │  │  ├─ query/
-│  │  │  │  ├─ mod.rs
 │  │  │  │  ├─ query.rs
-│  │  │  │  └─ sqlite_query.rs
-│  │  │  └─ schema/
+│  │  │  │  └─ schema.rs
+│  │  │  ├─ application/
+│  │  │  │  ├─ mod.rs
+│  │  │  │  ├─ queues/
+│  │  │  │  │  ├─ mod.rs
+│  │  │  │  │  ├─ parse_queue.rs
+│  │  │  │  │  └─ index_queue.rs
+│  │  │  │  └─ usecases/
+│  │  │  │     ├─ mod.rs
+│  │  │  │     ├─ index_document.rs
+│  │  │  │     └─ search_query.rs
+│  │  │  └─ adapters/
 │  │  │     ├─ mod.rs
-│  │  │     ├─ fts_schema.rs
-│  │  │     └─ migrate.rs
+│  │  │     ├─ null.rs
+│  │  │     ├─ markdown/
+│  │  │     │  ├─ mod.rs
+│  │  │     │  ├─ markdown_parser.rs
+│  │  │     │  ├─ mapper.rs
+│  │  │     │  └─ parser_state.rs
+│  │  │     └─ sqlite/
+│  │  │        ├─ mod.rs
+│  │  │        ├─ indexer.rs
+│  │  │        ├─ query.rs
+│  │  │        ├─ schema.rs
+│  │  │        └─ sql/
+│  │  │           ├─ mod.rs
+│  │  │           └─ fts_schema.rs
 │  ├─ export/
 │  │  ├─ src/
 │  │  │  ├─ lib.rs
@@ -258,9 +272,14 @@
 - core：DDD 实体/值对象/领域事件 + 策略模式（policy 校验），值对象不可变
 - core::model：DDD 实体/值对象
 - core::policy：策略模式 + 组合校验（validator 组合）
-- core::event：领域事件 + 发布订阅（Observer/Dispatcher）
-- core::error：错误代数类型（ADT）+ 映射表
-  **事件使用约定**：
+- core::event：领域事件（仅结构定义，不含发布器）
+- core::error：错误代数类型（ADT）+ 领域辅助方法（如 code/message）
+**严格边界（SRP）**：
+- core 不暴露 Repository/Service/Indexer/Clock 等操作接口
+- core 不依赖 AppError/AppResult；仅返回 `Result<T, DomainError>`
+- 流程编排/调度/持久化/解析属于上层（services/storage/search），禁止进入 core
+
+**事件使用约定**：
 - services 在用例完成后发布 `DomainEvent`
 - 副作用（索引/日志/缓存失效）由上层 handler 处理，core 不承载 IO
 
@@ -389,7 +408,7 @@
   - InvalidateCache：失效缓存
   - GetIndexStatus：查询解析/索引状态（待处理/进行中/失败/完成）
   - 策略：基于编辑器变更集（如 CodeMirror changes）做增量解析；优先解析当前活跃文件，后台按优先级补齐其余文件
-  - 说明：services::index 负责调度与最小闭环（解析 → 收集 → 入库）；解析/索引构建由 search::parser/indexer 实现
+  - 说明：services::index 负责调度与最小闭环（解析 → 收集 → 入库）；解析/索引构建由 search::domain 定义端口，search::adapters（markdown/sqlite）提供实现
   - 约定：services::index 提供 ParsePipeline/IndexPipeline trait；默认 ParsePipeline 使用 MarkdownParser + NodeCollectingSink
   - 用例：ReadDocument（从 FS 读取 markdown），ParseDocument（解析+收集），ApplyIndex（入库 nodes/node_text/node_range），RunIndex（执行 read→parse→apply），RunIndexNext（从队列拉取并执行）
   - 调度实现：tokio::mpsc 队列 + RunIndexWorker 后台执行；Semaphore 控制并发并对 doc_id 去重
@@ -460,61 +479,31 @@ Repository + Data Mapper（可选 Unit of Work）
 
 ### 3.4 search（索引与查询）
 
-管道/策略模式（parser/indexer 可替换）
+管道/策略模式（可替换实现）
 **职责**：解析与索引构建、检索与高亮。  
 **子模块与组成**：
-crates/search 骨架应体现“Parser/Indexer/Query/Schema”四层职责，且每层只保留最小可替换接口（trait + 实现 + 队列）
+crates/search 采用“三层结构（domain/application/adapters）”，确保接口稳定、流程清晰、实现可替换。
 
-- search::parser（解析）
-  - Markdown -> AST/NodeTree
-  - 结构/文本抽取
-  - 输入：markdown_text + (可选) editor_changes
-  - 输出：NodeTree（高亮范围可由 node_range 生成）
-  - 层级划分（严格 SRP，建议拆分）：
-    - parser.rs：Parser trait + ParseTask/ParseResult/NodeTree
-    - parse_queue.rs：ParseQueue（队列合并/去重）
-    - mapper.rs：Event/Tag -> NodeAction（只做语义映射）
-    - markdown_parser.rs：ParserState（只做栈/parent_id/range 生命周期管理）
-    - TextAccumulator：只合并文本并发出 Emit（可独立为模块）
-  - 实现建议：基于 pulldown-cmark 的 offset iterator 获取结构与范围
-  - 输出策略：解析产出的 NodeBase/NodeType/NodeText/NodeRange 通过 NodeSink 增量推送到 indexer/service 缓冲区；parser 不聚合文本，services 可按 parent_id 聚合
-  - 事件职责分离：
-    - Start：确定 node_type + parent_id + start_range
-    - End：补齐 end_range 并关闭节点
-    - Text/Code/Html：生成 text + range（绑定当前 parent）
-  - 增量（队列任务）：
-    - services::index 将 editor_changes 入队（可合并/去重）
-    - parser 处理单次任务，失败回退全量
-    - 任务可携带优先级与重试次数
-  - 类设计（示意）：
-    - ParseTask { doc_id, changes, priority, retry, queued_at }
-    - ParseQueue { push(task), pop(), merge_by_doc(doc_id) }
-    - Parser trait { parse(task) -> ParseResult }
-    - MarkdownParser (impl Parser)
-    - ParseResult { node_tree, warnings }
-  - 设计：Parser trait + 实现（如 MarkdownParser）
-- search::indexer（索引构建）
-  - 索引更新/重建、增量策略
-  - 设计：Indexer trait + 实现（如 SqliteIndexer）
-  - 类设计（示意）：
-    - IndexTask { doc_id, node_tree, mode(full|incremental), queued_at }
-    - IndexQueue { push(task), pop(), merge_by_doc(doc_id) }
-    - Indexer trait { upsert(task) -> IndexResult }
-    - SqliteIndexer (impl Indexer)
-    - IndexResult { updated_nodes, errors }
-- search::query（查询与高亮）
-  - 查询解析、命中集合、片段高亮
-  - 设计：Query trait + 实现（如 SqliteQuery）
-  - 类设计（示意）：
-    - QueryInput { q, scope(doc|folder|workspace), limit, offset }
-    - Query trait { search(input) -> Hits, highlights(doc_id, q) -> Fragments }
-    - SqliteQuery (impl Query)
-    - Hit { node_id, path, snippet, score }
-    - Fragment { node_id, ranges }
-- search::schema（索引结构）
-  - 索引字段定义与版本（使用 SQLite FTS）
-  - FTS 字段示例：text、title_path、tags、node_type
-  - schema_version 与升级规则（schema::migrate）
+- search::domain（端口 + 数据结构）
+  - Parser/Indexer/QueryEngine/SchemaExecutor trait
+  - ParseTask/ParseResult/NodeTree、IndexTask/IndexResult、QueryInput/Hit/Fragment
+  - 只表达语义，不引用具体实现
+- search::application（用例 + 队列）
+  - usecases::IndexDocument：组织解析 → 索引的最小闭环（Parser + Indexer）
+  - usecases::SearchQuery：封装查询与高亮（QueryEngine）
+  - queues::ParseQueue / IndexQueue：任务合并与去重（无业务逻辑）
+- search::adapters（实现层）
+  - markdown：MarkdownParser + mapper/parser_state（解析实现）
+  - sqlite：Indexer/Query/Schema（存储实现）
+  - null：未配置场景的空实现
+  - sql：SQL 常量集中在 adapters/sqlite/sql/*
+
+**解析实现说明**：
+- MarkdownParser 基于 pulldown-cmark offset iterator 获取结构与范围
+- NodeSink 作为解析输出端口；services 层决定如何聚合文本/节点
+**索引/查询实现说明**：
+- 索引写入 node\_* + FTS；查询返回 Hit/Fragment
+- Schema 迁移通过 adapters::sqlite::schema::migrate 执行
 
 ### 3.5 api（IPC 边界）
 
@@ -571,14 +560,14 @@ Facade（统一入口）
 **子模块与组成**：
 
 - common::error（统一错误）
-- common::config（配置加载）
+- common::config（配置结构与解析接口）
 - common::log（日志与追踪）
 - common::time（时间戳与时区工具）
 - common::types（通用类型别名）
 - common::uuid（UUID/BLOB 转换）
   **类设计（示意）**：
 - common::error：AppError/ErrorCode
-- common::config：ConfigLoader/Config
+- common::config：Config/ConfigLoader（不包含文件 IO）
 - common::log：TraceId/LogContext
 - common::time：Clock/UtcTimestamp
 - common::types：AppResult<T>
@@ -587,7 +576,7 @@ Facade（统一入口）
 - PathNormalizer：统一路径分隔符、去重 `.`、阻止 `..`
 - TagNormalizer：去空白、统一大小写、去重
   **实现约定（落地）**：
-- Config 以 JSON 作为默认载体（FileConfigLoader 从文件读取并反序列化）
+- Config 以 JSON 作为默认载体（文件加载在 services::config::loader）
 - TraceId 使用 UUID v7，LogContext 统一携带 trace_id
 - Clock 统一基于 UTC（chrono::Utc）
 - PathNormalizer/TagNormalizer 实现在 common::types 中，供 core/services 复用
@@ -602,9 +591,9 @@ Facade（统一入口）
 - 具体 subscriber 初始化放在 Tauri 入口或 services 初始化层
 - 测试场景可在 `crates/storage/tests/setup.rs` 通过 `enter_test_span()` 统一创建 LogContext + span，避免重复样板代码
   **职责边界（与 storage/services 协作）**：
-- common::config 只负责配置“加载与解析”（如读取文本并反序列化）
+- common::config 只负责配置“结构与解析接口”，文件加载位于 services::config::loader
 - storage/services 负责配置“持久化与业务流程”（保存/更新/回滚）
-- services 组合 storage 与 common：读取配置原文 → common 解析 → 构建 core::AppConfig/UserConfig
+- services 组合 storage 与 common：读取配置原文 → services::config::loader 解析 → 构建 core::AppConfig/UserConfig
 
 ### 3.7 plugins（扩展与钩子）
 
@@ -659,9 +648,9 @@ Hook/Observer（事件钩子）
 ## 5. 核心数据流
 
 - 导入：文件系统 -> Document/Folder 注册 -> services::index 入队解析
-- 解析：search::parser 生成 AST/NodeTree，高亮范围由 node_range 派生
-- 索引：search::indexer 写入 node\_\* 表与 FTS
-- 查询：services::search 调用 search::query 返回命中/高亮
+- 解析：search::adapters::markdown 生成 NodeTree，高亮范围由 node_range 派生
+- 索引：search::adapters::sqlite 写入 node\_\* 表与 FTS
+- 查询：services::search 调用 search::application::SearchQuery/QueryEngine 返回命中/高亮
 - 渲染：services::render 将 NodeTree 渲染为 markdown/html/markmap
 - 导出：通过 plugins::hook::on_export 产出文件
 

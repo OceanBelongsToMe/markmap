@@ -5,8 +5,8 @@ use knowlattice_core::model::node_range::NodeRange;
 use knowlattice_core::model::node_text::NodeText;
 use knowlattice_core::model::node_type::NodeType;
 use knowlattice_core::model::{DocumentId, NodeId};
-use knowlattice_search::parser::markdown_parser::MarkdownParser;
-use knowlattice_search::parser::parser::{NodeSink, ParseTask, Parser};
+use knowlattice_search::adapters::markdown::MarkdownParser;
+use knowlattice_search::domain::parser::{NodeSink, ParseTask, Parser};
 use proptest::prelude::*;
 use std::collections::{HashMap, HashSet};
 

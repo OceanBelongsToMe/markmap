@@ -1,7 +1,7 @@
 use common::time::Clock as _;
 use common::time::SystemClock;
 use common::types::AppResult;
-use knowlattice_core::error::domain_error::map_domain_error;
+use crate::error::map_domain_error;
 use knowlattice_core::model::node_base::NodeBase;
 use knowlattice_core::model::node_range::NodeRange;
 use knowlattice_core::model::node_text::NodeText;
@@ -9,7 +9,7 @@ use knowlattice_core::model::node_type::NodeType;
 use knowlattice_core::model::{DocumentId, NodeId};
 
 use super::markdown_parser::node_type_id;
-use super::parser::NodeSink;
+use crate::domain::parser::NodeSink;
 
 #[derive(Debug, Default)]
 pub struct ParserState {
@@ -172,5 +172,3 @@ pub struct StackEntry {
     pub node_type: NodeType,
     pub start: usize,
 }
-
-// reuse map_domain_error from core::error

@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 use crate::model::{
     ContentHash, DocumentId, FolderId, NodeId, RelativePath, WorkspaceId,
@@ -45,31 +44,4 @@ pub enum DomainEvent {
         doc_id: DocumentId,
         node_id: NodeId,
     },
-}
-
-pub trait DomainEventHandler: Send + Sync {
-    fn handle(&self, event: &DomainEvent);
-}
-
-#[derive(Default)]
-pub struct EventDispatcher {
-    handlers: Vec<Arc<dyn DomainEventHandler>>,
-}
-
-impl EventDispatcher {
-    pub fn new() -> Self {
-        Self {
-            handlers: Vec::new(),
-        }
-    }
-
-    pub fn register(&mut self, handler: Arc<dyn DomainEventHandler>) {
-        self.handlers.push(handler);
-    }
-
-    pub fn dispatch(&self, event: &DomainEvent) {
-        for handler in &self.handlers {
-            handler.handle(event);
-        }
-    }
 }

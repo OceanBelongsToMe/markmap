@@ -1,7 +1,7 @@
 use common::error::{AppError, ErrorCode};
 use common::types::AppResult;
 
-use super::indexer::{IndexResult, IndexTask, Indexer};
+use crate::domain::indexer::{IndexResult, IndexTask, Indexer};
 
 #[derive(Debug, Default)]
 pub struct SqliteIndexer;

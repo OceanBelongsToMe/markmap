@@ -1,7 +1,7 @@
 use common::error::{AppError, ErrorCode};
 use common::types::AppResult;
 
-use super::query::{Fragment, Hit, QueryEngine, QueryInput};
+use crate::domain::query::{Fragment, Hit, QueryEngine, QueryInput};
 use knowlattice_core::model::DocumentId;
 
 #[derive(Debug, Default)]

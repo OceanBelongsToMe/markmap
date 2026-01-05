@@ -1,5 +1,5 @@
 use common::error::{AppError, ErrorCode};
-use knowlattice_core::error::domain_error::{map_domain_error as core_map, DomainError};
+use knowlattice_core::error::domain_error::DomainError;
 
 pub fn map_sqlx_error(op: &str, err: sqlx::Error) -> AppError {
     AppError::with_details(
@@ -10,6 +10,12 @@ pub fn map_sqlx_error(op: &str, err: sqlx::Error) -> AppError {
 }
 
 pub fn map_domain_error(err: DomainError, context: &str) -> AppError {
-    let core_err = core_map(err);
-    AppError::with_details(core_err.code, context, core_err.details.unwrap_or_default())
+    let (code, details) = match err {
+        DomainError::NotFound { message } => (ErrorCode::NotFound, message),
+        DomainError::InvalidState { message } => (ErrorCode::InvalidState, message),
+        DomainError::ValidationFailed { message } => (ErrorCode::ValidationFailed, message),
+        DomainError::Conflict { message } => (ErrorCode::Conflict, message),
+        DomainError::PermissionDenied { message } => (ErrorCode::PermissionDenied, message),
+    };
+    AppError::with_details(code, context, details)
 }

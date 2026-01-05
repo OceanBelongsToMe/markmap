@@ -1,5 +1,5 @@
 use common::types::AppResult;
-use knowlattice_core::error::domain_error::map_domain_error;
+use crate::error::map_domain_error;
 use knowlattice_core::model::node_type::NodeType;
 use knowlattice_core::model::node_link::LinkType;
 use knowlattice_core::model::HeadingLevel;
@@ -13,8 +13,6 @@ fn normalize_optional(value: &str) -> Option<String> {
         Some(trimmed.to_string())
     }
 }
-
-// reuse map_domain_error from core::error
 
 fn map_alignment(alignment: Alignment) -> u8 {
     match alignment {

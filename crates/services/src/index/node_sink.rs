@@ -4,7 +4,7 @@ use knowlattice_core::model::node_range::NodeRange;
 use knowlattice_core::model::node_text::NodeText;
 use knowlattice_core::model::node_type::NodeType;
 use knowlattice_core::model::NodeId;
-use knowlattice_search::parser::parser::NodeSink;
+use knowlattice_search::domain::parser::NodeSink;
 
 use super::node_type_records::NodeTypeRecords;
 

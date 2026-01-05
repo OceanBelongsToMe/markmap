@@ -1,11 +1,12 @@
-use crate::parser::mapper::{ChainMapper, DefaultMapper, Mapper, NodeAction, TextMapper};
+use crate::adapters::markdown::mapper::{ChainMapper, DefaultMapper, Mapper, NodeAction, TextMapper};
 use common::types::AppResult;
 use knowlattice_core::model::node_type::NodeType;
 use knowlattice_core::model::DocumentId;
 // HeadingLevel is not used directly in this file; mapper handles heading payloads
 use pulldown_cmark::{Event, Options, Parser as MdParser};
 
-use super::parser::{NodeSink, NodeTree, ParseResult, ParseTask, Parser};
+use crate::domain::parser::{NodeSink, NodeTree, ParseResult, ParseTask, Parser};
+
 use super::parser_state::ParserState;
 
 #[derive(Debug, Default)]
