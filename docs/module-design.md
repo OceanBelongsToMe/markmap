@@ -27,6 +27,22 @@
 - 以 provider/registrar 形式注册窗口事件与插件初始化，确保扩展时变更隔离。
 - 为未来多窗口、多数据库或多入口场景提供明确扩展点。
 
+## 2.2 UI 组件替换的严格策略（Ark 组件）
+
+当需要将现有 UI 组件替换为 Ark UI 版本时，遵循“严格 SRP 拆分”：
+
+- `src/ui/ark/<component>/...`：仅负责 Ark 组件的结构、行为与样式（实现层）
+- `src/ui/components/<Component>.tsx`：仅负责业务 API 适配（适配层）
+- 调用方保持不变，组件替换的影响只集中在“实现层 + 适配层”
+
+示例（Select 替换）：
+- `src/ui/ark/select/ArkSelect.tsx`：封装 Ark Select 组件
+- `src/ui/components/Select.tsx`：把 `value: string` / `options` / `onChange` 适配为 Ark Select 的 `value: string[]` / `collection` / `onValueChange`
+
+权衡：
+- 成本：多 1 个文件与适配逻辑
+- 收益：更强的变更隔离与本地推理能力，后续切换组件库代价低
+
 ## 3. 目录与模块职责
 
 ### 3.0 目录结构管理

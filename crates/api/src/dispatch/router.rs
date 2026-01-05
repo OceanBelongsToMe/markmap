@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use serde_json::{json, Value};
-
 use knowlattice_services::builder::Services;
 
 use crate::dto::{DtoRequest, DtoResponse};
@@ -10,6 +8,7 @@ use crate::error::ApiError;
 use super::codec::CodecRegistry;
 use super::context::ApiContextBuilder;
 use super::pipeline::{LoggingPreMiddleware, PostPipeline, PrePipeline};
+use super::response::ResponseMapper;
 use super::registry::CommandRegistry;
 
 pub struct CommandRouter {
@@ -61,28 +60,6 @@ impl CommandRouter {
         match codec.serialize(raw) {
             Ok(data) => ResponseMapper::ok(&ctx, data),
             Err(err) => ResponseMapper::error(&ctx, err),
-        }
-    }
-}
-
-struct ResponseMapper;
-
-impl ResponseMapper {
-    fn ok(ctx: &super::context::ApiContext, data: Value) -> DtoResponse {
-        DtoResponse {
-            ok: true,
-            data,
-            error: None,
-            request_id: ctx.request_id.clone(),
-        }
-    }
-
-    fn error(ctx: &super::context::ApiContext, err: ApiError) -> DtoResponse {
-        DtoResponse {
-            ok: false,
-            data: json!({}),
-            error: Some(err.with_trace_id(ctx.trace_id.clone())),
-            request_id: ctx.request_id.clone(),
         }
     }
 }

@@ -1,33 +1,13 @@
-use crate::dispatch::{ApiContext, CodecRegistry, CommandHandler, CommandRegistry};
+use crate::dispatch::{CodecRegistry, CommandRegistry};
 use crate::dto::search::{SearchPingRequest, SearchPingResponse};
-use crate::error::ApiError;
+use super::ping::{register_ping, register_ping_codec};
 
 pub const COMMAND_PING: &str = "search_ping";
 
-pub struct SearchPingHandler;
-
-#[async_trait::async_trait]
-impl CommandHandler for SearchPingHandler {
-    type Request = SearchPingRequest;
-    type Response = SearchPingResponse;
-
-    fn name(&self) -> &'static str {
-        COMMAND_PING
-    }
-
-    async fn handle(
-        &self,
-        _ctx: &ApiContext,
-        _payload: SearchPingRequest,
-    ) -> Result<SearchPingResponse, ApiError> {
-        Ok(SearchPingResponse::default())
-    }
-}
-
 pub fn register(registry: &mut CommandRegistry) {
-    registry.register(SearchPingHandler);
+    register_ping::<SearchPingRequest, SearchPingResponse>(registry, COMMAND_PING);
 }
 
 pub fn register_codecs(codecs: &mut CodecRegistry) {
-    codecs.register::<SearchPingHandler>(COMMAND_PING);
+    register_ping_codec::<SearchPingRequest, SearchPingResponse>(codecs, COMMAND_PING);
 }
