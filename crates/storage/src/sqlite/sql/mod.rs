@@ -2,6 +2,7 @@ pub mod document;
 pub mod folder;
 pub mod node_base;
 pub mod node_code_block;
+pub mod node_footnote_definition;
 pub mod node_heading;
 pub mod node_image;
 pub mod node_link;

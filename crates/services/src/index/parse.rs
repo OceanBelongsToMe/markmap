@@ -7,15 +7,21 @@ use super::node_sink::NodeCollectingResult;
 use super::pipeline::ParsePipeline;
 use crate::builder::{ServiceContext, ServiceRegistry};
 use crate::index::pipeline::DefaultParsePipeline;
+use crate::node_types::NodeTypeLookup;
 
 pub struct ParseDocument {
     pipeline: Arc<dyn ParsePipeline + Send + Sync>,
+    node_types: Arc<NodeTypeLookup>,
 }
 
 impl ParseDocument {
     pub fn register(_ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let pipeline = Arc::new(DefaultParsePipeline::new());
-        registry.register(Arc::new(ParseDocument { pipeline }));
+        let node_types: Arc<NodeTypeLookup> = registry.get()?;
+        registry.register(Arc::new(ParseDocument {
+            pipeline,
+            node_types,
+        }));
         Ok(())
     }
 
@@ -24,7 +30,9 @@ impl ParseDocument {
         doc_id: DocumentId,
         markdown: String,
     ) -> AppResult<NodeCollectingResult> {
-        self.pipeline.parse_markdown(doc_id, markdown)
+        let node_types = self.node_types.snapshot().await?;
+        self.pipeline
+            .parse_markdown(doc_id, markdown, &node_types)
     }
 }
 
@@ -35,10 +43,14 @@ mod tests {
     #[test]
     fn parse_document_executes_pipeline() {
         let pipeline = Arc::new(DefaultParsePipeline::new());
-        let parse = ParseDocument { pipeline };
-        let result = parse
-            .pipeline
-            .parse_markdown(DocumentId::new(), "hello".to_string())
+        let node_types = crate::node_types::NodeTypeCache::new(
+            knowlattice_search::adapters::markdown::NODE_TYPE_NAME_IDS
+                .iter()
+                .map(|(name, id)| (*id, (*name).to_string()))
+                .collect(),
+        );
+        let result = pipeline
+            .parse_markdown(DocumentId::new(), "hello".to_string(), &node_types)
             .expect("parse");
         assert!(!result.bases.is_empty());
         assert!(!result.texts.is_empty());

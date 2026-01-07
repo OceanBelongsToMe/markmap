@@ -7,3 +7,4 @@ pub mod search;
 pub mod export;
 pub mod builder;
 pub mod error;
+pub mod node_types;

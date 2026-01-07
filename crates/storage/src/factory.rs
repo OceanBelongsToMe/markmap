@@ -7,9 +7,10 @@ pub use crate::provider::{NodeRepositories, Repositories};
 use crate::sqlite::pool::SqlitePool;
 use crate::sqlite::repo::{
     SqliteDocumentRepo, SqliteFolderRepo, SqliteNodeBaseRepo, SqliteNodeCodeBlockRepo,
-    SqliteNodeHeadingRepo, SqliteNodeImageRepo, SqliteNodeLinkRepo, SqliteNodeListRepo,
-    SqliteNodeRangeRepo, SqliteNodeTableRepo, SqliteNodeTaskRepo, SqliteNodeTextRepo,
-    SqliteNodeTypeRepo, SqliteNodeWikiRepo, SqliteWorkspaceRecentFilesRepo, SqliteWorkspaceRepo,
+    SqliteNodeFootnoteDefinitionRepo, SqliteNodeHeadingRepo, SqliteNodeImageRepo,
+    SqliteNodeLinkRepo, SqliteNodeListRepo, SqliteNodeRangeRepo, SqliteNodeTableRepo,
+    SqliteNodeTaskRepo, SqliteNodeTextRepo, SqliteNodeTypeRepo, SqliteNodeWikiRepo,
+    SqliteWorkspaceRecentFilesRepo, SqliteWorkspaceRepo,
     SqliteWorkspaceStateRepo,
 };
 
@@ -22,6 +23,7 @@ pub fn build_sqlite_repositories(pool: Pool<Sqlite>) -> AppResult<Repositories> 
         node: NodeRepositories {
             base: Arc::new(SqliteNodeBaseRepo::new(pool.clone())),
             code_block: Arc::new(SqliteNodeCodeBlockRepo::new(pool.clone())),
+            footnote_definition: Arc::new(SqliteNodeFootnoteDefinitionRepo::new(pool.clone())),
             heading: Arc::new(SqliteNodeHeadingRepo::new(pool.clone())),
             image: Arc::new(SqliteNodeImageRepo::new(pool.clone())),
             link: Arc::new(SqliteNodeLinkRepo::new(pool.clone())),

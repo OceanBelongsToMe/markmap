@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use crate::repo::{
     node::{
-        NodeBaseRepository, NodeCodeBlockRepository, NodeHeadingRepository, NodeImageRepository,
-        NodeLinkRepository, NodeListRepository, NodeRangeRepository, NodeTableRepository,
-        NodeTaskRepository, NodeTextRepository, NodeTypeRepository, NodeWikiRepository,
+        NodeBaseRepository, NodeCodeBlockRepository, NodeFootnoteDefinitionRepository,
+        NodeHeadingRepository, NodeImageRepository, NodeLinkRepository, NodeListRepository,
+        NodeRangeRepository, NodeTableRepository, NodeTaskRepository, NodeTextRepository,
+        NodeTypeRepository, NodeWikiRepository,
     },
     DocumentRepository, FolderRepository, WorkspaceRecentFilesRepository, WorkspaceRepository,
     WorkspaceStateRepository,
@@ -13,6 +14,7 @@ use crate::repo::{
 pub struct NodeRepositories {
     pub base: Arc<dyn NodeBaseRepository>,
     pub code_block: Arc<dyn NodeCodeBlockRepository>,
+    pub footnote_definition: Arc<dyn NodeFootnoteDefinitionRepository>,
     pub heading: Arc<dyn NodeHeadingRepository>,
     pub image: Arc<dyn NodeImageRepository>,
     pub link: Arc<dyn NodeLinkRepository>,

@@ -1,4 +1,5 @@
 use knowlattice_core::model::node_code_block::NodeCodeBlock;
+use knowlattice_core::model::node_footnote_definition::NodeFootnoteDefinition;
 use knowlattice_core::model::node_heading::NodeHeading;
 use knowlattice_core::model::node_image::NodeImage;
 use knowlattice_core::model::node_link::NodeLink;
@@ -12,6 +13,7 @@ use knowlattice_core::model::NodeId;
 #[derive(Debug, Default, Clone)]
 pub struct NodeTypeRecords {
     pub headings: Vec<NodeHeading>,
+    pub footnote_definitions: Vec<NodeFootnoteDefinition>,
     pub lists: Vec<NodeListItem>,
     pub code_blocks: Vec<NodeCodeBlock>,
     pub tables: Vec<NodeTable>,
@@ -26,6 +28,9 @@ impl NodeTypeRecords {
         match node_type {
             NodeType::Heading { level } => {
                 self.headings.push(NodeHeading { node_id, level });
+            }
+            NodeType::FootnoteDefinition { label } => {
+                self.footnote_definitions.push(NodeFootnoteDefinition { node_id, label });
             }
             NodeType::List { order, is_item } => {
                 self.lists.push(NodeListItem {
@@ -102,7 +107,6 @@ impl NodeTypeRecords {
             | NodeType::Strikethrough
             | NodeType::Superscript
             | NodeType::Subscript
-            | NodeType::FootnoteDefinition { .. }
             | NodeType::FootnoteReference { .. }
             | NodeType::DefinitionList
             | NodeType::DefinitionListTitle

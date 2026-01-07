@@ -8,11 +8,13 @@ use knowlattice_core::model::node_text::NodeText;
 use knowlattice_core::model::node_type::NodeType;
 use knowlattice_core::model::{DocumentId, NodeId};
 
-use super::markdown_parser::node_type_id;
+use std::sync::Arc;
+
+use super::markdown_parser::NodeTypeIdResolver;
 use crate::domain::parser::NodeSink;
 
-#[derive(Debug, Default)]
 pub struct ParserState {
+    resolver: Arc<dyn NodeTypeIdResolver>,
     pub stack: Vec<StackEntry>,
     pub nodes: Vec<NodeBase>,
     pub roots: Vec<NodeId>,
@@ -20,8 +22,14 @@ pub struct ParserState {
 }
 
 impl ParserState {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(resolver: Arc<dyn NodeTypeIdResolver>) -> Self {
+        Self {
+            resolver,
+            stack: Vec::new(),
+            nodes: Vec::new(),
+            roots: Vec::new(),
+            warnings: Vec::new(),
+        }
     }
 
     pub fn current_parent_id(&self) -> Option<NodeId> {
@@ -32,7 +40,7 @@ impl ParserState {
         self.stack
             .iter()
             .rev()
-            .find(|entry| node_type_id(&entry.node_type) == expected_type_id)
+            .find(|entry| entry.node.node_type_id == expected_type_id)
             .map(|entry| entry.node_type.clone())
     }
 
@@ -57,7 +65,7 @@ impl ParserState {
     ) -> AppResult<()> {
         let node_id = NodeId::new();
         let now = SystemClock.now();
-        let node_type_id = node_type_id(&node_type);
+        let node_type_id = self.resolver.id_for(&node_type)?;
         let node = NodeBase::new(node_id, doc_id, parent_id, node_type_id, now, now)
             .map_err(map_domain_error)?;
         if node.parent_id.is_none() {
@@ -127,7 +135,7 @@ impl ParserState {
         sink: &mut dyn NodeSink,
     ) -> AppResult<()> {
         let node_id = NodeId::new();
-        let node_type_id = node_type_id(&node_type);
+        let node_type_id = self.resolver.id_for(&node_type)?;
         let now = SystemClock.now();
         let node = NodeBase::new(node_id, doc_id, parent_id, node_type_id, now, now)
             .map_err(map_domain_error)?;

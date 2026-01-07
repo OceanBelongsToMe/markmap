@@ -12,3 +12,4 @@ tracing = "^0.1"
 tracing-subscriber = { version = "^0.3", features = ["env-filter", "json"] }
 sqlx = { version = "^0.8", features = ["sqlite", "runtime-tokio", "migrate"] }
 async-trait = "^0.1"
+pulldown-cmark = "^0.13"

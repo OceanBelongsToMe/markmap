@@ -149,6 +149,7 @@ impl ServicesBuilder {
 
     fn register_defaults(ctx: &ServiceContext) -> AppResult<ServiceRegistry> {
         let mut registry = ServiceRegistry::new();
+        crate::node_types::register(ctx, &mut registry);
         crate::index::register(ctx, &mut registry)?;
         crate::document::register(ctx, &mut registry)?;
         crate::workspace::register(ctx, &mut registry)?;

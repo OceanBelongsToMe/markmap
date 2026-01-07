@@ -3,9 +3,10 @@ use std::sync::Arc;
 use common::types::AppResult;
 use knowlattice_core::model::DocumentId;
 use knowlattice_storage::repo::node::{
-    NodeBaseRepository, NodeCodeBlockRepository, NodeHeadingRepository, NodeImageRepository,
-    NodeLinkRepository, NodeListRepository, NodeRangeRepository, NodeTableRepository,
-    NodeTaskRepository, NodeTextRepository, NodeWikiRepository,
+    NodeBaseRepository, NodeCodeBlockRepository, NodeFootnoteDefinitionRepository,
+    NodeHeadingRepository, NodeImageRepository, NodeLinkRepository, NodeListRepository,
+    NodeRangeRepository, NodeTableRepository, NodeTaskRepository, NodeTextRepository,
+    NodeWikiRepository,
 };
 
 use super::node_sink::NodeCollectingResult;
@@ -16,6 +17,7 @@ pub struct ApplyIndex {
     node_text_repo: Arc<dyn NodeTextRepository>,
     node_range_repo: Arc<dyn NodeRangeRepository>,
     node_heading_repo: Arc<dyn NodeHeadingRepository>,
+    node_footnote_definition_repo: Arc<dyn NodeFootnoteDefinitionRepository>,
     node_list_repo: Arc<dyn NodeListRepository>,
     node_code_block_repo: Arc<dyn NodeCodeBlockRepository>,
     node_table_repo: Arc<dyn NodeTableRepository>,
@@ -30,6 +32,7 @@ pub struct ApplyIndexDeps {
     pub node_text_repo: Arc<dyn NodeTextRepository>,
     pub node_range_repo: Arc<dyn NodeRangeRepository>,
     pub node_heading_repo: Arc<dyn NodeHeadingRepository>,
+    pub node_footnote_definition_repo: Arc<dyn NodeFootnoteDefinitionRepository>,
     pub node_list_repo: Arc<dyn NodeListRepository>,
     pub node_code_block_repo: Arc<dyn NodeCodeBlockRepository>,
     pub node_table_repo: Arc<dyn NodeTableRepository>,
@@ -46,6 +49,7 @@ impl ApplyIndex {
             node_text_repo: deps.node_text_repo,
             node_range_repo: deps.node_range_repo,
             node_heading_repo: deps.node_heading_repo,
+            node_footnote_definition_repo: deps.node_footnote_definition_repo,
             node_list_repo: deps.node_list_repo,
             node_code_block_repo: deps.node_code_block_repo,
             node_table_repo: deps.node_table_repo,
@@ -61,6 +65,7 @@ impl ApplyIndex {
         let node_text_repo = Arc::clone(&ctx.repos.node.text);
         let node_range_repo = Arc::clone(&ctx.repos.node.range);
         let node_heading_repo = Arc::clone(&ctx.repos.node.heading);
+        let node_footnote_definition_repo = Arc::clone(&ctx.repos.node.footnote_definition);
         let node_list_repo = Arc::clone(&ctx.repos.node.list);
         let node_code_block_repo = Arc::clone(&ctx.repos.node.code_block);
         let node_table_repo = Arc::clone(&ctx.repos.node.table);
@@ -73,6 +78,7 @@ impl ApplyIndex {
             node_text_repo,
             node_range_repo,
             node_heading_repo,
+            node_footnote_definition_repo,
             node_list_repo,
             node_code_block_repo,
             node_table_repo,
@@ -94,6 +100,9 @@ impl ApplyIndex {
         self.node_range_repo.batch_upsert(&result.ranges).await?;
         self.node_heading_repo
             .batch_upsert(&result.node_types.headings)
+            .await?;
+        self.node_footnote_definition_repo
+            .batch_upsert(&result.node_types.footnote_definitions)
             .await?;
         self.node_list_repo
             .batch_upsert(&result.node_types.lists)

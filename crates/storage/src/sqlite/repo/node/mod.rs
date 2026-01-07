@@ -13,6 +13,8 @@ pub mod node_wiki;
 
 pub(crate) use node_base::SqliteNodeBaseRepo;
 pub(crate) use node_code_block::SqliteNodeCodeBlockRepo;
+pub(crate) use node_footnote_definition::SqliteNodeFootnoteDefinitionRepo;
+pub(crate) mod node_footnote_definition;
 pub(crate) use node_heading::SqliteNodeHeadingRepo;
 pub(crate) use node_image::SqliteNodeImageRepo;
 pub(crate) use node_link::SqliteNodeLinkRepo;

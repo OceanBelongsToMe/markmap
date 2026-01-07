@@ -336,6 +336,7 @@
       - node_image：node_id、src、alt、title
       - node_link：node_id、href、title、link_type、ref_id
       - node_task：node_id、checked
+      - node_footnote_definition：node_id、label
       - node_wiki：node_id、target_node_id、display_text、created_at、updated_at
   - 值对象（建议与约束）：
     - WorkspaceId/FolderId/DocId/NodeId：强类型 ID（newtype）
@@ -409,6 +410,7 @@
   - GetIndexStatus：查询解析/索引状态（待处理/进行中/失败/完成）
   - 策略：基于编辑器变更集（如 CodeMirror changes）做增量解析；优先解析当前活跃文件，后台按优先级补齐其余文件
   - 说明：services::index 负责调度与最小闭环（解析 → 收集 → 入库）；解析/索引构建由 search::domain 定义端口，search::adapters（markdown/sqlite）提供实现
+  - 解析依赖 node_types 缓存（懒加载），用于同步 node_type_id 语义
   - 约定：services::index 提供 ParsePipeline/IndexPipeline trait；默认 ParsePipeline 使用 MarkdownParser + NodeCollectingSink
   - 用例：ReadDocument（从 FS 读取 markdown），ParseDocument（解析+收集），ApplyIndex（入库 nodes/node_text/node_range），RunIndex（执行 read→parse→apply），RunIndexNext（从队列拉取并执行）
   - 调度实现：tokio::mpsc 队列 + RunIndexWorker 后台执行；Semaphore 控制并发并对 doc_id 去重
@@ -418,7 +420,27 @@
 - services::render（渲染/预览）
   - RenderMarkdown/RenderHtml/RenderMarkmap：按格式渲染
   - RenderDocument：门面用例，按 format 路由到具体用例
-  - 渲染用例按文件拆分（render/markdown.rs、render/html.rs、render/markmap.rs、render/document.rs）
+  - 渲染用例按文件拆分（render/markdown/*、render/html.rs、render/markmap.rs、render/document.rs）
+  - RenderMarkdown 基于 node_* 表还原 markdown（Loader → TreeBuilder → Serializer），不重新解析 markdown
+  - RenderMarkdown 规则（首版）
+    - 列表缩进：有序列表子元素缩进 3 空格；无序列表子元素缩进 2 空格
+    - Wiki：若有目标 ID，输出 `[[display_text|target_node_id]]`
+    - 表格：可降级为子节点文本拼接（不强制对齐）
+    - 无文本节点：从子节点获取文本输出
+    - 类型判定以 node_type_id 为主，分表仅补参数（依赖 node_types 缓存）
+  - RenderMarkdown::Serializer（SRP 拆分）
+    - serializer.rs：编排入口（仅驱动渲染）
+    - serializer/engine.rs：根节点驱动与输出聚合
+    - serializer/traversal.rs：树遍历策略
+    - serializer/block.rs：块级渲染
+    - serializer/inline.rs：行内渲染
+    - serializer/table.rs：表格渲染
+    - serializer/rules.rs：通用规则函数
+    - serializer/state.rs：上下文状态
+  - RenderMarkdown 测试拆分
+    - serializer/serializer_tests.rs：规则/单点用例
+    - serializer/serializer_compose_tests.rs：组合用例
+  - node_types 懒加载并缓存（首次使用加载，刷新策略：待办）
 - services::search（检索编排）
   - Search：全文/结构检索与分页
   - SearchScope：doc/folder/workspace
