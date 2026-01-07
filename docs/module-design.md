@@ -545,8 +545,9 @@ Facade（统一入口）
   - 领域错误到 IPC 错误的映射
     **类设计（示意，归属模块）**：
 - api::command：ApiContext { request_id }；CommandRegistry { register() }；CodecRegistry { register() }；CommandRouter { dispatch()/with_codecs() }；PrePipeline/PostPipeline { run() }；defaults::default_router()；Router 内负责前后编解码
-- api::command 示例：WorkspaceAttachFolderHandler / DocumentPingHandler
+- api::command 示例：WorkspaceAttachFolderHandler / DocumentPingHandler / RenderDocumentHandler
   - workspace_attach_folder：创建工作区 + 附加目录 + 扫描 + 入库 + 入队解析
+  - document_render：根据 DocumentId 和格式进行渲染（通过 RenderDocument 门面分发到 Markdown/Html/Markmap 渲染器）
 - api::dto：DtoRequest/DtoResponse（envelope + payload）
 - api::error：ErrorMapper { to_ipc_error(domain_error) }
   **约定**：

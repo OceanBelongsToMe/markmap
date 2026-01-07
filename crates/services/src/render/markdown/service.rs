@@ -27,12 +27,13 @@ impl RenderMarkdown {
         registry.register(Arc::new(service));
     }
 
-    pub async fn execute(&self, doc_id: DocumentId) -> AppResult<String> {
+    pub async fn execute(&self, doc_id: DocumentId) -> AppResult<crate::render::RenderOutput> {
         let snapshot = self.loader.load(doc_id).await?;
         let tree = self.tree_builder.build(snapshot)?;
         let node_types = self.node_types.snapshot().await?;
         let classifier = NodeTypeClassifier::new(node_types);
         let serializer = MarkdownSerializer::new(classifier);
-        serializer.serialize(&tree)
+        let content = serializer.serialize(&tree)?;
+        Ok(crate::render::RenderOutput::Text(content))
     }
 }

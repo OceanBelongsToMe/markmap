@@ -5,6 +5,7 @@ use std::sync::Arc;
 use crate::render::html::RenderHtml;
 use crate::render::markdown::RenderMarkdown;
 use crate::render::markmap::RenderMarkmap;
+use crate::render::RenderOutput;
 use crate::builder::ServiceRegistry;
 
 #[derive(Debug, Clone)]
@@ -33,7 +34,7 @@ impl RenderDocument {
         Ok(())
     }
 
-    pub async fn execute(&self, doc_id: DocumentId, format: RenderFormat) -> AppResult<String> {
+    pub async fn execute(&self, doc_id: DocumentId, format: RenderFormat) -> AppResult<RenderOutput> {
         match format {
             RenderFormat::Markdown => self.markdown.execute(doc_id).await,
             RenderFormat::Html => self.html.execute(doc_id).await,

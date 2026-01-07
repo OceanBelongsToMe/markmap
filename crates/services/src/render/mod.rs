@@ -6,6 +6,8 @@ pub mod markmap;
 mod tests;
 
 use common::types::AppResult;
+use serde::Serialize;
+use serde_json::Value;
 
 use crate::builder::{ServiceContext, ServiceRegistry};
 use crate::render::document::RenderDocument;
@@ -14,6 +16,13 @@ use crate::render::markdown::RenderMarkdown;
 use crate::render::markmap::RenderMarkmap;
 
 pub use document::RenderFormat;
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum RenderOutput {
+    Text(String),
+    Json(Value),
+}
 
 pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
     RenderMarkdown::register(ctx, registry);

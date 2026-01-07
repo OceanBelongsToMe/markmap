@@ -1,5 +1,6 @@
 node_modules
 dist
 .codex/
+.gemini/
 _bmad/
 _bmad-output/

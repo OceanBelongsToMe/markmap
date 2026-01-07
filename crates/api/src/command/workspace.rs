@@ -10,6 +10,7 @@ use crate::dto::workspace::{
     WorkspaceFolderNode, WorkspaceDocumentNode,
 };
 use crate::error::ApiError;
+use crate::error::mapper::from_app_error;
 use common::time::timestamp_to_millis;
 use knowlattice_services::workspace::{
     AttachFolderAndImport, GetCurrentWorkspace, ListRecentFiles, ListWorkspaceFileTree,
@@ -75,11 +76,11 @@ impl CommandHandler for WorkspaceAttachFolderHandler {
             .map(parse_workspace_id)
             .transpose()?;
 
-        let attach_flow: Arc<AttachFolderAndImport> = services.get().map_err(to_api_error)?;
+        let attach_flow: Arc<AttachFolderAndImport> = services.get().map_err(from_app_error)?;
         let result = attach_flow
             .execute(root_path, workspace_name, workspace_id, payload.extensions)
             .await
-            .map_err(to_api_error)?;
+            .map_err(from_app_error)?;
 
         Ok(WorkspaceAttachFolderResponse {
             workspace_id: result.workspace_id.as_uuid().to_string(),
@@ -104,9 +105,9 @@ impl CommandHandler for WorkspaceSwitchHandler {
         payload: WorkspaceSwitchRequest,
     ) -> Result<WorkspaceSwitchResponse, ApiError> {
         let services = Arc::clone(&ctx.services);
-        let switcher: Arc<SwitchWorkspace> = services.get().map_err(to_api_error)?;
+        let switcher: Arc<SwitchWorkspace> = services.get().map_err(from_app_error)?;
         let workspace_id = parse_workspace_id(&payload.workspace_id)?;
-        switcher.execute(workspace_id).await.map_err(to_api_error)?;
+        switcher.execute(workspace_id).await.map_err(from_app_error)?;
 
         Ok(WorkspaceSwitchResponse {
             workspace_id: workspace_id.as_uuid().to_string(),
@@ -129,14 +130,14 @@ impl CommandHandler for WorkspaceRecentFileHandler {
         payload: WorkspaceRecentFileRequest,
     ) -> Result<WorkspaceRecentFileResponse, ApiError> {
         let services = Arc::clone(&ctx.services);
-        let recorder: Arc<RecordRecentFile> = services.get().map_err(to_api_error)?;
+        let recorder: Arc<RecordRecentFile> = services.get().map_err(from_app_error)?;
         let workspace_id = parse_workspace_id(&payload.workspace_id)?;
         let document_id = parse_document_id(&payload.document_id)?;
 
         let entry = recorder
             .execute(workspace_id, document_id, payload.position)
             .await
-            .map_err(to_api_error)?;
+            .map_err(from_app_error)?;
 
         Ok(WorkspaceRecentFileResponse {
             workspace_id: entry.workspace_id.as_uuid().to_string(),
@@ -162,12 +163,12 @@ impl CommandHandler for WorkspaceRecentFilesHandler {
         payload: WorkspaceRecentFilesRequest,
     ) -> Result<WorkspaceRecentFilesResponse, ApiError> {
         let services = Arc::clone(&ctx.services);
-        let lister: Arc<ListRecentFiles> = services.get().map_err(to_api_error)?;
+        let lister: Arc<ListRecentFiles> = services.get().map_err(from_app_error)?;
         let workspace_id = parse_workspace_id(&payload.workspace_id)?;
         let items = lister
             .execute(workspace_id)
             .await
-            .map_err(to_api_error)?
+            .map_err(from_app_error)?
             .into_iter()
             .map(|entry| WorkspaceRecentFileResponse {
                 workspace_id: entry.workspace_id.as_uuid().to_string(),
@@ -196,8 +197,8 @@ impl CommandHandler for WorkspaceCurrentHandler {
         _payload: WorkspaceCurrentRequest,
     ) -> Result<WorkspaceCurrentResponsePayload, ApiError> {
         let services = Arc::clone(&ctx.services);
-        let getter: Arc<GetCurrentWorkspace> = services.get().map_err(to_api_error)?;
-        let current = getter.execute().await.map_err(to_api_error)?;
+        let getter: Arc<GetCurrentWorkspace> = services.get().map_err(from_app_error)?;
+        let current = getter.execute().await.map_err(from_app_error)?;
 
         let current = current.map(|workspace| WorkspaceCurrentResponse {
             workspace_id: workspace.id.as_uuid().to_string(),
@@ -225,9 +226,9 @@ impl CommandHandler for WorkspaceFileTreeHandler {
         payload: WorkspaceFileTreeRequest,
     ) -> Result<WorkspaceFileTreeResponse, ApiError> {
         let services = Arc::clone(&ctx.services);
-        let lister: Arc<ListWorkspaceFileTree> = services.get().map_err(to_api_error)?;
+        let lister: Arc<ListWorkspaceFileTree> = services.get().map_err(from_app_error)?;
         let workspace_id = parse_workspace_id(&payload.workspace_id)?;
-        let tree = lister.execute(workspace_id).await.map_err(to_api_error)?;
+        let tree = lister.execute(workspace_id).await.map_err(from_app_error)?;
 
         let folders = tree
             .folders
@@ -258,12 +259,6 @@ impl CommandHandler for WorkspaceFileTreeHandler {
     }
 }
 
-fn to_api_error(err: common::error::AppError) -> ApiError {
-    match err.details {
-        Some(details) => ApiError::with_details(err.code.as_str(), err.message, details),
-        None => ApiError::new(err.code.as_str(), err.message),
-    }
-}
 
 pub fn register(registry: &mut CommandRegistry) {
     registry.register(WorkspacePingHandler);
