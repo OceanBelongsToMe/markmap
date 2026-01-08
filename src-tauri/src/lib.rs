@@ -40,9 +40,16 @@ async fn configure_sqlite_pool(pool: &sqlx::SqlitePool) -> Result<(), String> {
 pub fn run() {
     init_tracing();
     let context = tauri::generate_context!();
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_sql::Builder::default().build())
-        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_dialog::init());
+
+    #[cfg(debug_assertions)]
+    {
+        builder = builder.plugin(tauri_plugin_mcp_bridge::init());
+    }
+
+    builder
         .setup(|app| {
             let sqlite_pool = app::db::load_sqlite_pool(app)?;
             tauri::async_runtime::block_on(configure_sqlite_pool(&sqlite_pool))?;

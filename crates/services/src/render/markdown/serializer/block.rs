@@ -59,16 +59,49 @@ impl RenderEngine<'_> {
                 } else {
                     "-".to_string()
                 };
-                let text = self.collect_inline(node_id);
+                
+                let mut text = self.collect_inline(node_id);
+                let mut skip_first_child = None;
+
+                if text.trim().is_empty() {
+                    for child_id in self.children(node_id) {
+                        let Some(child) = self.tree.nodes_by_id.get(&child_id) else {
+                            continue;
+                        };
+                        let kind = self.classifier.classify(child.base.node_type_id);
+                        if kind == MarkdownKind::Paragraph {
+                            text = self.collect_inline(child_id);
+                            skip_first_child = Some(child_id);
+                            break; 
+                        } else if !is_inline_kind(kind) {
+                            break;
+                        }
+                    }
+                }
+
                 let prefix = block_prefix(indent, quote_depth);
                 if text.trim().is_empty() {
                     out.push(format!("{prefix}{marker}"));
                 } else {
                     out.push(format!("{prefix}{marker} {text}"));
                 }
+                
                 let child_indent = indent.to_owned() + if ordered { "   " } else { "  " };
                 let child_context = Some(ListContext { ordered });
-                self.render_block_children(node_id, child_context, &child_indent, quote_depth, out);
+                
+                for child_id in self.children(node_id) {
+                    if Some(child_id) == skip_first_child {
+                        continue;
+                    }
+                    let Some(child) = self.tree.nodes_by_id.get(&child_id) else {
+                        continue;
+                    };
+                    let kind = self.classifier.classify(child.base.node_type_id);
+                    if is_inline_kind(kind) || is_table_child_kind(kind) || kind == MarkdownKind::ListItem {
+                        continue;
+                    }
+                    self.render_node(child_id, child_context, &child_indent, quote_depth, out);
+                }
             }
             MarkdownKind::Heading => {
                 let level = record

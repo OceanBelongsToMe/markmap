@@ -30,3 +30,4 @@ knowlattice-api = { path = "../crates/api" }
 knowlattice-services = { path = "../crates/services" }
 sqlx = { workspace = true }
 tracing-subscriber = { workspace = true }
+tauri-plugin-mcp-bridge = "0.7"
