@@ -248,6 +248,8 @@ body,
 
 .multi-pane-pane {
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 html[data-resizing] .multi-pane-pane {
@@ -376,6 +378,8 @@ button {
 .absolute { position: absolute; }
 .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
 .flex { display: flex; }
+.flex-1 { flex: 1 1 0%; }
+.min-h-0 { min-height: 0; }
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
 .z-10 { z-index: 10; }
@@ -387,3 +391,11 @@ button {
 .bg-white\/50 { background-color: rgba(255, 255, 255, 0.5); }
 .bg-red-100 { background-color: #fee2e2; }
 .text-red-800 { color: #991b1b; }
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.bg-white { background-color: #ffffff; }
+.rounded { border-radius: 0.25rem; }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.border { border-width: 1px; }
+.border-gray-200 { border-color: #e5e7eb; }
+.transition-opacity { transition-property: opacity; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+.z-20 { z-index: 20; }

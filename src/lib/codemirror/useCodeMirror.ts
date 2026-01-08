@@ -1,4 +1,4 @@
-import { createEffect, onCleanup } from "solid-js";
+import { createEffect, onCleanup, untrack } from "solid-js";
 import { EditorState, Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
@@ -25,19 +25,22 @@ export function useCodeMirror(props: () => UseCodeMirrorProps) {
   };
 
   createEffect(() => {
-    const { container, value, extensions, onChange, autoFocus } = props();
+    const { container } = props();
 
     if (!container) return;
     if (view) return; // Prevent re-initialization if already exists
 
+    // Use untrack to prevent re-running this effect when value/extensions change
+    const currentProps = untrack(props);
+
     const state = EditorState.create({
-      doc: value || "",
+      doc: currentProps.value || "",
       extensions: [
         basicSetup,
-        ...(extensions || []),
+        ...(currentProps.extensions || []),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged && onChange) {
-            onChange(update.state.doc.toString());
+          if (update.docChanged && currentProps.onChange) {
+            currentProps.onChange(update.state.doc.toString());
           }
         }),
       ],
@@ -48,7 +51,7 @@ export function useCodeMirror(props: () => UseCodeMirrorProps) {
       parent: container,
     });
 
-    if (autoFocus) {
+    if (currentProps.autoFocus) {
       view.focus();
     }
   });

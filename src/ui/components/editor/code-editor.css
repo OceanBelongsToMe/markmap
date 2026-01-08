@@ -1,7 +1,11 @@
 .code-editor-root .cm-editor {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .code-editor-root .cm-scroller {
   overflow: auto;
+  flex: 1;
+  min-height: 0; /* Important for flex child scrolling */
 }
