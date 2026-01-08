@@ -1,7 +1,7 @@
 use knowlattice_core::model::NodeId;
 
 use super::engine::RenderEngine;
-use super::rules::{block_prefix, ensure_blank_line, is_inline_kind, is_table_child_kind, list_child_indent, node_text, push_block};
+use super::rules::{block_prefix, ensure_blank_line, is_inline_kind, is_table_child_kind, list_child_indent, push_block};
 use super::state::ListContext;
 use super::super::classifier::MarkdownKind;
 
@@ -112,7 +112,7 @@ impl RenderEngine<'_> {
                     .and_then(|block| block.language.as_ref())
                     .map(String::as_str)
                     .unwrap_or("");
-                let text = node_text(record);
+                let text = self.collect_inline(node_id);
                 let fence = format!("```{language}");
                 push_block(out, &block_prefix(indent, quote_depth), &fence);
                 if !text.is_empty() {
