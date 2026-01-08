@@ -5,10 +5,11 @@ use knowlattice_core::model::node_range::NodeRange;
 use knowlattice_core::model::node_text::NodeText;
 use knowlattice_core::model::node_type::NodeType;
 use knowlattice_core::model::{DocumentId, NodeId};
-use knowlattice_search::adapters::markdown::MarkdownParser;
+use knowlattice_search::adapters::markdown::{MarkdownParser, NodeTypeIdResolver};
 use knowlattice_search::domain::parser::{NodeSink, ParseTask, Parser};
 use proptest::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 #[derive(Default)]
 struct CaptureSink {
@@ -46,8 +47,77 @@ impl NodeSink for CaptureSink {
     }
 }
 
+pub struct StaticNodeTypeIdResolver;
+
+impl NodeTypeIdResolver for StaticNodeTypeIdResolver {
+    fn id_for(&self, node_type: &NodeType) -> AppResult<i64> {
+        Ok(match node_type {
+            NodeType::Heading { .. } => 1,
+            NodeType::Text => 32,
+            NodeType::List { .. } => 2,
+            NodeType::ListItem { .. } => 3,
+            NodeType::CodeBlock { .. } => 4,
+            NodeType::Table { .. } => 5,
+            NodeType::Image { .. } => 6,
+            NodeType::Link { .. } => 7,
+            NodeType::Task { .. } => 8,
+            NodeType::Wiki { .. } => 9,
+            NodeType::Paragraph => 10,
+            NodeType::BlockQuote { .. } => 11,
+            NodeType::HtmlBlock => 12,
+            NodeType::CodeInline => 13,
+            NodeType::TableHead => 14,
+            NodeType::TableRow => 15,
+            NodeType::TableCell => 16,
+            NodeType::Emphasis => 17,
+            NodeType::Strong => 18,
+            NodeType::Strikethrough => 19,
+            NodeType::Superscript => 20,
+            NodeType::Subscript => 21,
+            NodeType::FootnoteDefinition { .. } => 22,
+            NodeType::FootnoteReference { .. } => 23,
+            NodeType::DefinitionList => 24,
+            NodeType::DefinitionListTitle => 25,
+            NodeType::DefinitionListDefinition => 26,
+            NodeType::MetadataBlock { .. } => 27,
+            NodeType::MathInline => 28,
+            NodeType::MathDisplay => 29,
+            NodeType::HtmlInline => 30,
+            NodeType::HorizontalRule => 31,
+        })
+    }
+
+    fn id_for_end(&self, tag_end: &pulldown_cmark::TagEnd) -> AppResult<Option<i64>> {
+        Ok(match tag_end {
+            pulldown_cmark::TagEnd::Heading(_) => Some(1),
+            pulldown_cmark::TagEnd::Paragraph => Some(10),
+            pulldown_cmark::TagEnd::BlockQuote(_) => Some(11),
+            pulldown_cmark::TagEnd::HtmlBlock => Some(12),
+            pulldown_cmark::TagEnd::List(_) => Some(2),
+            pulldown_cmark::TagEnd::Item => Some(3),
+            pulldown_cmark::TagEnd::CodeBlock => Some(4),
+            pulldown_cmark::TagEnd::Table => Some(5),
+            pulldown_cmark::TagEnd::TableHead => Some(14),
+            pulldown_cmark::TagEnd::TableRow => Some(15),
+            pulldown_cmark::TagEnd::TableCell => Some(16),
+            pulldown_cmark::TagEnd::FootnoteDefinition => Some(22),
+            pulldown_cmark::TagEnd::DefinitionList => Some(24),
+            pulldown_cmark::TagEnd::DefinitionListTitle => Some(25),
+            pulldown_cmark::TagEnd::DefinitionListDefinition => Some(26),
+            pulldown_cmark::TagEnd::Emphasis => Some(17),
+            pulldown_cmark::TagEnd::Strong => Some(18),
+            pulldown_cmark::TagEnd::Strikethrough => Some(19),
+            pulldown_cmark::TagEnd::Superscript => Some(20),
+            pulldown_cmark::TagEnd::Subscript => Some(21),
+            pulldown_cmark::TagEnd::Link => Some(7),
+            pulldown_cmark::TagEnd::Image => Some(6),
+            pulldown_cmark::TagEnd::MetadataBlock(_) => Some(27),
+        })
+    }
+}
+
 fn parse_with_sink(markdown: &str) -> AppResult<CaptureSink> {
-    let parser = MarkdownParser::new();
+    let parser = MarkdownParser::new_with_resolver(Arc::new(StaticNodeTypeIdResolver));
     let mut sink = CaptureSink::default();
     let task = ParseTask {
         doc_id: DocumentId::new(),

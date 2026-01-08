@@ -1,4 +1,6 @@
-use crate::adapters::markdown::mapper::{ChainMapper, DefaultMapper, Mapper, NodeAction, TextMapper};
+use crate::adapters::markdown::mapper::{
+    ChainMapper, DefaultMapper, Mapper, NodeAction, TextMapper,
+};
 use common::error::{AppError, ErrorCode};
 use common::types::AppResult;
 use knowlattice_core::model::node_type::NodeType;
@@ -173,89 +175,38 @@ impl NodeTypeIdResolver for DbBackedResolver {
     }
 }
 
-#[derive(Debug)]
-pub struct StaticNodeTypeIdResolver;
-
-impl NodeTypeIdResolver for StaticNodeTypeIdResolver {
-    fn id_for(&self, node_type: &NodeType) -> AppResult<i64> {
-        Ok(match node_type {
-            NodeType::Heading { .. } => 1,
-            NodeType::Text => 32,
-            NodeType::List { .. } => 2,
-            NodeType::ListItem { .. } => 3,
-            NodeType::CodeBlock { .. } => 4,
-            NodeType::Table { .. } => 5,
-            NodeType::Image { .. } => 6,
-            NodeType::Link { .. } => 7,
-            NodeType::Task { .. } => 8,
-            NodeType::Wiki { .. } => 9,
-            NodeType::Paragraph => 10,
-            NodeType::BlockQuote { .. } => 11,
-            NodeType::HtmlBlock => 12,
-            NodeType::CodeInline => 13,
-            NodeType::TableHead => 14,
-            NodeType::TableRow => 15,
-            NodeType::TableCell => 16,
-            NodeType::Emphasis => 17,
-            NodeType::Strong => 18,
-            NodeType::Strikethrough => 19,
-            NodeType::Superscript => 20,
-            NodeType::Subscript => 21,
-            NodeType::FootnoteDefinition { .. } => 22,
-            NodeType::FootnoteReference { .. } => 23,
-            NodeType::DefinitionList => 24,
-            NodeType::DefinitionListTitle => 25,
-            NodeType::DefinitionListDefinition => 26,
-            NodeType::MetadataBlock { .. } => 27,
-            NodeType::MathInline => 28,
-            NodeType::MathDisplay => 29,
-            NodeType::HtmlInline => 30,
-            NodeType::HorizontalRule => 31,
-        })
-    }
-
-    fn id_for_end(&self, tag_end: &pulldown_cmark::TagEnd) -> AppResult<Option<i64>> {
-        Ok(match tag_end {
-            pulldown_cmark::TagEnd::Heading(_) => Some(1),
-            pulldown_cmark::TagEnd::Paragraph => Some(10),
-            pulldown_cmark::TagEnd::BlockQuote(_) => Some(11),
-            pulldown_cmark::TagEnd::HtmlBlock => Some(12),
-            pulldown_cmark::TagEnd::List(_) => Some(2),
-            pulldown_cmark::TagEnd::Item => Some(3),
-            pulldown_cmark::TagEnd::CodeBlock => Some(4),
-            pulldown_cmark::TagEnd::Table => Some(5),
-            pulldown_cmark::TagEnd::TableHead => Some(14),
-            pulldown_cmark::TagEnd::TableRow => Some(15),
-            pulldown_cmark::TagEnd::TableCell => Some(16),
-            pulldown_cmark::TagEnd::FootnoteDefinition => Some(22),
-            pulldown_cmark::TagEnd::DefinitionList => Some(24),
-            pulldown_cmark::TagEnd::DefinitionListTitle => Some(25),
-            pulldown_cmark::TagEnd::DefinitionListDefinition => Some(26),
-            pulldown_cmark::TagEnd::Emphasis => Some(17),
-            pulldown_cmark::TagEnd::Strong => Some(18),
-            pulldown_cmark::TagEnd::Strikethrough => Some(19),
-            pulldown_cmark::TagEnd::Superscript => Some(20),
-            pulldown_cmark::TagEnd::Subscript => Some(21),
-            pulldown_cmark::TagEnd::Link => Some(7),
-            pulldown_cmark::TagEnd::Image => Some(6),
-            pulldown_cmark::TagEnd::MetadataBlock(_) => Some(27),
-        })
-    }
-}
-
 pub struct MarkdownParser {
     resolver: Arc<dyn NodeTypeIdResolver>,
 }
 
 impl MarkdownParser {
-    pub fn new() -> Self {
-        Self {
-            resolver: Arc::new(StaticNodeTypeIdResolver),
-        }
-    }
-
     pub fn new_with_resolver(resolver: Arc<dyn NodeTypeIdResolver>) -> Self {
         Self { resolver }
+    }
+
+    fn handle_task_list_marker(
+        &self,
+        checked: bool,
+        state: &mut ParserState,
+        sink: &mut dyn NodeSink,
+    ) -> AppResult<()> {
+        let mut update = None;
+        if let Some(entry) = state.stack.last_mut() {
+            let list_item_id = self.resolver.id_for(&NodeType::ListItem {
+                order: 0,
+                is_item: true,
+            })?;
+            if entry.node.node_type_id == list_item_id {
+                let node_type_id = self.resolver.id_for(&NodeType::Task { checked })?;
+                entry.node.node_type_id = node_type_id;
+                update = Some((entry.node.id, node_type_id));
+            }
+        }
+        if let Some((node_id, node_type_id)) = update {
+            state.update_base_type(node_id, node_type_id, sink);
+            sink.push_node_type(node_id, NodeType::Task { checked });
+        }
+        Ok(())
     }
 }
 
@@ -297,7 +248,13 @@ impl Parser for MarkdownParser {
                                 )?;
                             }
                             NodeAction::Close { node_type, end } => {
-                                apply_close_action(&*self.resolver, node_type, end, &mut state, sink)?;
+                                apply_close_action(
+                                    &*self.resolver,
+                                    node_type,
+                                    end,
+                                    &mut state,
+                                    sink,
+                                )?;
                             }
                         }
                     }
@@ -312,29 +269,20 @@ impl Parser for MarkdownParser {
                     {
                         match action {
                             NodeAction::Close { node_type, end } => {
-                                apply_close_action(&*self.resolver, node_type, end, &mut state, sink)?;
+                                apply_close_action(
+                                    &*self.resolver,
+                                    node_type,
+                                    end,
+                                    &mut state,
+                                    sink,
+                                )?;
                             }
                             _ => {}
                         }
                     }
                 }
                 Event::TaskListMarker(checked) => {
-                    let mut update = None;
-                    if let Some(entry) = state.stack.last_mut() {
-                        let list_item_id = self.resolver.id_for(&NodeType::ListItem {
-                            order: 0,
-                            is_item: true,
-                        })?;
-                        if entry.node.node_type_id == list_item_id {
-                            let node_type_id = self.resolver.id_for(&NodeType::Task { checked })?;
-                            entry.node.node_type_id = node_type_id;
-                            update = Some((entry.node.id, node_type_id));
-                        }
-                    }
-                    if let Some((node_id, node_type_id)) = update {
-                        state.update_base_type(node_id, node_type_id, sink);
-                        sink.push_node_type(node_id, NodeType::Task { checked });
-                    }
+                    self.handle_task_list_marker(checked, &mut state, sink)?;
                 }
                 // Consolidate emit-only events (borrow inner values to avoid moves)
                 Event::Code(_)
