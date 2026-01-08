@@ -3,14 +3,8 @@ import { EditorPane } from "../../../layouts/Regions";
 import { useResponsiveContent } from "../../../state/useResponsiveContent";
 import { MarkdownEditor } from "../../../features/editor/MarkdownEditor";
 import { useActiveDocument } from "../../../state/workspace/useActiveDocument";
-import type { FileTreeStyle } from "../../../features/sidebar/file-tree";
 
-export type WorkspaceEditorPaneProps = {
-  fileTreeStyle: FileTreeStyle;
-  onFileTreeStyleChange: (style: FileTreeStyle) => void;
-};
-
-export const WorkspaceEditorPane = (props: WorkspaceEditorPaneProps) => {
+export const WorkspaceEditorPane = () => {
   const [editorRef, setEditorRef] = createSignal<HTMLDivElement | undefined>();
   const { contentVariant } = useResponsiveContent(() => editorRef());
   
@@ -38,22 +32,6 @@ export const WorkspaceEditorPane = (props: WorkspaceEditorPaneProps) => {
 
   return (
     <EditorPane ref={(el) => setEditorRef(el)} class={`content-${contentVariant()}`}>
-      <div style={{ padding: "12px", "border-bottom": "1px solid var(--color-border-subtle)" }}>
-        <label style={{ display: "inline-flex", "align-items": "center", gap: "8px" }}>
-          <span>File tree style</span>
-          <select
-            value={props.fileTreeStyle}
-            onChange={(event) =>
-              props.onFileTreeStyleChange(event.currentTarget.value as FileTreeStyle)
-            }
-          >
-            <option value="ark">ark</option>
-            <option value="dense">dense</option>
-            <option value="classic">classic</option>
-          </select>
-        </label>
-      </div>
-      
       <div class="h-full relative">
         <Show when={activeDocId()} fallback={
           <div class="flex items-center justify-center h-full text-gray-400">

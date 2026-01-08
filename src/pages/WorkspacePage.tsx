@@ -33,7 +33,16 @@ export const WorkspacePage = () => {
 
   return (
     <MainLayout
-      toolbar={<ToolbarShell left={<WorkspaceToolbarContent />} />}
+      toolbar={
+        <ToolbarShell 
+          left={
+            <WorkspaceToolbarContent 
+              fileTreeStyle={fileTreeStyle()} 
+              onFileTreeStyleChange={setFileTreeStyle} 
+            />
+          } 
+        />
+      }
       content={
         <div
           ref={(el) => setShellRef(el)}
@@ -66,12 +75,7 @@ export const WorkspacePage = () => {
               ) : undefined
             }
             sidebarWidth={sidebarWidth()}
-            editor={
-              <WorkspaceEditorPane
-                fileTreeStyle={fileTreeStyle()}
-                onFileTreeStyleChange={setFileTreeStyle}
-              />
-            }
+            editor={<WorkspaceEditorPane />}
             preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
             onSizesChange={(sizes) => {
               if (!showSidebar()) return;
