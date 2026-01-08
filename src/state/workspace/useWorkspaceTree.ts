@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, createRoot } from "solid-js";
 import {
   fetchCurrentWorkspace,
   fetchWorkspaceFileTree,
@@ -34,12 +34,6 @@ export type WorkspaceDocumentNode = {
   lang?: string | null;
 };
 
-const [currentWorkspace, setCurrentWorkspace] = createSignal<WorkspaceCurrent | null>(null);
-const [fileTree, setFileTree] = createSignal<WorkspaceFileTree | null>(null);
-const [loading, setLoading] = createSignal(false);
-const [error, setError] = createSignal<string | null>(null);
-let inFlight: Promise<void> | null = null;
-
 const mapCurrentWorkspace = (payload: WorkspaceCurrentResponse | null): WorkspaceCurrent | null => {
   if (!payload) return null;
   return {
@@ -69,65 +63,94 @@ const mapFileTree = (payload: WorkspaceFileTreeResponse): WorkspaceFileTree => {
   };
 };
 
-export const loadCurrentWorkspace = async () => {
-  if (inFlight) {
+const root = createRoot(() => {
+  const [currentWorkspace, setCurrentWorkspace] = createSignal<WorkspaceCurrent | null>(null);
+  const [fileTree, setFileTree] = createSignal<WorkspaceFileTree | null>(null);
+  const [loading, setLoading] = createSignal(false);
+  const [error, setError] = createSignal<string | null>(null);
+  let inFlight: Promise<void> | null = null;
+
+  const loadCurrentWorkspace = async () => {
+    if (inFlight) {
+      return inFlight;
+    }
+    inFlight = (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+      const response = await fetchCurrentWorkspace();
+      if (!response.ok) {
+        throw new Error(response.error?.message ?? "加载工作空间失败");
+      }
+      const current = mapCurrentWorkspace(response.data.current);
+      setCurrentWorkspace(current);
+      if (current) {
+        const tree = await fetchWorkspaceFileTree(current.workspaceId);
+        if (!tree.ok) {
+          throw new Error(tree.error?.message ?? "加载文件树失败");
+        }
+        setFileTree(mapFileTree(tree.data));
+      } else {
+        setFileTree(null);
+      }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "加载工作空间失败");
+      } finally {
+        setLoading(false);
+        inFlight = null;
+      }
+    })();
     return inFlight;
-  }
-  inFlight = (async () => {
+  };
+
+  const refreshWorkspaceTree = async (workspaceId?: string) => {
+    const target = workspaceId ?? currentWorkspace()?.workspaceId;
+    if (!target) {
+      setFileTree(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-    const response = await fetchCurrentWorkspace();
-    if (!response.ok) {
-      throw new Error(response.error?.message ?? "加载工作空间失败");
-    }
-    const current = mapCurrentWorkspace(response.data.current);
-    setCurrentWorkspace(current);
-    if (current) {
-      const tree = await fetchWorkspaceFileTree(current.workspaceId);
+      const tree = await fetchWorkspaceFileTree(target);
       if (!tree.ok) {
         throw new Error(tree.error?.message ?? "加载文件树失败");
       }
       setFileTree(mapFileTree(tree.data));
-    } else {
-      setFileTree(null);
-    }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "加载工作空间失败");
+      setError(err instanceof Error ? err.message : "加载文件树失败");
     } finally {
       setLoading(false);
-      inFlight = null;
     }
-  })();
-  return inFlight;
-};
+  };
 
-export const refreshWorkspaceTree = async (workspaceId?: string) => {
-  const target = workspaceId ?? currentWorkspace()?.workspaceId;
-  if (!target) {
-    setFileTree(null);
-    return;
-  }
-  setLoading(true);
-  setError(null);
-  try {
-    const tree = await fetchWorkspaceFileTree(target);
-    if (!tree.ok) {
-      throw new Error(tree.error?.message ?? "加载文件树失败");
-    }
-    setFileTree(mapFileTree(tree.data));
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "加载文件树失败");
-  } finally {
-    setLoading(false);
-  }
-};
+  const isWorkspaceEmpty = () => {
+    const tree = fileTree();
+    if (!tree) return true;
+    return tree.folders.every((f) => f.documents.length === 0);
+  };
 
-export const useWorkspaceTreeState = () => {
   return {
     currentWorkspace,
     fileTree,
     loading,
-    error
+    error,
+    loadCurrentWorkspace,
+    refreshWorkspaceTree,
+    isWorkspaceEmpty
+  };
+});
+
+// Re-export actions for backward compatibility (if needed) or preferred usage
+export const loadCurrentWorkspace = root.loadCurrentWorkspace;
+export const refreshWorkspaceTree = root.refreshWorkspaceTree;
+
+export const useWorkspaceTreeState = () => {
+  return {
+    currentWorkspace: root.currentWorkspace,
+    fileTree: root.fileTree,
+    loading: root.loading,
+    error: root.error,
+    isWorkspaceEmpty: root.isWorkspaceEmpty
   };
 };

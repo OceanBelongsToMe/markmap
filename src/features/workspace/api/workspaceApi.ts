@@ -42,6 +42,19 @@ export type RenderDocumentResponse = {
   content: string | object; // content can be string (md/html) or object (markmap json)
 };
 
+export type WorkspaceAttachFolderRequest = {
+  root_path: string;
+  workspace_name?: string | null;
+  workspace_id?: string | null;
+  extensions?: string[] | null;
+};
+
+export type WorkspaceAttachFolderResponse = {
+  workspace_id: string;
+  folder_id: string;
+  imported: number;
+};
+
 export const fetchCurrentWorkspace = async () => {
   return invoke<DispatchResponse<WorkspaceCurrentResponsePayload>>("dispatch", {
     req: { command: "workspace_current", payload: {} }
@@ -63,5 +76,11 @@ export const renderDocument = async (documentId: string, format: "markdown" | "h
         format 
       } 
     }
+  });
+};
+
+export const attachFolder = async (payload: WorkspaceAttachFolderRequest) => {
+  return invoke<DispatchResponse<WorkspaceAttachFolderResponse>>("dispatch", {
+    req: { command: "workspace_attach_folder", payload }
   });
 };

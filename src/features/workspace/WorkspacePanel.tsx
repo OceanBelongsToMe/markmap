@@ -5,7 +5,7 @@ import { useWorkspaceActions } from "./hooks/useWorkspaceActions";
 
 export const WorkspacePanel = () => {
   const { t } = useI18n();
-  const { greetMsg, name, setName, greet } = useWorkspaceActions();
+  const { importFolder } = useWorkspaceActions();
 
   return (
     <>
@@ -16,10 +16,10 @@ export const WorkspacePanel = () => {
           greet: t("greet"),
           enterName: t("enterName")
         }}
-        name={name}
-        onNameChange={setName}
-        greetMsg={greetMsg}
-        onGreet={greet}
+        name={() => ""}
+        onNameChange={() => {}}
+        greetMsg={() => ""}
+        onGreet={importFolder}
       />
       <EditorSettings />
     </>

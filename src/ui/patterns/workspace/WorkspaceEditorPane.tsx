@@ -3,23 +3,22 @@ import { EditorPane } from "../../../layouts/Regions";
 import { useResponsiveContent } from "../../../state/useResponsiveContent";
 import { MarkdownEditor } from "../../../features/editor/MarkdownEditor";
 import { useActiveDocument } from "../../../state/workspace/useActiveDocument";
+import { useWorkspaceTreeState } from "../../../state/workspace/useWorkspaceTree";
+import { useWorkspaceActions } from "../../../features/workspace/hooks/useWorkspaceActions";
 
 export const WorkspaceEditorPane = () => {
   const [editorRef, setEditorRef] = createSignal<HTMLDivElement | undefined>();
   const { contentVariant } = useResponsiveContent(() => editorRef());
   
   const { content, error, activeDocId } = useActiveDocument();
+  const { isWorkspaceEmpty } = useWorkspaceTreeState();
+  const { importFolder } = useWorkspaceActions();
   
-  // Local state for editor value to avoid reactivity loops. 
-  // We sync FROM active document TO this signal.
   const [editorContent, setEditorContent] = createSignal("");
 
   createEffect(() => {
-    // When document content loads, update the editor
     const txt = content();
     if (txt !== undefined && txt !== null) {
-      // Handle the case where content might be an object (markmap)
-      // For MarkdownEditor, we expect a string.
       if (typeof txt === 'string') {
          setEditorContent(txt);
       } else {
@@ -32,14 +31,22 @@ export const WorkspaceEditorPane = () => {
 
   return (
     <EditorPane ref={(el) => setEditorRef(el)} class={`content-${contentVariant()}`}>
-      {/* 
-        Using flex-1 and min-h-0 is essential for the editor to fill remaining space
-        and enable internal scrolling in a flex column container.
-      */}
       <div class="flex-1 min-h-0 relative">
         <Show when={activeDocId()} fallback={
-          <div class="flex items-center justify-center h-full text-gray-400">
-            Select a file to edit
+          <div class="flex flex-col items-center justify-center h-full text-gray-400 gap-4">
+            <Show when={isWorkspaceEmpty()} fallback={
+              <span>Select a file to edit</span>
+            }>
+              <div class="flex flex-col items-center gap-2">
+                <span>Your workspace is empty</span>
+                <button 
+                  onClick={importFolder}
+                  class="text-blue-500 hover:text-blue-600 underline cursor-pointer bg-transparent border-none shadow-none p-0 font-normal"
+                >
+                  Import a folder to get started
+                </button>
+              </div>
+            </Show>
           </div>
         }>
           <MarkdownEditor 
