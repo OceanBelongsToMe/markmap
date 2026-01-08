@@ -119,16 +119,19 @@ body,
 
 .editor-pane {
   min-width: 0;
-  overflow: auto;
-  padding: 16px;
+  overflow: hidden;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .editor-pane.content-compact {
-  padding: 12px;
+  padding: 0;
 }
 
 .editor-pane.content-minimal {
-  padding: 8px;
+  padding: 0;
   font-size: 0.95rem;
 }
 
@@ -365,3 +368,22 @@ button {
 #greet-input {
   margin-right: 5px;
 }
+
+/* Utility Classes */
+.h-full { height: 100%; }
+.w-full { width: 100%; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.z-10 { z-index: 10; }
+.top-0 { top: 0; }
+.left-0 { left: 0; }
+.right-0 { right: 0; }
+.p-2 { padding: 0.5rem; }
+.text-gray-400 { color: #9ca3af; }
+.bg-white\/50 { background-color: rgba(255, 255, 255, 0.5); }
+.bg-red-100 { background-color: #fee2e2; }
+.text-red-800 { color: #991b1b; }

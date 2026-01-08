@@ -113,10 +113,11 @@ impl RenderEngine<'_> {
                     .map(String::as_str)
                     .unwrap_or("");
                 let text = self.collect_inline(node_id);
+                let text = text.trim_end();
                 let fence = format!("```{language}");
                 push_block(out, &block_prefix(indent, quote_depth), &fence);
                 if !text.is_empty() {
-                    push_block(out, &block_prefix(indent, quote_depth), &text);
+                    push_block(out, &block_prefix(indent, quote_depth), text);
                 }
                 push_block(out, &block_prefix(indent, quote_depth), "```");
                 ensure_blank_line(out);
