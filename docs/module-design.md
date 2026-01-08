@@ -16,6 +16,7 @@
 目标是让入口层“稳定、可控、可演进”，优先保证安全边界与职责边界清晰。
 
 已落实（方案 A）：
+
 - 数据库池选择抽离为单一职责模块（`src-tauri/src/app/db.rs`），避免在入口层混合配置解析与资源选择。
 - SQLite 连接池查找由“假设必定存在”改为“显式判定 + 错误返回”，降低隐藏 panic 风险。
 - `capabilities` 移除 `sql:allow-execute`，推动 SQL 访问通过后端命令封装。
@@ -23,6 +24,7 @@
 - 窗口全屏事件同步逻辑封装为私有结构体，减少局部状态散落。
 
 规划中（方案 C）：
+
 - 引入 `AppContext` 统一管理 services/router/db 等共享资源，减少 `run()` 内聚合。
 - 以 provider/registrar 形式注册窗口事件与插件初始化，确保扩展时变更隔离。
 - 为未来多窗口、多数据库或多入口场景提供明确扩展点。
@@ -36,10 +38,12 @@
 - 调用方保持不变，组件替换的影响只集中在“实现层 + 适配层”
 
 示例（Select 替换）：
+
 - `src/ui/ark/select/ArkSelect.tsx`：封装 Ark Select 组件
 - `src/ui/components/Select.tsx`：把 `value: string` / `options` / `onChange` 适配为 Ark Select 的 `value: string[]` / `collection` / `onValueChange`
 
 权衡：
+
 - 成本：多 1 个文件与适配逻辑
 - 收益：更强的变更隔离与本地推理能力，后续切换组件库代价低
 
@@ -274,12 +278,13 @@
 - core::policy：策略模式 + 组合校验（validator 组合）
 - core::event：领域事件（仅结构定义，不含发布器）
 - core::error：错误代数类型（ADT）+ 领域辅助方法（如 code/message）
-**严格边界（SRP）**：
+  **严格边界（SRP）**：
 - core 不暴露 Repository/Service/Indexer/Clock 等操作接口
 - core 不依赖 AppError/AppResult；仅返回 `Result<T, DomainError>`
 - 流程编排/调度/持久化/解析属于上层（services/storage/search），禁止进入 core
 
 **事件使用约定**：
+
 - services 在用例完成后发布 `DomainEvent`
 - 副作用（索引/日志/缓存失效）由上层 handler 处理，core 不承载 IO
 
@@ -420,8 +425,8 @@
 - services::render（渲染/预览）
   - RenderMarkdown/RenderHtml/RenderMarkmap：按格式渲染
   - RenderDocument：门面用例，按 format 路由到具体用例
-  - 渲染用例按文件拆分（render/markdown/*、render/html.rs、render/markmap.rs、render/document.rs）
-  - RenderMarkdown 基于 node_* 表还原 markdown（Loader → TreeBuilder → Serializer），不重新解析 markdown
+  - 渲染用例按文件拆分（render/markdown/\*、render/html.rs、render/markmap.rs、render/document.rs）
+  - RenderMarkdown 基于 node\_\* 表还原 markdown（Loader → TreeBuilder → Serializer），不重新解析 markdown
   - RenderMarkdown 规则（首版）
     - 列表缩进：有序列表子元素缩进 3 空格；无序列表子元素缩进 2 空格
     - Wiki：若有目标 ID，输出 `[[display_text|target_node_id]]`
@@ -518,13 +523,14 @@ crates/search 采用“三层结构（domain/application/adapters）”，确保
   - markdown：MarkdownParser + mapper/parser_state（解析实现）
   - sqlite：Indexer/Query/Schema（存储实现）
   - null：未配置场景的空实现
-  - sql：SQL 常量集中在 adapters/sqlite/sql/*
+  - sql：SQL 常量集中在 adapters/sqlite/sql/\*
 
 **解析实现说明**：
+
 - MarkdownParser 基于 pulldown-cmark offset iterator 获取结构与范围
 - NodeSink 作为解析输出端口；services 层决定如何聚合文本/节点
-**索引/查询实现说明**：
-- 索引写入 node\_* + FTS；查询返回 Hit/Fragment
+  **索引/查询实现说明**：
+- 索引写入 node\_\* + FTS；查询返回 Hit/Fragment
 - Schema 迁移通过 adapters::sqlite::schema::migrate 执行
 
 ### 3.5 api（IPC 边界）

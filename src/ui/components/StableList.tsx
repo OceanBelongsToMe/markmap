@@ -3,7 +3,7 @@ import { Index } from "solid-js";
 
 export type StableListProps<T> = {
   each: Accessor<T[]>;
-  children: (item: Accessor<T>, index: Accessor<number>) => JSX.Element;
+  children: (item: Accessor<T>, index: number) => JSX.Element;
 };
 
 export const StableList = <T,>(props: StableListProps<T>) => {

@@ -4,6 +4,7 @@ import { useWorkspaceFileTree } from "./data/useWorkspaceFileTree";
 import { FileTreeView } from "./ui/FileTreeView";
 import { useInitialExpand } from "./state/useInitialExpand";
 import type { FileTreeStyle } from "./style/fileTreeStyleTypes";
+import { useActiveDocument } from "../../../state/workspace/useActiveDocument";
 
 export type FileTreeSectionProps = {
   loadingLabel?: string;
@@ -14,11 +15,19 @@ export type FileTreeSectionProps = {
 export const FileTreeSection = (props: FileTreeSectionProps) => {
   const { fileNodes, loading } = useWorkspaceFileTree();
   const { expandedIds, setExpandedIds, selectedId, setSelectedId } = useFileTreeState();
-  const { handleExpandedChange, handleSelectId } = useFileTreeActions({
+  const { openDocument } = useActiveDocument();
+  
+  const { handleExpandedChange, handleSelectId: baseSelectId } = useFileTreeActions({
     expandedIds,
     setExpandedIds,
     setSelectedId
   });
+
+  const handleSelectId = (id: string) => {
+    baseSelectId(id);
+    openDocument(id);
+  };
+
   useInitialExpand({
     nodes: fileNodes,
     expandedIds,

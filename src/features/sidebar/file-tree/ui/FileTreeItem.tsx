@@ -13,7 +13,7 @@ export type FileTreeItemProps = {
 };
 
 export const FileTreeItem = (props: FileTreeItemProps) => {
-  const { node, depth, isFolder, isExpanded, indexPath } = props.entry;
+  const { node, depth, isFolder, indexPath } = props.entry;
   return (
     <TreeView.NodeProvider node={node} indexPath={indexPath}>
       {isFolder ? (

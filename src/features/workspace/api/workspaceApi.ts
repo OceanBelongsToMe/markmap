@@ -38,6 +38,10 @@ export type WorkspaceFileTreeResponse = {
   folders: WorkspaceFolderNode[];
 };
 
+export type RenderDocumentResponse = {
+  content: string | object; // content can be string (md/html) or object (markmap json)
+};
+
 export const fetchCurrentWorkspace = async () => {
   return invoke<DispatchResponse<WorkspaceCurrentResponsePayload>>("dispatch", {
     req: { command: "workspace_current", payload: {} }
@@ -47,5 +51,17 @@ export const fetchCurrentWorkspace = async () => {
 export const fetchWorkspaceFileTree = async (workspaceId: string) => {
   return invoke<DispatchResponse<WorkspaceFileTreeResponse>>("dispatch", {
     req: { command: "workspace_file_tree", payload: { workspace_id: workspaceId } }
+  });
+};
+
+export const renderDocument = async (documentId: string, format: "markdown" | "html" | "markmap" = "markdown") => {
+  return invoke<DispatchResponse<RenderDocumentResponse>>("dispatch", {
+    req: { 
+      command: "document_render", 
+      payload: { 
+        document_id: documentId,
+        format 
+      } 
+    }
   });
 };

@@ -47,6 +47,7 @@
   - `src/i18n/index.ts`：语言切换与回退策略（`t(key, locale)`）
   - `src/i18n/context.tsx`：I18n Provider + locale 上下文封装（内部接入 Ark `LocaleProvider`）
   - `src/i18n/locale.ts`：locale 规范化与方向性（`rtl/ltr`）映射
+  - `src/i18n/supported-locales.ts`：支持的语言列表与元数据
   - `src/i18n/formatters.ts`：日期/数字/货币格式化（`Intl.*`）
   - `src/i18n/zh-CN.ts`：中文翻译资源
   - 全局方向性接入：在 `src/App.tsx` 根节点设置 `dir={direction()}` 统一 RTL/LTR
@@ -55,7 +56,7 @@
 
 - 责任边界：关键任务链路、状态流转、错误与恢复策略、交互反馈规则。
 - 不负责：视觉主题与组件样式。
-- 目录映射：`src/flows/`
+- 目录映射：`src/features/`（内聚在具体特性模块中）
 - 交付物：任务流图、状态机/流程编排、错误处理与恢复规则。
 - 验收指标：任务完成率、错误率、恢复成功率。
 
@@ -63,7 +64,7 @@
 
 - 责任边界：网格系统、排版层级、色彩与对比策略、视觉节奏与动效原则。
 - 不负责：具体业务流程与组件逻辑。
-- 目录映射：`src/layouts/`、`src/theme/`
+- 目录映射：`src/layouts/`、`src/ui/theme/`、`src/ui/typography/`
 - 交付物：布局规则、排版规范、主题变量（色彩/间距/字体）。
 - 验收指标：可读性评分、一致性检查通过率、视觉层级清晰度。
 - 结构说明：
@@ -323,7 +324,7 @@ flowchart TD
 
 - 责任边界：可复用 UI 组件、组合式交互模式、组件约束与使用指南。
 - 不负责：业务流程编排。
-- 目录映射：`src/ui/components/`、`src/ui/patterns/`
+- 目录映射：`src/ui/components/`、`src/ui/patterns/`、`src/ui/ark/`、`src/ui/styles/`
 - 交付物：组件清单、组件 API、模式库与使用示例。
 - 验收指标：组件复用率、改动影响面、组件一致性合规率。
 - 组件层级（建议）：
@@ -428,6 +429,25 @@ src/ui/styles/tree-view.css
   - .ui-tree-view [data-branch]
 ```
 
+#### 4.4 编辑器组件分层（CodeMirror 接入）
+
+- 目标：将 CodeMirror 复杂 API 隔离，确保业务逻辑与 UI 渲染解耦。
+- 分层架构（从下至上）：
+  1.  **适配层 (Adapter)**: `src/lib/codemirror/`
+      - 职责：封装第三方库，提供 `useCodeMirror` hook 与配置工厂。
+      - 产出：`EditorFactory`、`extensions`、`useCodeMirror`。
+      - 依赖：`@codemirror/*`，不依赖 UI 框架。
+  2.  **UI 组件层 (UI)**: `src/ui/components/editor/CodeEditor.tsx`
+      - 职责：纯渲染容器，处理 DOM 挂载、Resize、Props 透传。
+      - 状态：非受控模式（Internal State）+ 信号同步。
+      - 依赖：`useCodeMirror`。
+  3.  **业务容器层 (Feature)**: `src/features/editor/MarkdownEditor.tsx`
+      - 职责：连接 Store 与 UI，处理防抖保存、语言配置、业务快捷键。
+      - 依赖：`CodeEditor`、`useDocument`。
+  4.  **布局层 (Layout)**: `src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
+      - 职责：决定编辑器的显示位置与尺寸。
+      - 依赖：`MarkdownEditor`。
+
 ### 5. 可用性与无障碍
 
 - 责任边界：可访问性策略（ARIA）、键盘可达性、可理解性与容错。
@@ -458,13 +478,22 @@ src/ui/styles/tree-view.css
 
 ## 前端目录规划建议
 
-- `src/ia/`：信息架构模块
-- `src/flows/`：任务流与交互模块
-- `src/layouts/`：布局系统
-- `src/theme/`：主题与视觉变量
-- `src/ui/components/`：可复用组件
-- `src/ui/patterns/`：交互模式
 - `src/a11y/`：无障碍策略与工具
+- `src/features/`：业务功能与交互流程（sidebar, workspace）
+- `src/i18n/`：国际化资源与策略
+- `src/ia/`：信息架构常量
+- `src/layouts/`：布局骨架与规则
+- `src/pages/`：页面级入口
+- `src/routes/`：路由定义
+- `src/state/`：全局与共享状态
+- `src/ui/ark/`：Ark UI 行为层实现
+- `src/ui/components/`：通用 UI 组件
+- `src/ui/icons/`：图标资产
+- `src/ui/patterns/`：组合式交互模式
+- `src/ui/styles/`：组件样式与全局 CSS
+- `src/ui/theme/`：主题 Tokens 与变量
+- `src/ui/typography/`：排版系统
+- `src/ui/virtual/`：虚拟滚动实现
 
 ---
 
@@ -486,6 +515,21 @@ src/ui/styles/tree-view.css
 - `WorkspaceSidebar` 消费状态，不执行 `invoke`。
 - API 层只做命令调用与 DTO 映射，不包含业务逻辑。
 - 状态层负责缓存与刷新策略，避免 UI 组件重复请求。
+
+## 文档打开流程（SRP）
+
+### 模块拆分
+
+- API 适配层：`src/features/workspace/api/workspaceApi.ts`
+  - `renderDocument(docId, format)`: 调用后端命令获取渲染内容。
+- 状态层：`src/state/workspace/useActiveDocument.ts`
+  - `activeDocId`: 当前激活的文档 ID。
+  - `documentResource`: 基于 activeDocId 的异步资源（content/loading/error）。
+  - `openDocument(id)`: 动作入口。
+- 交互层：`src/features/sidebar/file-tree/`
+  - 监听节点选中事件，调用 `openDocument`。
+- 视图层：`src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
+  - 消费 `documentResource`，根据 loading/error 状态渲染骨架屏或 `MarkdownEditor`。
 
 ---
 
