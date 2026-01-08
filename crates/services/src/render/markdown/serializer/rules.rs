@@ -78,3 +78,11 @@ pub fn block_prefix(indent: &str, quote_depth: usize) -> String {
     let prefix = "> ".repeat(quote_depth);
     format!("{indent}{prefix}")
 }
+
+pub fn ensure_blank_line(out: &mut Vec<String>) {
+    if let Some(last) = out.last() {
+        if !last.is_empty() {
+            out.push("".to_string());
+        }
+    }
+}

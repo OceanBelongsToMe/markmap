@@ -1,7 +1,7 @@
 use knowlattice_core::model::NodeId;
 
 use super::engine::RenderEngine;
-use super::rules::{block_prefix, is_inline_kind, is_table_child_kind, list_child_indent, node_text, push_block};
+use super::rules::{block_prefix, ensure_blank_line, is_inline_kind, is_table_child_kind, list_child_indent, node_text, push_block};
 use super::state::ListContext;
 use super::super::classifier::MarkdownKind;
 
@@ -30,6 +30,9 @@ impl RenderEngine<'_> {
                 let child_context = Some(ListContext { ordered });
                 for child_id in self.children(node_id) {
                     self.render_node(child_id, child_context, indent, quote_depth, out);
+                }
+                if list_context.is_none() {
+                    ensure_blank_line(out);
                 }
             }
             MarkdownKind::Task => {
@@ -81,6 +84,7 @@ impl RenderEngine<'_> {
                     out.push(format!("{prefix}{hashes} {text}"));
                 }
                 self.render_block_children(node_id, None, indent, quote_depth, out);
+                ensure_blank_line(out);
             }
             MarkdownKind::Paragraph | MarkdownKind::Text => {
                 let text = self.collect_inline(node_id);
@@ -89,6 +93,7 @@ impl RenderEngine<'_> {
                     out.push(format!("{prefix}{text}"));
                 }
                 self.render_block_children(node_id, None, indent, quote_depth, out);
+                ensure_blank_line(out);
             }
             MarkdownKind::BlockQuote => {
                 let text = self.collect_inline(node_id);
@@ -114,6 +119,7 @@ impl RenderEngine<'_> {
                     push_block(out, &block_prefix(indent, quote_depth), &text);
                 }
                 push_block(out, &block_prefix(indent, quote_depth), "```");
+                ensure_blank_line(out);
             }
             MarkdownKind::CodeInline
             | MarkdownKind::Emphasis
@@ -137,6 +143,7 @@ impl RenderEngine<'_> {
                     push_block(out, &block_prefix(indent, quote_depth), &text);
                 }
                 push_block(out, &block_prefix(indent, quote_depth), "$$");
+                ensure_blank_line(out);
                 // TODO: Preserve original math delimiters when available.
             }
             MarkdownKind::HtmlBlock | MarkdownKind::MetadataBlock => {
@@ -146,12 +153,14 @@ impl RenderEngine<'_> {
                 }
                 // TODO: Preserve original HTML/metadata blocks from source ranges.
                 self.render_block_children(node_id, None, indent, quote_depth, out);
+                ensure_blank_line(out);
             }
             MarkdownKind::HorizontalRule => {
                 out.push(format!("{}---", block_prefix(indent, quote_depth)));
             }
             MarkdownKind::Table => {
                 self.render_table(node_id, indent, quote_depth, out);
+                ensure_blank_line(out);
             }
             MarkdownKind::TableHead => {
                 // Table head rendering is handled by render_table with alignments.
