@@ -13,16 +13,12 @@ export const MarkmapCanvas = (props: MarkmapCanvasProps) => {
   let mm: Markmap | undefined;
 
   createEffect(() => {
-    // Deep clone data to break reactivity connection and prevent mutations from triggering updates
-    const data = props.data ? structuredClone(props.data) : null;
-    
-    if (!svgRef || !data) return;
-
+    if (!svgRef || !props.data) return;
+    console.log(props.data);
     if (!mm) {
-      mm = Markmap.create(svgRef, props.options, data);
+      mm = Markmap.create(svgRef, props.options, props.data);
     } else {
-      mm.setData(data);
-      mm.fit(); // Still good to call fit() on data change
+      mm.setData(props.data, props.options);
     }
   });
 

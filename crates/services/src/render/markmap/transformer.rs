@@ -75,7 +75,14 @@ impl MarkmapTransformer {
             stack.last_mut().unwrap().node.children.push(item.node);
         }
 
-        let root = stack.pop().unwrap().node;
+        let mut root = stack.pop().unwrap().node;
+        
+        // Promotion: If the virtual Root has exactly one child, promote it to be the new root.
+        // This makes the map start from the document's main heading.
+        if root.children.len() == 1 {
+            root = root.children.into_iter().next().unwrap();
+        }
+
         Ok(serde_json::to_value(root).expect("MarkmapNode serialization failed"))
     }
 
