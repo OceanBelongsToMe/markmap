@@ -45,7 +45,7 @@ impl MarkmapTransformer {
         let mut stack: Vec<StackItem> = vec![];
         stack.push(StackItem {
             level: 0,
-            node: MarkmapNode::new("root".to_string(), "Root".to_string(), vec![]),
+            node: MarkmapNode::new("root".to_string(), "".to_string(), vec![]),
         });
 
         let mut counter = 0;
