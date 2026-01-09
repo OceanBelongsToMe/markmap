@@ -6,7 +6,7 @@ use super::types::NodeTree;
 mod block;
 mod engine;
 mod inline;
-mod rules;
+pub mod rules;
 mod state;
 mod table;
 mod traversal;

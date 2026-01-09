@@ -425,6 +425,12 @@
 - services::render（渲染/预览）
   - RenderMarkdown/RenderHtml/RenderMarkmap：按格式渲染
   - RenderDocument：门面用例，按 format 路由到具体用例
+  - RenderMarkmap（思维导图渲染）：
+    - 策略：骨架渲染（Skeleton Only），仅处理 Heading 与 List/ListItem，构建层级结构。
+    - 输出：JSON 对象（serde_json::Value），符合 markmap 数据结构 `{ content, children }`。
+    - 模块结构：
+      - `service.rs`：负责 Loader 与依赖注入。
+      - `transformer.rs`：负责 NodeTree -> Markmap JSON 的递归转换。
   - 渲染用例按文件拆分（render/markdown/\*、render/html.rs、render/markmap.rs、render/document.rs）
   - RenderMarkdown 基于 node\_\* 表还原 markdown（Loader → TreeBuilder → Serializer），不重新解析 markdown
   - RenderMarkdown 规则（首版）

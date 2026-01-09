@@ -27,7 +27,7 @@ pub enum RenderOutput {
 pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
     RenderMarkdown::register(ctx, registry);
     RenderHtml::register(registry);
-    RenderMarkmap::register(registry);
+    RenderMarkmap::register(ctx, registry)?;
     RenderDocument::register(registry)?;
     Ok(())
 }
