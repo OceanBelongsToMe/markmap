@@ -8,7 +8,7 @@ use crate::repo::{
         NodeTypeRepository, NodeWikiRepository,
     },
     DocumentRepository, FolderRepository, WorkspaceRecentFilesRepository, WorkspaceRepository,
-    WorkspaceStateRepository,
+    WorkspaceStateRepository, UserSettingsRepository,
 };
 
 pub struct NodeRepositories {
@@ -34,4 +34,5 @@ pub struct Repositories {
     pub node: NodeRepositories,
     pub workspace_state: Arc<dyn WorkspaceStateRepository>,
     pub workspace_recent_files: Arc<dyn WorkspaceRecentFilesRepository>,
+    pub user_settings: Arc<dyn UserSettingsRepository>,
 }

@@ -1,26 +1,24 @@
 use common::types::AppResult;
 use knowlattice_core::model::NodeId;
-use serde::Serialize;
-use serde_json::Value;
 
 use crate::node_types::NodeTypeCache;
 use crate::render::markdown::classifier::{MarkdownKind, NodeTypeClassifier};
 use crate::render::markdown::serializer::rules::{is_inline_kind, node_text};
 use crate::render::markdown::types::NodeTree;
 
-#[derive(Debug, Serialize)]
-pub struct MarkmapNode {
-    pub id: String,
+#[derive(Debug)]
+pub struct MarkmapPureNode {
     pub content: String,
-    pub children: Vec<MarkmapNode>,
+    pub children: Vec<MarkmapPureNode>,
+    pub node_id: String,
 }
 
-impl MarkmapNode {
-    pub fn new(id: String, content: String, children: Vec<MarkmapNode>) -> Self {
+impl MarkmapPureNode {
+    fn new(content: String, node_id: String, children: Vec<MarkmapPureNode>) -> Self {
         Self {
-            id,
             content,
             children,
+            node_id,
         }
     }
 }
@@ -31,7 +29,7 @@ pub struct MarkmapTransformer {
 
 struct StackItem {
     level: u8,
-    node: MarkmapNode,
+    node: MarkmapPureNode,
 }
 
 impl MarkmapTransformer {
@@ -41,18 +39,16 @@ impl MarkmapTransformer {
         }
     }
 
-    pub fn transform(&self, tree: &NodeTree) -> AppResult<Value> {
+    pub fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode> {
         let mut stack: Vec<StackItem> = vec![];
         stack.push(StackItem {
             level: 0,
-            node: MarkmapNode::new("root".to_string(), "".to_string(), vec![]),
+            node: MarkmapPureNode::new("".to_string(), "root".to_string(), vec![]),
         });
-
-        let mut counter = 0;
 
         for &root_id in &tree.roots {
             let level = self.get_node_level(tree, root_id);
-            let nodes = self.transform_node(tree, root_id, &mut counter);
+            let nodes = self.transform_node(tree, root_id);
 
             for node in nodes {
                 let target_level = if level <= 6 { level } else { 7 };
@@ -61,7 +57,7 @@ impl MarkmapTransformer {
                     let item = stack.pop().unwrap();
                     stack.last_mut().unwrap().node.children.push(item.node);
                 }
-                
+
                 if target_level <= 6 {
                     stack.push(StackItem { level: target_level, node });
                 } else {
@@ -76,54 +72,49 @@ impl MarkmapTransformer {
         }
 
         let mut root = stack.pop().unwrap().node;
-        
-        // Promotion: If the virtual Root has exactly one child, promote it to be the new root.
-        // This makes the map start from the document's main heading.
+
         if root.children.len() == 1 {
             root = root.children.into_iter().next().unwrap();
         }
 
-        Ok(serde_json::to_value(root).expect("MarkmapNode serialization failed"))
+        Ok(root)
     }
 
-    fn transform_nodes(&self, tree: &NodeTree, node_ids: &[NodeId], counter: &mut usize) -> Vec<MarkmapNode> {
+    fn transform_nodes(&self, tree: &NodeTree, node_ids: &[NodeId]) -> Vec<MarkmapPureNode> {
         let mut result = Vec::new();
         for &id in node_ids {
-            result.extend(self.transform_node(tree, id, counter));
+            result.extend(self.transform_node(tree, id));
         }
         result
     }
 
-    fn transform_node(&self, tree: &NodeTree, node_id: NodeId, counter: &mut usize) -> Vec<MarkmapNode> {
+    fn transform_node(&self, tree: &NodeTree, node_id: NodeId) -> Vec<MarkmapPureNode> {
         let Some(record) = tree.nodes_by_id.get(&node_id) else {
             return vec![];
         };
 
         let kind = self.classifier.classify(record.base.node_type_id);
-        *counter += 1;
-        let id_str = format!("mm-node-{}", counter);
+        let node_uuid = record.base.id.as_uuid().to_string();
 
         match kind {
             MarkdownKind::Heading => {
                 let content = self.get_node_text(tree, node_id);
-                let children = self.transform_children(tree, node_id, counter);
-                vec![MarkmapNode::new(id_str, content, children)]
+                let children = self.transform_children(tree, node_id);
+                vec![MarkmapPureNode::new(content, node_uuid, children)]
             }
-            MarkdownKind::List => {
-                self.transform_children(tree, node_id, counter)
-            }
+            MarkdownKind::List => self.transform_children(tree, node_id),
             MarkdownKind::ListItem => {
                 let content = self.get_node_text(tree, node_id);
-                let children = self.transform_children(tree, node_id, counter);
-                vec![MarkmapNode::new(id_str, content, children)]
+                let children = self.transform_children(tree, node_id);
+                vec![MarkmapPureNode::new(content, node_uuid, children)]
             }
-            _ => vec![], 
+            _ => vec![],
         }
     }
 
-    fn transform_children(&self, tree: &NodeTree, node_id: NodeId, counter: &mut usize) -> Vec<MarkmapNode> {
+    fn transform_children(&self, tree: &NodeTree, node_id: NodeId) -> Vec<MarkmapPureNode> {
         if let Some(children_ids) = tree.children_by_id.get(&node_id) {
-            self.transform_nodes(tree, children_ids, counter)
+            self.transform_nodes(tree, children_ids)
         } else {
             vec![]
         }
@@ -143,20 +134,20 @@ impl MarkmapTransformer {
         let Some(record) = tree.nodes_by_id.get(&node_id) else {
             return String::new();
         };
-        
+
         let mut text = node_text(record);
-        
+
         if text.is_empty() {
-             if let Some(children) = tree.children_by_id.get(&node_id) {
-                 for &child_id in children {
-                     if let Some(child_record) = tree.nodes_by_id.get(&child_id) {
-                         let kind = self.classifier.classify(child_record.base.node_type_id);
-                         if is_inline_kind(kind) || kind == MarkdownKind::Paragraph {
-                             text.push_str(&self.get_node_text(tree, child_id));
-                         }
-                     }
-                 }
-             }
+            if let Some(children) = tree.children_by_id.get(&node_id) {
+                for &child_id in children {
+                    if let Some(child_record) = tree.nodes_by_id.get(&child_id) {
+                        let kind = self.classifier.classify(child_record.base.node_type_id);
+                        if is_inline_kind(kind) || kind == MarkdownKind::Paragraph {
+                            text.push_str(&self.get_node_text(tree, child_id));
+                        }
+                    }
+                }
+            }
         }
         text
     }

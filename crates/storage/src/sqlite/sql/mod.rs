@@ -13,6 +13,7 @@ pub mod node_task;
 pub mod node_text;
 pub mod node_type;
 pub mod node_wiki;
+pub mod user_settings;
 pub mod workspace;
 pub mod workspace_recent_files;
 pub mod workspace_state;

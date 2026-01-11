@@ -11,15 +11,24 @@ export type MarkmapCanvasProps = {
 export const MarkmapCanvas = (props: MarkmapCanvasProps) => {
   let svgRef: SVGSVGElement | undefined;
   let mm: Markmap | undefined;
+  let didFit = false;
 
   createEffect(() => {
     if (!svgRef || !props.data) return;
-    console.log(props.data);
     if (!mm) {
-      mm = Markmap.create(svgRef, props.options, props.data);
-    } else {
-      mm.setData(props.data, props.options);
+      mm = Markmap.create(svgRef, props.options);
+    } else if (props.options) {
+      mm.setOptions(props.options);
     }
+
+    (mm as any).state.data = props.data;
+    mm.updateStyle();
+    mm.renderData().then(() => {
+      if (!didFit) {
+        didFit = true;
+        mm?.fit();
+      }
+    });
   });
 
   onCleanup(() => {

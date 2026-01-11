@@ -4,6 +4,7 @@ pub mod node;
 pub mod workspace;
 pub mod workspace_recent_files;
 pub mod workspace_state;
+pub mod user_settings;
 pub(crate) use document::SqliteDocumentRepo;
 pub(crate) use folder::SqliteFolderRepo;
 pub(crate) use node::{
@@ -15,3 +16,4 @@ pub(crate) use node::{
 pub(crate) use workspace::SqliteWorkspaceRepo;
 pub(crate) use workspace_recent_files::SqliteWorkspaceRecentFilesRepo;
 pub(crate) use workspace_state::SqliteWorkspaceStateRepo;
+pub(crate) use user_settings::SqliteUserSettingsRepo;

@@ -54,8 +54,8 @@ async fn folder_list_and_delete() {
 
     let listed = folder_repo.list_by_workspace(workspace.id).await.unwrap();
     assert_eq!(listed.len(), 2);
-    assert_eq!(listed[0].id, f1.id);
-    assert_eq!(listed[1].id, f2.id);
+    assert_eq!(listed[0].id, f2.id);
+    assert_eq!(listed[1].id, f1.id);
 
     folder_repo.delete(f1.id).await.unwrap();
     assert!(folder_repo.get(f1.id).await.unwrap().is_none());

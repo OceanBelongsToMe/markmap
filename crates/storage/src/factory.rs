@@ -10,8 +10,8 @@ use crate::sqlite::repo::{
     SqliteNodeFootnoteDefinitionRepo, SqliteNodeHeadingRepo, SqliteNodeImageRepo,
     SqliteNodeLinkRepo, SqliteNodeListRepo, SqliteNodeRangeRepo, SqliteNodeTableRepo,
     SqliteNodeTaskRepo, SqliteNodeTextRepo, SqliteNodeTypeRepo, SqliteNodeWikiRepo,
-    SqliteWorkspaceRecentFilesRepo, SqliteWorkspaceRepo,
-    SqliteWorkspaceStateRepo,
+    SqliteWorkspaceRecentFilesRepo, SqliteWorkspaceRepo, SqliteWorkspaceStateRepo,
+    SqliteUserSettingsRepo,
 };
 
 pub fn build_sqlite_repositories(pool: Pool<Sqlite>) -> AppResult<Repositories> {
@@ -36,7 +36,8 @@ pub fn build_sqlite_repositories(pool: Pool<Sqlite>) -> AppResult<Repositories> 
             wiki: Arc::new(SqliteNodeWikiRepo::new(pool.clone())),
         },
         workspace_state: Arc::new(SqliteWorkspaceStateRepo::new(pool.clone())),
-        workspace_recent_files: Arc::new(SqliteWorkspaceRecentFilesRepo::new(pool)),
+        workspace_recent_files: Arc::new(SqliteWorkspaceRecentFilesRepo::new(pool.clone())),
+        user_settings: Arc::new(SqliteUserSettingsRepo::new(pool)),
     };
 
     Ok(repos)

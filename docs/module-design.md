@@ -56,6 +56,104 @@
 - 工作流型行为（如 attach+import）保留在 `workspace` 的 orchestration 模块中，依赖明确列出。
 - `ServiceContext` 仅承载稳定的共享依赖（repos/clock/queue），避免膨胀。
 
+## 2.4 Markmap 渲染的 SRP 设计（后端）
+
+目标：将 markmap 的初始化逻辑迁移到后端，同时保持单一职责，避免 transformer 过载。
+
+职责拆分建议（落地版）：
+
+- `transformer.rs`：仅负责结构转换（`NodeTree -> PureNode`），不写 state/payload。
+- `initializer.rs`：`PureNode -> INode`，补齐 `state/payload`（id/path/key/depth/rect/size）。
+- `fold.rs`：折叠策略（fold=2 递归折叠 + initialExpandLevel）。
+- `options.rs`：`MarkmapOptions`（默认值 + 用户配置入口）。
+- `types.rs`：后端输出的 INode 结构定义。
+
+推荐流水线（实现管线）：
+
+```
+RenderMarkmap::execute
+  -> MarkmapTransformer::transform (PureNode)
+  -> NodeInitializer::apply (INode)
+  -> FoldPolicy::apply (INode, options)
+  -> JSON 输出
+```
+
+关键约定：
+
+- `state.id` 为遍历自增数字（满足前端 markmap-view 运行期索引需求）。
+- `state.key` 使用后端 `node_id`（UUID 字符串），保证稳定性。
+- `state.path` 为数字路径（例如 `1.2.3`）。
+- `payload.path` 与 `state.path` 保持一致。
+- `initialExpandLevel` 通过 `MarkmapOptions` 进入（默认 -1）。
+
+前端约定：
+
+- 不再使用 `setData/_initializeData`。
+- 只写入 `mm.state.data` 并调用 `renderData()`。
+- 不依赖 `markmap-common` 的运行期工具。
+
+## 2.5 配置表设计（方案 A：K/V）
+
+适用：配置项频繁变动、前后端共享、需要灵活扩展。
+
+表：`user_settings`
+
+- `id` TEXT PRIMARY KEY
+- `user_id` TEXT NULL      // NULL 表示全局默认
+- `scope` TEXT NOT NULL     // "global" | "workspace" | "document"
+- `scope_id` TEXT NULL      // workspace_id / document_id
+- `namespace` TEXT NOT NULL // e.g. "markmap"
+- `key` TEXT NOT NULL       // e.g. "initial_expand_level"
+- `value_json` TEXT NOT NULL // JSON 序列化
+- `updated_at` INTEGER NOT NULL // 毫秒时间戳
+
+约束与索引：
+
+- UNIQUE(`user_id`, `scope`, `scope_id`, `namespace`, `key`)
+- INDEX(`namespace`, `scope`, `scope_id`)
+
+读取优先级：
+
+1) document 级覆盖
+2) workspace 级覆盖
+3) user global
+4) system default
+
+## 2.6 MarkmapOptions 读取设计（基于 user_settings）
+
+命名空间与键：
+
+- namespace: `markmap`
+- key: `initial_expand_level`
+
+scope 约定：
+
+- `document`：scope_id = document_id
+- `workspace`：scope_id = workspace_id
+- `global`：scope_id = NULL
+
+读取流程（高优先级优先命中即返回）：
+
+```
+defaults = MarkmapOptions::default()
+scopes = [
+  ("document", document_id),
+  ("workspace", workspace_id),
+  ("global", None)
+]
+for scope in scopes:
+  setting = repo.get(user_id, scope, namespace, key)
+  if setting exists:
+    options.initial_expand_level = parse(setting.value_json)
+    break
+return options
+```
+
+失败处理：
+
+- JSON 解析失败：记录 error，回退默认值
+- 设置不存在：继续向下一级
+
 ## 3. 目录与模块职责
 
 ### 3.0 目录结构管理
