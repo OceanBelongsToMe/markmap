@@ -138,3 +138,21 @@ docs/
 
 - `docs/backend/export.md` 与 `docs/backend/plugins.md` 收敛为高层约定 + 路径索引
 - 复核结果：SRP 通过
+
+## 维护检查清单新增（2026-01-11）
+
+- 新增：`docs/process/maintenance-checklist.md`
+- 已加入 `docs/index.md` 导航
+
+## 架构摘要新增（2026-01-11）
+
+- 新增：`docs/architecture-summary.md`
+- 已加入 `docs/index.md` 快速入口
+
+## 文档更新规范补充（2026-01-11）
+
+- 在 `docs/process/documentation-guidelines.md` 增加 Code Alignment Checklist 维护规则
+
+## 文档更新规范补充（2026-01-11）
+
+- 增加前端专属规则与后端专属规则
