@@ -4,6 +4,7 @@
 
 ## 快速入口
 
+- 项目入口：`project-context.md`
 - 架构摘要：[architecture-summary.md](architecture-summary.md)
 
 ## 阅读路径（面向编程助手连续使用）
