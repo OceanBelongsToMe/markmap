@@ -40,6 +40,7 @@
 
 - core：`docs/backend/core-domain.md`
 - services：`docs/backend/services.md`
+  - render：`docs/backend/services/render.md`
 - storage：`docs/backend/storage.md`
 - search：`docs/backend/search.md`
 - export：`docs/backend/export.md`

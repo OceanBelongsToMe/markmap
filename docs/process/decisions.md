@@ -161,3 +161,13 @@ docs/
 
 - 新增：`project-context.md`
 - 已加入 `docs/index.md` 快速入口
+
+## 渲染服务 SRP 拆分设计（2026-01-11）
+
+- services::render 设计约束：RenderHtml 仅负责编排，数据加载、Markdown→HTML、HTML 后处理、安全净化分别独立
+- Inline 渲染策略复用：RenderHtml 与 RenderMarkmap 共享 inline 规则以保证预览一致性
+
+## Render 文档归属调整（2026-01-11）
+
+- 归属修正：`docs/backend/render.md` 调整为 `docs/backend/services/render.md`
+- 导航更新：`docs/index.md`、`docs/backend/overview.md`、`docs/architecture-summary.md`、`docs/backend/services.md`

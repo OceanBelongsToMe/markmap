@@ -13,6 +13,7 @@ use std::sync::Arc;
 use crate::builder::{ServiceContext, ServiceRegistry};
 use crate::node_types::NodeTypeLookup;
 use crate::render::markdown::loader::NodeLoader;
+use crate::render::markdown::inline_renderer::{InlineHtmlRenderer, InlineRenderer};
 use crate::render::markdown::tree::NodeTreeBuilder;
 use crate::render::RenderOutput;
 
@@ -25,6 +26,7 @@ pub struct RenderMarkmap {
     loader: NodeLoader,
     tree_builder: NodeTreeBuilder,
     node_types: Arc<NodeTypeLookup>,
+    inline: Arc<dyn InlineRenderer>,
     document_repo: Arc<dyn DocumentRepository>,
     folder_repo: Arc<dyn FolderRepository>,
     user_settings: Arc<dyn UserSettingsRepository>,
@@ -33,10 +35,12 @@ pub struct RenderMarkmap {
 impl RenderMarkmap {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let node_types: Arc<NodeTypeLookup> = registry.get()?;
+        let inline: Arc<dyn InlineRenderer> = Arc::new(InlineHtmlRenderer::new());
         let service = RenderMarkmap {
             loader: NodeLoader::from_repos(&ctx.repos.node),
             tree_builder: NodeTreeBuilder::new(),
             node_types,
+            inline,
             document_repo: ctx.repos.document.clone(),
             folder_repo: ctx.repos.folder.clone(),
             user_settings: ctx.repos.user_settings.clone(),
@@ -50,7 +54,7 @@ impl RenderMarkmap {
         let tree = self.tree_builder.build(snapshot)?;
         let node_types = self.node_types.snapshot().await?;
         
-        let transformer = MarkmapTransformer::new(node_types);
+        let transformer = MarkmapTransformer::new(node_types, self.inline.clone());
         let (workspace_id, document_id) = self.resolve_scope_ids(doc_id).await?;
         let resolver = MarkmapOptionsResolver::new(self.user_settings.clone());
         let options = resolver

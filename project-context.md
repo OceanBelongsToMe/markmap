@@ -30,8 +30,8 @@
 
 ## 5) 构建与运行（常用）
 
-- 前端开发：`bun run dev` 或 `npm run dev`
-- Tauri 开发：`npm run tauri dev`
+- 前端开发：`bun run dev`
+- Tauri 开发：`bun tauri dev`
 
 ## 6) 维护规则
 

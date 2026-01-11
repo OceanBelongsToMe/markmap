@@ -31,6 +31,7 @@
 - Tauri 入口策略：[backend/tauri-entry.md](backend/tauri-entry.md)
 - Core 领域模型：[backend/core-domain.md](backend/core-domain.md)
 - Services 设计：[backend/services.md](backend/services.md)
+- Render 设计：[backend/services/render.md](backend/services/render.md)
 - Storage 设计：[backend/storage.md](backend/storage.md)
 - Search 设计：[backend/search.md](backend/search.md)
 - API/DTO 边界：[backend/api-dto.md](backend/api-dto.md)

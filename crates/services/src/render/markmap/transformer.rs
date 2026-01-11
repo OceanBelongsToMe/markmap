@@ -3,7 +3,7 @@ use knowlattice_core::model::NodeId;
 
 use crate::node_types::NodeTypeCache;
 use crate::render::markdown::classifier::{MarkdownKind, NodeTypeClassifier};
-use crate::render::markdown::serializer::rules::{is_inline_kind, node_text};
+use crate::render::markdown::inline_renderer::InlineRenderer;
 use crate::render::markdown::types::NodeTree;
 
 #[derive(Debug)]
@@ -25,6 +25,7 @@ impl MarkmapPureNode {
 
 pub struct MarkmapTransformer {
     classifier: NodeTypeClassifier,
+    inline: std::sync::Arc<dyn InlineRenderer>,
 }
 
 struct StackItem {
@@ -33,9 +34,10 @@ struct StackItem {
 }
 
 impl MarkmapTransformer {
-    pub fn new(node_types: NodeTypeCache) -> Self {
+    pub fn new(node_types: NodeTypeCache, inline: std::sync::Arc<dyn InlineRenderer>) -> Self {
         Self {
             classifier: NodeTypeClassifier::new(node_types),
+            inline,
         }
     }
 
@@ -98,13 +100,13 @@ impl MarkmapTransformer {
 
         match kind {
             MarkdownKind::Heading => {
-                let content = self.get_node_text(tree, node_id);
+                let content = self.get_node_content(tree, node_id);
                 let children = self.transform_children(tree, node_id);
                 vec![MarkmapPureNode::new(content, node_uuid, children)]
             }
             MarkdownKind::List => self.transform_children(tree, node_id),
             MarkdownKind::ListItem => {
-                let content = self.get_node_text(tree, node_id);
+                let content = self.get_node_content(tree, node_id);
                 let children = self.transform_children(tree, node_id);
                 vec![MarkmapPureNode::new(content, node_uuid, children)]
             }
@@ -130,25 +132,7 @@ impl MarkmapTransformer {
         }
     }
 
-    fn get_node_text(&self, tree: &NodeTree, node_id: NodeId) -> String {
-        let Some(record) = tree.nodes_by_id.get(&node_id) else {
-            return String::new();
-        };
-
-        let mut text = node_text(record);
-
-        if text.is_empty() {
-            if let Some(children) = tree.children_by_id.get(&node_id) {
-                for &child_id in children {
-                    if let Some(child_record) = tree.nodes_by_id.get(&child_id) {
-                        let kind = self.classifier.classify(child_record.base.node_type_id);
-                        if is_inline_kind(kind) || kind == MarkdownKind::Paragraph {
-                            text.push_str(&self.get_node_text(tree, child_id));
-                        }
-                    }
-                }
-            }
-        }
-        text
+    fn get_node_content(&self, tree: &NodeTree, node_id: NodeId) -> String {
+        self.inline.render_inline(tree, node_id, &self.classifier)
     }
 }

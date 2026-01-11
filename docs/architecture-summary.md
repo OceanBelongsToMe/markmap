@@ -47,6 +47,7 @@
 - 后端概览：[backend/overview.md](backend/overview.md)
 - 核心流程：[backend/architecture.md](backend/architecture.md)
 - 服务编排：[backend/services.md](backend/services.md)
+- 渲染设计：[backend/services/render.md](backend/services/render.md)
 - 存储边界：[backend/storage.md](backend/storage.md)
 - 搜索系统：[backend/search.md](backend/search.md)
 - API/DTO：[backend/api-dto.md](backend/api-dto.md)

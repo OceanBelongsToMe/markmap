@@ -9,6 +9,9 @@
 - services::render（渲染/预览）
   - RenderMarkdown/RenderHtml/RenderMarkmap：按格式渲染
   - RenderDocument：门面用例，按 format 路由到具体用例
+  - HTML 渲染遵循 SRP：数据加载、Markdown→HTML、HTML 后处理、安全净化分离，仅由 RenderHtml 负责编排
+  - Inline 渲染策略可复用：RenderHtml 与 RenderMarkmap 共享 inline 规则，保持预览一致性
+  - render 模块职责与 SRP 约束见 `services/render.md`
   - RenderMarkmap 的协议与输出结构见 `docs/shared/markmap-protocol.md`。
   - 渲染实现与规则细节见 `crates/services/src/render/`
 - services::search（检索编排）
