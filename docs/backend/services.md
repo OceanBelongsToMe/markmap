@@ -1,0 +1,21 @@
+- services::index（索引编排）
+  - EnqueueParse：异步入队解析任务
+  - RunParse：执行解析并写入 NodeTree/AST
+  - RefreshIndex：重建或增量刷新索引
+  - InvalidateCache：失效缓存
+  - GetIndexStatus：查询解析/索引状态（待处理/进行中/失败/完成）
+  - 说明：services::index 负责调度与最小闭环（解析 → 收集 → 入库）；解析/索引构建由 search::domain 定义端口，search::adapters 提供实现
+  - 详细调度策略与队列实现见 `crates/services/src/index/` 与 `crates/search/src/application/`
+- services::render（渲染/预览）
+  - RenderMarkdown/RenderHtml/RenderMarkmap：按格式渲染
+  - RenderDocument：门面用例，按 format 路由到具体用例
+  - RenderMarkmap 的协议与输出结构见 `docs/shared/markmap-protocol.md`。
+  - 渲染实现与规则细节见 `crates/services/src/render/`
+- services::search（检索编排）
+  - Search：全文/结构检索与分页
+  - SearchScope：doc/folder/workspace
+  - GetNodeTree：按 file_id 获取解析后的结构树
+  - QueryHighlights：命中片段与高亮
+  - GetNodeDetails：获取节点详情（含 NodeExtra）
+  - GetSearchSuggestions（可选）：标签/标题建议
+  - 具体查询与高亮策略见 `crates/search/src/`

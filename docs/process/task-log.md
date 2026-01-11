@@ -1,0 +1,24 @@
+# 任务记录
+
+## NodeType 内容时间戳
+- [ ] 说明：为 NodeType 增加内容层时间戳，用于区分语义变更与解析时间。
+- [ ] 原因：Node 的 updated_at 反映解析时间，内容变更应单独追踪。
+- [ ] 方案：引入 NodeTypeMeta（组合方式），挂载到各个 NodeType 变体。
+- [ ] 状态：等待确定结构调整方案。
+
+## TaskListMarker 与 Task 节点同步策略
+- [ ] 需要确认：TaskListMarker 出现时是否“覆盖 ListItem 为 Task”，还是“保留 ListItem + 追加 Task 记录”。
+- [ ] 当前问题：仅更新 NodeBase.node_type_id，未同步 NodeType 流，导致 node_task 不入库。
+
+## core 领域模型构造器/工厂（3.1）
+- [x] 为 Workspace/Folder/Document/Node/NodeType 增加构造器，集中校验不变量（纯模型无 IO）。
+- [x] 为 RelativePath/Tag 复用 common::types normalizer，避免重复逻辑。
+
+## services 层构造器使用点预留
+- [x] 在 services 创建/更新实体的流程中统一使用 core::model::*::new 构造器（禁止直接 struct literal）。
+
+## 全局配置改为 JSON 文件
+- [ ] 讨论并实现全局配置使用 JSON 文件存储（替代数据库方案）。
+
+## 时间字段存储格式
+- [ ] SQLite 中时间字段采用 INTEGER（Unix 时间戳），读写时统一转换为 ISO-8601。
