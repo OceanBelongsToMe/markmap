@@ -4,8 +4,7 @@ use std::sync::Arc;
 use knowlattice_core::model::workspace::Workspace;
 use knowlattice_core::model::{document::Document, folder::Folder};
 use knowlattice_core::model::{ContentHash, DocumentId, FolderId, NodeId, RelativePath, WorkspaceId};
-use knowlattice_storage::repo::node::{NodeBaseRepository, NodeBase, NodeText, NodeTextRepository};
-use knowlattice_storage::repo::{DocumentRepository, FolderRepository, WorkspaceRepository};
+use knowlattice_storage::repo::node::{NodeBase, NodeText};
 
 use crate::setup::{enter_test_span, init_tracing, setup_repos};
 

@@ -5,10 +5,7 @@ use chrono::{TimeZone, Utc};
 use knowlattice_core::model::document::Document;
 use knowlattice_core::model::folder::Folder;
 use knowlattice_core::model::{ContentHash, DocumentId, FolderId, RelativePath, WorkspaceId};
-use knowlattice_storage::repo::{
-    DocumentRepository, FolderRepository, WorkspaceRecentFile, WorkspaceRecentFilesRepository,
-    WorkspaceRepository,
-};
+use knowlattice_storage::repo::WorkspaceRecentFile;
 
 use crate::setup::{enter_test_span, init_tracing, setup_repos};
 

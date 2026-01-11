@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use knowlattice_storage::repo::node::NodeTypeRepository;
 
 use crate::setup::{enter_test_span, init_tracing, setup_repos};
 

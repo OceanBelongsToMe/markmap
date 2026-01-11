@@ -5,7 +5,6 @@ use chrono::{TimeZone, Utc};
 
 use knowlattice_core::model::workspace::{UserConfig, Workspace};
 use knowlattice_core::model::WorkspaceId;
-use knowlattice_storage::repo::WorkspaceRepository;
 
 use crate::setup::{enter_test_span, init_tracing, setup_repos};
 

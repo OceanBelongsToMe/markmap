@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use knowlattice_core::model::folder::Folder;
 use knowlattice_core::model::{FolderId, WorkspaceId};
-use knowlattice_storage::repo::{FolderRepository, WorkspaceRepository};
 
 use crate::setup::{enter_test_span, init_tracing, setup_repos};
 
