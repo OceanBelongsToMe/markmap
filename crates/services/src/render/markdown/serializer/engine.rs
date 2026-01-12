@@ -18,6 +18,9 @@ impl<'a> RenderEngine<'a> {
         for node_id in &self.tree.roots {
             self.render_node(*node_id, None, "", 0, &mut lines);
         }
+        while matches!(lines.last(), Some(last) if last.is_empty()) {
+            lines.pop();
+        }
         Ok(lines.join("\n"))
     }
 }

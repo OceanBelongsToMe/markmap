@@ -126,7 +126,9 @@ impl RenderEngine<'_> {
                     out.push(format!("{prefix}{text}"));
                 }
                 self.render_block_children(node_id, None, indent, quote_depth, out);
-                ensure_blank_line(out);
+                if quote_depth == 0 {
+                    ensure_blank_line(out);
+                }
             }
             MarkdownKind::BlockQuote => {
                 let text = self.collect_inline(node_id);
@@ -190,6 +192,9 @@ impl RenderEngine<'_> {
                 ensure_blank_line(out);
             }
             MarkdownKind::HorizontalRule => {
+                if matches!(out.last(), Some(last) if last.is_empty()) {
+                    out.pop();
+                }
                 out.push(format!("{}---", block_prefix(indent, quote_depth)));
             }
             MarkdownKind::Table => {
