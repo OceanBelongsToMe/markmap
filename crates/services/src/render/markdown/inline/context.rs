@@ -3,7 +3,7 @@ use knowlattice_core::model::node_link::NodeLink;
 use knowlattice_core::model::node_wiki::NodeWiki;
 use knowlattice_core::model::NodeId;
 
-use crate::render::markdown::classifier::{MarkdownKind, NodeTypeClassifier};
+use crate::render::markdown::classify::classifier::{MarkdownKind, NodeTypeClassifier};
 use crate::render::markdown::types::{NodeRecord, NodeTree};
 
 pub trait InlineRecordView {

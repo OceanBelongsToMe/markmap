@@ -1,4 +1,4 @@
-use super::super::classifier::MarkdownKind;
+use super::super::classify::classifier::MarkdownKind;
 use super::super::types::NodeRecord;
 use super::state::ListContext;
 

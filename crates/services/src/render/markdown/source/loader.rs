@@ -1,7 +1,7 @@
 use common::types::AppResult;
 use knowlattice_core::model::DocumentId;
 
-use crate::render::markdown::loader::NodeLoader;
+use crate::render::markdown::source::NodeLoader;
 use crate::render::markdown::traits::NodeLoading;
 use crate::render::markdown::types::NodeSnapshot;
 

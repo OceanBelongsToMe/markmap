@@ -2,7 +2,7 @@ use knowlattice_core::model::NodeId;
 
 use super::engine::RenderEngine;
 use super::rules::{block_prefix, table_separator_with_alignment};
-use super::super::classifier::MarkdownKind;
+use super::super::classify::classifier::MarkdownKind;
 
 impl RenderEngine<'_> {
     pub fn table_row_cells(&self, node_id: NodeId) -> Vec<String> {

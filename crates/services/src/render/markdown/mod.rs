@@ -1,7 +1,5 @@
-pub mod classifier;
 pub mod classify;
 pub mod inline;
-pub mod loader;
 pub mod serializer;
 pub mod source;
 pub mod service;

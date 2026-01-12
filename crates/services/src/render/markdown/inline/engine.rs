@@ -1,6 +1,6 @@
 use knowlattice_core::model::NodeId;
 
-use crate::render::markdown::classifier::MarkdownKind;
+use crate::render::markdown::classify::classifier::MarkdownKind;
 use crate::render::markdown::inline::context::InlineContext;
 use crate::render::markdown::inline::format::InlineFormat;
 use crate::render::markdown::serializer::rules::is_inline_kind;

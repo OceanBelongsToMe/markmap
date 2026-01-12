@@ -3,7 +3,7 @@ use knowlattice_core::model::{node_base::NodeBase, DocumentId, NodeId};
 use std::collections::HashMap;
 
 use crate::node_types::NodeTypeCache;
-use crate::render::markdown::classifier::NodeTypeClassifier;
+use crate::render::markdown::classify::classifier::NodeTypeClassifier;
 use crate::render::markdown::types::{NodeRecord, NodeTree};
 
 pub fn base(doc_id: DocumentId, parent_id: Option<NodeId>, node_type_id: i64) -> NodeBase {

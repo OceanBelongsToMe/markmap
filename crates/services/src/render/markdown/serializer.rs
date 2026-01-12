@@ -1,6 +1,6 @@
 use common::types::AppResult;
 
-use super::classifier::NodeTypeClassifier;
+use super::classify::classifier::NodeTypeClassifier;
 use super::types::NodeTree;
 
 mod block;

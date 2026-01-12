@@ -1,6 +1,6 @@
 use knowlattice_core::model::NodeId;
 
-use crate::render::markdown::classifier::NodeTypeClassifier;
+use crate::render::markdown::classify::classifier::NodeTypeClassifier;
 use crate::render::markdown::inline::context::InlineTreeContext;
 use crate::render::markdown::inline::engine::InlineRenderEngine;
 use crate::render::markdown::inline::format::HtmlInlineFormat;
@@ -24,7 +24,7 @@ pub struct InlineTextRenderer {
 mod tests {
     use super::{InlineHtmlRenderer, InlineRenderer};
     use crate::node_types::NodeTypeCache;
-    use crate::render::markdown::classifier::NodeTypeClassifier;
+    use crate::render::markdown::classify::classifier::NodeTypeClassifier;
     use crate::render::markdown::types::{NodeRecord, NodeTree};
     use common::time::{Clock, SystemClock, UtcTimestamp};
     use knowlattice_core::model::node_base::NodeBase;

@@ -1,6 +1,6 @@
 use common::types::AppResult;
 
-use super::super::classifier::NodeTypeClassifier;
+use super::super::classify::classifier::NodeTypeClassifier;
 use super::super::types::NodeTree;
 use super::policy::SpacingPolicy;
 use super::profile::MarkdownStyleProfile;

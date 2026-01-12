@@ -6,9 +6,8 @@ use knowlattice_core::model::DocumentId;
 use crate::builder::{ServiceContext, ServiceRegistry};
 use crate::node_types::NodeTypeLookup;
 use crate::render::markdown::classify::NodeTypeSnapshotProvider;
-use crate::render::markdown::loader::NodeLoader;
 use crate::render::markdown::serializer::MarkdownSerializerImpl;
-use crate::render::markdown::source::NodeLoaderSource;
+use crate::render::markdown::source::{NodeLoader, NodeLoaderSource};
 use crate::render::markdown::traits::{
     MarkdownSerializing, NodeLoading, NodeTypeSnapshot, TreeBuilding,
 };

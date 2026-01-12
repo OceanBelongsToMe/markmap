@@ -1,6 +1,6 @@
 use knowlattice_core::model::NodeId;
 
-use crate::render::markdown::classifier::NodeTypeClassifier;
+use crate::render::markdown::classify::classifier::NodeTypeClassifier;
 use crate::render::markdown::inline::context::InlineTreeContext;
 use crate::render::markdown::inline::engine::InlineRenderEngine;
 use crate::render::markdown::inline::format::HtmlInlineFormat;

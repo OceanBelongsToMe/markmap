@@ -2,7 +2,7 @@ use common::types::AppResult;
 use knowlattice_core::model::NodeId;
 
 use crate::node_types::NodeTypeCache;
-use crate::render::markdown::classifier::{MarkdownKind, NodeTypeClassifier};
+use crate::render::markdown::classify::classifier::{MarkdownKind, NodeTypeClassifier};
 use crate::render::markdown::inline::renderer::InlineRenderer;
 use crate::render::markdown::types::NodeTree;
 

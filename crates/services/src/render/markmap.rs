@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use crate::builder::{ServiceContext, ServiceRegistry};
 use crate::node_types::NodeTypeLookup;
-use crate::render::markdown::loader::NodeLoader;
+use crate::render::markdown::source::NodeLoader;
 use crate::render::markdown::inline::renderer::{InlineHtmlRenderer, InlineRenderer};
 use crate::render::markdown::tree::NodeTreeBuilder;
 use crate::render::RenderOutput;

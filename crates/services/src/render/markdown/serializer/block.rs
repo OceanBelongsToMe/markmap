@@ -3,7 +3,7 @@ use knowlattice_core::model::NodeId;
 use super::engine::RenderEngine;
 use super::rules::{block_prefix, is_inline_kind, is_table_child_kind, list_child_indent, push_block};
 use super::state::ListContext;
-use super::super::classifier::MarkdownKind;
+use super::super::classify::classifier::MarkdownKind;
 
 impl RenderEngine<'_> {
     pub fn render_node(

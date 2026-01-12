@@ -4,7 +4,7 @@ use common::types::AppResult;
 use knowlattice_core::model::DocumentId;
 use knowlattice_storage::provider::NodeRepositories;
 
-use super::types::NodeSnapshot;
+use super::super::types::NodeSnapshot;
 
 pub struct NodeLoader {
     repos: NodeRepositories,
