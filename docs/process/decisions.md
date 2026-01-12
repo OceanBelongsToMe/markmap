@@ -176,3 +176,8 @@ docs/
 
 - 新增环境变量：`KNOWLATTICE_RENDER_HTML_SANITIZE`，用于开启 HTML 输出净化
 - 默认关闭：预览一致性优先，导出/分享可按需开启
+
+## Inline 渲染 SRP 拆分（2026-01-11）
+
+- 自研 inline 渲染保持性能优先，不使用 comrak 片段渲染
+- 拆分职责：文本提取 / Markdown 序列化 / HTML 序列化

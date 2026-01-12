@@ -13,14 +13,14 @@ pub trait InlineRenderer: Send + Sync {
     ) -> String;
 }
 
-pub struct InlineTextRenderer;
+pub struct InlineTextExtractor;
 
-impl InlineTextRenderer {
+impl InlineTextExtractor {
     pub fn new() -> Self {
         Self
     }
 
-    fn render_node(
+    pub fn extract_text(
         &self,
         tree: &NodeTree,
         node_id: NodeId,
@@ -38,7 +38,7 @@ impl InlineTextRenderer {
                     if let Some(child_record) = tree.nodes_by_id.get(&child_id) {
                         let kind = classifier.classify(child_record.base.node_type_id);
                         if is_inline_kind(kind) || kind == MarkdownKind::Paragraph {
-                            text.push_str(&self.render_node(tree, child_id, classifier));
+                            text.push_str(self.extract_text(tree, child_id, classifier).as_str());
                         }
                     }
                 }
@@ -49,6 +49,18 @@ impl InlineTextRenderer {
     }
 }
 
+pub struct InlineTextRenderer {
+    extractor: InlineTextExtractor,
+}
+
+impl InlineTextRenderer {
+    pub fn new() -> Self {
+        Self {
+            extractor: InlineTextExtractor::new(),
+        }
+    }
+}
+
 impl InlineRenderer for InlineTextRenderer {
     fn render_inline(
         &self,
@@ -56,15 +68,139 @@ impl InlineRenderer for InlineTextRenderer {
         node_id: NodeId,
         classifier: &NodeTypeClassifier,
     ) -> String {
-        self.render_node(tree, node_id, classifier)
+        self.extractor.extract_text(tree, node_id, classifier)
     }
 }
 
-pub struct InlineHtmlRenderer;
+pub struct InlineMarkdownSerializer;
 
-impl InlineHtmlRenderer {
+impl InlineMarkdownSerializer {
     pub fn new() -> Self {
         Self
+    }
+
+    pub fn render_inline(
+        &self,
+        tree: &NodeTree,
+        node_id: NodeId,
+        classifier: &NodeTypeClassifier,
+    ) -> String {
+        self.render_node(tree, node_id, classifier)
+    }
+
+    fn collect_inline(
+        &self,
+        tree: &NodeTree,
+        node_id: NodeId,
+        classifier: &NodeTypeClassifier,
+    ) -> String {
+        let Some(record) = tree.nodes_by_id.get(&node_id) else {
+            return String::new();
+        };
+
+        let mut content = node_text(record);
+
+        if let Some(children) = tree.children_by_id.get(&node_id) {
+            for &child_id in children {
+                let Some(child) = tree.nodes_by_id.get(&child_id) else {
+                    continue;
+                };
+                let kind = classifier.classify(child.base.node_type_id);
+                if is_inline_kind(kind) {
+                    content.push_str(&self.render_node(tree, child_id, classifier));
+                }
+            }
+        }
+
+        content
+    }
+
+    fn render_node(
+        &self,
+        tree: &NodeTree,
+        node_id: NodeId,
+        classifier: &NodeTypeClassifier,
+    ) -> String {
+        let Some(record) = tree.nodes_by_id.get(&node_id) else {
+            return String::new();
+        };
+        let kind = classifier.classify(record.base.node_type_id);
+        let content = self.collect_inline(tree, node_id, classifier);
+        if content.is_empty() {
+            return String::new();
+        }
+        match kind {
+            MarkdownKind::Emphasis => format!("*{content}*"),
+            MarkdownKind::Strong => format!("**{content}**"),
+            MarkdownKind::Strikethrough => format!("~~{content}~~"),
+            MarkdownKind::Superscript => format!("^{content}^"),
+            MarkdownKind::Subscript => format!("~{content}~"),
+            MarkdownKind::CodeInline => format!("`{content}`"),
+            MarkdownKind::MathInline => format!("${content}$"),
+            MarkdownKind::HtmlInline => content,
+            MarkdownKind::FootnoteReference => format!("[^{content}]"),
+            MarkdownKind::Link => {
+                if let Some(link) = record.link.as_ref() {
+                    let label = if content.trim().is_empty() {
+                        link.href.as_str()
+                    } else {
+                        content.as_str()
+                    };
+                    let mut line = format!("[{label}]({}", link.href);
+                    if let Some(title) = link.title.as_ref() {
+                        line.push_str(&format!(" \"{}\"", title));
+                    }
+                    line.push(')');
+                    line
+                } else {
+                    content
+                }
+            }
+            MarkdownKind::Image => {
+                if let Some(image) = record.image.as_ref() {
+                    let alt = image.alt.as_deref().unwrap_or("");
+                    let mut line = format!("![{alt}]({}", image.src);
+                    if let Some(title) = image.title.as_ref() {
+                        line.push_str(&format!(" \"{}\"", title));
+                    }
+                    line.push(')');
+                    line
+                } else {
+                    content
+                }
+            }
+            MarkdownKind::Wiki => {
+                if let Some(wiki) = record.wiki.as_ref() {
+                    let target = wiki.target_node_id.as_uuid();
+                    let display = wiki.display_text.trim();
+                    if display.is_empty() {
+                        format!("[[{target}]]")
+                    } else {
+                        format!("[[{display}|{target}]]")
+                    }
+                } else {
+                    content
+                }
+            }
+            _ => content,
+        }
+    }
+}
+
+pub struct InlineHtmlSerializer;
+
+impl InlineHtmlSerializer {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn render_inline(
+        &self,
+        tree: &NodeTree,
+        node_id: NodeId,
+        classifier: &NodeTypeClassifier,
+    ) -> String {
+        self.render_node(tree, node_id, classifier)
     }
 
     fn collect_inline(
@@ -172,6 +308,18 @@ impl InlineHtmlRenderer {
     }
 }
 
+pub struct InlineHtmlRenderer {
+    serializer: InlineHtmlSerializer,
+}
+
+impl InlineHtmlRenderer {
+    pub fn new() -> Self {
+        Self {
+            serializer: InlineHtmlSerializer::new(),
+        }
+    }
+}
+
 impl InlineRenderer for InlineHtmlRenderer {
     fn render_inline(
         &self,
@@ -179,7 +327,7 @@ impl InlineRenderer for InlineHtmlRenderer {
         node_id: NodeId,
         classifier: &NodeTypeClassifier,
     ) -> String {
-        self.render_node(tree, node_id, classifier)
+        self.serializer.render_inline(tree, node_id, classifier)
     }
 }
 
