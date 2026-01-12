@@ -25,3 +25,23 @@ impl MarkdownSerializer {
         engine.render()
     }
 }
+
+pub struct MarkdownSerializerImpl;
+
+impl MarkdownSerializerImpl {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl crate::render::markdown::traits::MarkdownSerializing for MarkdownSerializerImpl {
+    fn serialize(
+        &self,
+        tree: &NodeTree,
+        node_types: crate::node_types::NodeTypeCache,
+    ) -> AppResult<String> {
+        let classifier = NodeTypeClassifier::new(node_types);
+        let serializer = MarkdownSerializer::new(classifier);
+        serializer.serialize(tree)
+    }
+}

@@ -31,3 +31,8 @@
 ## Inline HTML 规则规范化
 - [ ] 说明：明确 Math inline / FootnoteReference / Wiki 的 HTML 输出规范。
 - [ ] 原因：避免渲染规则不一致导致预览差异。
+
+## Markdown 渲染模块 SRP + DIP 重构
+- [ ] 说明：按阶段迁移 markdown 渲染目录结构（traits / source / classify / tree / inline / serializer）。
+- [ ] 迁移阶段：0) 新建目录与 traits 占位；1) service 依赖 traits；2) inline 内核下沉；3) serializer profile/policy 拆分；4) tree/classify/source 独立；5) 清理旧路径。
+- [ ] 验收：每阶段测试全绿，渲染行为不变。
