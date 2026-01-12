@@ -40,3 +40,15 @@ impl MarkdownToHtml for ComrakRenderer {
         Ok(markdown_to_html(markdown, &self.options))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{ComrakRenderer, MarkdownToHtml};
+
+    #[test]
+    fn comrak_renders_raw_html() {
+        let renderer = ComrakRenderer::new();
+        let html = renderer.render("<b>hi</b>").expect("render");
+        assert!(html.contains("<b>hi</b>"));
+    }
+}
