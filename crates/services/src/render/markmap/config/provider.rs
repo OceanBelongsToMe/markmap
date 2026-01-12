@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use common::types::AppResult;
 use knowlattice_core::model::{DocumentId, WorkspaceId};
 use knowlattice_storage::repo::{
-    UserSettingNamespace, UserSettingQuery, UserSettingScope, UserSettingsRepository,
+    DocumentRepository, FolderRepository, UserSettingNamespace, UserSettingQuery, UserSettingScope,
+    UserSettingsRepository,
 };
 use std::sync::Arc;
 
@@ -12,24 +13,49 @@ use crate::render::markmap::traits::MarkmapOptionsProviding;
 const KEY_INITIAL_EXPAND_LEVEL: &str = "initial_expand_level";
 
 pub struct MarkmapOptionsProvider {
+    document_repo: Arc<dyn DocumentRepository>,
+    folder_repo: Arc<dyn FolderRepository>,
     user_settings: Arc<dyn UserSettingsRepository>,
 }
 
 impl MarkmapOptionsProvider {
-    pub fn new(user_settings: Arc<dyn UserSettingsRepository>) -> Self {
-        Self { user_settings }
+    pub fn new(
+        user_settings: Arc<dyn UserSettingsRepository>,
+        document_repo: Arc<dyn DocumentRepository>,
+        folder_repo: Arc<dyn FolderRepository>,
+    ) -> Self {
+        Self {
+            user_settings,
+            document_repo,
+            folder_repo,
+        }
+    }
+
+    async fn resolve_scope_ids(
+        &self,
+        doc_id: DocumentId,
+    ) -> AppResult<(Option<WorkspaceId>, Option<DocumentId>)> {
+        let document = match self.document_repo.get(doc_id).await? {
+            Some(document) => document,
+            None => return Ok((None, Some(doc_id))),
+        };
+        let workspace_id = match self.folder_repo.get(document.folder_id).await? {
+            Some(folder) => Some(folder.workspace_id),
+            None => None,
+        };
+        Ok((workspace_id, Some(doc_id)))
     }
 }
 
 #[async_trait]
 impl MarkmapOptionsProviding for MarkmapOptionsProvider {
-    async fn resolve(
+    async fn resolve_for_document(
         &self,
         user_id: Option<String>,
-        workspace_id: Option<WorkspaceId>,
-        document_id: Option<DocumentId>,
+        document_id: DocumentId,
     ) -> AppResult<MarkmapOptions> {
         let mut options = MarkmapOptions::default();
+        let (workspace_id, document_id) = self.resolve_scope_ids(document_id).await?;
         let scopes = [
             (
                 UserSettingScope::Document,

@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use common::types::AppResult;
 use knowlattice_core::model::NodeId;
 
@@ -25,8 +26,9 @@ impl MarkmapTransformer {
     }
 }
 
+#[async_trait]
 impl MarkmapTransforming for MarkmapTransformer {
-    fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode> {
+    async fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode> {
         let mut stack: Vec<StackItem> = vec![];
         stack.push(StackItem {
             level: 0,
@@ -156,8 +158,8 @@ mod tests {
             .expect("node base")
     }
 
-    #[test]
-    fn transform_uses_inline_html_renderer() {
+    #[tokio::test]
+    async fn transform_uses_inline_html_renderer() {
         let doc_id = DocumentId::new();
         let heading_id = NodeId::new();
         let link_id = NodeId::new();
@@ -244,7 +246,7 @@ mod tests {
         let inline = Arc::new(InlineHtmlRenderer::new());
         let inline = Arc::new(MarkmapInlineAdapter::new(inline, Arc::clone(&classifier)));
         let transformer = MarkmapTransformer::new(classifier, inline);
-        let node = transformer.transform(&tree).expect("transform");
+        let node = transformer.transform(&tree).await.expect("transform");
 
         assert!(node.content.contains("<a href=\"https://example.com\">"));
         assert!(node.content.contains("Example"));

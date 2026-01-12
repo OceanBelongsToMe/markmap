@@ -188,6 +188,9 @@
 ## C) Shared（docs则：shared/*）
 
 ### markmap-protocol.md
+- `crates/services/src/render/markmap/mod.rs`
+- `crates/services/src/render/markmap/service.rs`
+- `crates/services/src/render/markmap/registry.rs`
 - `crates/services/src/render/markmap/pipeline/transformer.rs`
 - `crates/services/src/render/markmap/pipeline/initializer.rs`
 - `crates/services/src/render/markmap/pipeline/folder.rs`

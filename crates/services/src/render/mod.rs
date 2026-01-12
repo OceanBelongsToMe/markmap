@@ -13,7 +13,6 @@ use crate::builder::{ServiceContext, ServiceRegistry};
 use crate::render::document::RenderDocument;
 use crate::render::html::RenderHtml;
 use crate::render::markdown::RenderMarkdown;
-use crate::render::markmap::RenderMarkmap;
 
 pub use document::RenderFormat;
 
@@ -27,7 +26,7 @@ pub enum RenderOutput {
 pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
     RenderMarkdown::register(ctx, registry);
     RenderHtml::register(registry);
-    RenderMarkmap::register(ctx, registry)?;
+    markmap::register(ctx, registry)?;
     RenderDocument::register(registry)?;
     Ok(())
 }

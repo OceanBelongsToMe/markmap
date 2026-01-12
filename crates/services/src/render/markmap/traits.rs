@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use common::types::AppResult;
-use knowlattice_core::model::{DocumentId, NodeId, WorkspaceId};
+use knowlattice_core::model::{DocumentId, NodeId};
 
 use crate::render::markdown::types::NodeTree;
 use crate::render::markmap::config::options::MarkmapOptions;
@@ -19,8 +19,9 @@ pub trait MarkmapInlineRendering: Send + Sync {
     fn render_inline(&self, tree: &NodeTree, node_id: NodeId) -> String;
 }
 
+#[async_trait]
 pub trait MarkmapTransforming: Send + Sync {
-    fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode>;
+    async fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode>;
 }
 
 pub trait MarkmapInitializing: Send + Sync {
@@ -33,10 +34,9 @@ pub trait MarkmapFolding: Send + Sync {
 
 #[async_trait]
 pub trait MarkmapOptionsProviding: Send + Sync {
-    async fn resolve(
+    async fn resolve_for_document(
         &self,
         user_id: Option<String>,
-        workspace_id: Option<WorkspaceId>,
-        document_id: Option<DocumentId>,
+        document_id: DocumentId,
     ) -> AppResult<MarkmapOptions>;
 }

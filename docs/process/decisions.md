@@ -196,3 +196,8 @@ docs/
 
 - 分层目录：traits / pipeline / inline / classify / source / config
 - RenderMarkmap 仅依赖 traits，pipeline 与适配层各自解耦
+
+## RenderMarkmap 入口纯化（2026-01-12）
+
+- 入口拆分：mod.rs 仅导出/注册，registry 负责装配，service 仅编排
+- RenderMarkmap 字段仅保留运行期端口（input/options/transformer/initializer/folder）
