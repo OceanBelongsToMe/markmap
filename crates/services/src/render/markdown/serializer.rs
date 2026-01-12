@@ -5,7 +5,7 @@ use super::types::NodeTree;
 
 mod block;
 mod engine;
-mod inline;
+mod inline_adapter;
 pub mod rules;
 mod state;
 mod table;
