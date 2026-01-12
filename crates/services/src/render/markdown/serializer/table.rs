@@ -61,22 +61,30 @@ impl RenderEngine<'_> {
             }
         }
         let prefix = block_prefix(indent, quote_depth);
-        if let Some(head) = head_rows.first() {
-            let count = head.len().max(alignments.len());
-            if !head.is_empty() {
-                out.push(format!("{prefix}| {} |", head.join(" | ")));
-                out.push(format!(
-                    "{prefix}|{}|",
-                    table_separator_with_alignment(count, &alignments)
-                ));
-            }
+
+        // Determine column count and header cells
+        let (mut header_cells, count) = if let Some(head) = head_rows.first().filter(|h| !h.is_empty()) {
+            (head.clone(), head.len().max(alignments.len()))
         } else if !body_rows.is_empty() {
             let count = body_rows[0].len().max(alignments.len());
+            (vec![String::new(); count], count)
+        } else {
+            (Vec::new(), 0)
+        };
+
+        if count > 0 {
+            // Pad header cells if necessary to match count
+            while header_cells.len() < count {
+                header_cells.push(String::new());
+            }
+
+            out.push(format!("{prefix}| {} |", header_cells.join(" | ")));
             out.push(format!(
                 "{prefix}|{}|",
                 table_separator_with_alignment(count, &alignments)
             ));
         }
+
         for row in &body_rows {
             if row.is_empty() {
                 continue;

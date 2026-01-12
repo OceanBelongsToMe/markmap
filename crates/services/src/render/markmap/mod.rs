@@ -1,6 +1,9 @@
 pub mod classify {
     pub mod classifier;
 }
+pub mod block {
+    pub mod renderer;
+}
 pub mod config {
     pub mod options;
     pub mod provider;

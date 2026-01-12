@@ -19,6 +19,10 @@ pub trait MarkmapInlineRendering: Send + Sync {
     fn render_inline(&self, tree: &NodeTree, node_id: NodeId) -> String;
 }
 
+pub trait MarkmapBlockRendering: Send + Sync {
+    fn render_table_html(&self, tree: &NodeTree, node_id: NodeId) -> AppResult<String>;
+}
+
 #[async_trait]
 pub trait MarkmapTransforming: Send + Sync {
     async fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode>;

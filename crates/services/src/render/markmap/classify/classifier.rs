@@ -25,6 +25,7 @@ impl MarkmapClassifying for MarkmapClassifierAdapter {
             MarkdownKind::Heading => MarkmapNodeKind::Heading,
             MarkdownKind::List => MarkmapNodeKind::List,
             MarkdownKind::ListItem => MarkmapNodeKind::ListItem,
+            MarkdownKind::Table => MarkmapNodeKind::Table,
             _ => MarkmapNodeKind::Other,
         }
     }

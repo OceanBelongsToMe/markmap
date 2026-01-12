@@ -201,3 +201,8 @@ docs/
 
 - 入口拆分：mod.rs 仅导出/注册，registry 负责装配，service 仅编排
 - RenderMarkmap 字段仅保留运行期端口（input/options/transformer/initializer/folder）
+
+## Markmap 表格节点输出 HTML（2026-01-12）
+
+- 表格节点 `content` 直接输出 HTML `<table>` 片段
+- RenderHtml 与 Markmap 复用 MarkdownSerializer + Comrak，保持预览一致性

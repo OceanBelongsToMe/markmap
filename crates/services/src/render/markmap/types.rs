@@ -5,6 +5,7 @@ pub enum MarkmapNodeKind {
     Heading,
     List,
     ListItem,
+    Table,
     Other,
 }
 

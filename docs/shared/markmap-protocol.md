@@ -33,6 +33,7 @@ RenderMarkmap::execute
 - `state.path` 为数字路径（例如 `1.2.3`）。
 - `payload.path` 与 `state.path` 保持一致。
 - `initialExpandLevel` 通过 `MarkmapOptions` 进入（默认 -1）。
+- 表格节点 `content` 输出 HTML `<table>` 片段（与 RenderHtml 一致）。
 
 前端约定：
 
