@@ -1,14 +1,10 @@
-use super::options::MarkmapOptions;
-use super::types::MarkmapNode;
+use crate::render::markmap::config::options::MarkmapOptions;
+use crate::render::markmap::traits::MarkmapFolding;
+use crate::render::markmap::types::MarkmapNode;
 
 pub struct FoldPolicy;
 
 impl FoldPolicy {
-    pub fn apply(root: &mut MarkmapNode, options: &MarkmapOptions) {
-        let mut fold_recursively = 0u32;
-        Self::apply_node(root, &mut fold_recursively, options);
-    }
-
     fn apply_node(node: &mut MarkmapNode, fold_recursively: &mut u32, options: &MarkmapOptions) {
         let is_fold_recursively = node.payload.fold == Some(2);
         if is_fold_recursively {
@@ -27,5 +23,12 @@ impl FoldPolicy {
         if is_fold_recursively {
             *fold_recursively -= 1;
         }
+    }
+}
+
+impl MarkmapFolding for FoldPolicy {
+    fn apply(&self, root: &mut MarkmapNode, options: &MarkmapOptions) {
+        let mut fold_recursively = 0u32;
+        Self::apply_node(root, &mut fold_recursively, options);
     }
 }

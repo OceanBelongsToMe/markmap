@@ -36,3 +36,8 @@
 - [ ] 说明：按阶段迁移 markdown 渲染目录结构（traits / source / classify / tree / inline / serializer）。
 - [ ] 迁移阶段：0) 新建目录与 traits 占位；1) service 依赖 traits；2) inline 内核下沉；3) serializer profile/policy 拆分；4) tree/classify/source 独立；5) 清理旧路径。
 - [ ] 验收：每阶段测试全绿，渲染行为不变。
+
+## Markmap 渲染模块 SRP + DIP 重构
+- [ ] 说明：按阶段迁移 markmap 渲染目录结构（traits / pipeline / inline / classify / source / config）。
+- [ ] 迁移阶段：1) 增加 traits 端口；2) pipeline 依赖 traits（transform/init/fold）；3) 增加 inline/classify/source/config 适配层；4) service 纯编排；5) 清理旧依赖与路径。
+- [ ] 验收：每阶段测试全绿，输出一致。

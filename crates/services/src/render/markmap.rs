@@ -1,13 +1,27 @@
-pub mod fold;
-pub mod initializer;
-pub mod options;
-pub mod options_resolver;
-pub mod transformer;
+pub mod classify {
+    pub mod classifier;
+}
+pub mod config {
+    pub mod options;
+    pub mod provider;
+}
+pub mod inline {
+    pub mod renderer;
+}
+pub mod pipeline {
+    pub mod folder;
+    pub mod initializer;
+    pub mod transformer;
+}
+pub mod source {
+    pub mod provider;
+}
+pub mod traits;
 pub mod types;
 
 use common::types::AppResult;
 use knowlattice_core::model::{DocumentId, WorkspaceId};
-use knowlattice_storage::repo::{DocumentRepository, FolderRepository, UserSettingsRepository};
+use knowlattice_storage::repo::{DocumentRepository, FolderRepository};
 use std::sync::Arc;
 
 use crate::builder::{ServiceContext, ServiceRegistry};
@@ -17,53 +31,67 @@ use crate::render::markdown::inline::renderer::{InlineHtmlRenderer, InlineRender
 use crate::render::markdown::tree::NodeTreeBuilder;
 use crate::render::RenderOutput;
 
-use self::fold::FoldPolicy;
-use self::initializer::NodeInitializer;
-use self::options_resolver::MarkmapOptionsResolver;
-use self::transformer::MarkmapTransformer;
+use self::classify::classifier::MarkmapClassifierAdapter;
+use self::config::provider::MarkmapOptionsProvider;
+use self::inline::renderer::MarkmapInlineAdapter;
+use self::pipeline::folder::FoldPolicy;
+use self::pipeline::initializer::NodeInitializer;
+use self::pipeline::transformer::MarkmapTransformer;
+use self::source::provider::MarkmapTreeProvider;
+use self::traits::{MarkmapFolding, MarkmapInitializing, MarkmapInputProviding, MarkmapOptionsProviding, MarkmapTransforming};
 
 pub struct RenderMarkmap {
-    loader: NodeLoader,
-    tree_builder: NodeTreeBuilder,
+    input: Arc<dyn MarkmapInputProviding>,
+    options: Arc<dyn MarkmapOptionsProviding>,
+    initializer: Arc<dyn MarkmapInitializing>,
+    folder: Arc<dyn MarkmapFolding>,
     node_types: Arc<NodeTypeLookup>,
     inline: Arc<dyn InlineRenderer>,
     document_repo: Arc<dyn DocumentRepository>,
     folder_repo: Arc<dyn FolderRepository>,
-    user_settings: Arc<dyn UserSettingsRepository>,
 }
 
 impl RenderMarkmap {
     pub fn register(ctx: &ServiceContext, registry: &mut ServiceRegistry) -> AppResult<()> {
         let node_types: Arc<NodeTypeLookup> = registry.get()?;
         let inline: Arc<dyn InlineRenderer> = Arc::new(InlineHtmlRenderer::new());
+        let input = MarkmapTreeProvider::new(
+            NodeLoader::from_repos(&ctx.repos.node),
+            NodeTreeBuilder::new(),
+        );
+        let options = MarkmapOptionsProvider::new(ctx.repos.user_settings.clone());
         let service = RenderMarkmap {
-            loader: NodeLoader::from_repos(&ctx.repos.node),
-            tree_builder: NodeTreeBuilder::new(),
+            input: Arc::new(input),
+            options: Arc::new(options),
+            initializer: Arc::new(NodeInitializer::new()),
+            folder: Arc::new(FoldPolicy),
             node_types,
             inline,
             document_repo: ctx.repos.document.clone(),
             folder_repo: ctx.repos.folder.clone(),
-            user_settings: ctx.repos.user_settings.clone(),
         };
         registry.register(Arc::new(service));
         Ok(())
     }
 
     pub async fn execute(&self, doc_id: DocumentId) -> AppResult<RenderOutput> {
-        let snapshot = self.loader.load(doc_id).await?;
-        let tree = self.tree_builder.build(snapshot)?;
+        let tree = self.input.load_tree(doc_id).await?;
         let node_types = self.node_types.snapshot().await?;
         
-        let transformer = MarkmapTransformer::new(node_types, self.inline.clone());
+        let classifier = Arc::new(MarkmapClassifierAdapter::new(node_types));
+        let inline = Arc::new(MarkmapInlineAdapter::new(
+            self.inline.clone(),
+            Arc::clone(&classifier),
+        ));
+        let transformer = MarkmapTransformer::new(classifier, inline);
         let (workspace_id, document_id) = self.resolve_scope_ids(doc_id).await?;
-        let resolver = MarkmapOptionsResolver::new(self.user_settings.clone());
-        let options = resolver
+        let options = self
+            .options
             .resolve(None, workspace_id, document_id)
             .await?;
         let pure = transformer.transform(&tree)?;
-        let mut initializer = NodeInitializer::new();
-        let mut node = initializer.apply(pure);
-        FoldPolicy::apply(&mut node, &options);
+        let mut node = self.initializer.initialize(pure);
+        self.folder.apply(&mut node, &options);
         let json = serde_json::to_value(node).expect("MarkmapNode serialization failed");
         
         Ok(RenderOutput::Json(json))

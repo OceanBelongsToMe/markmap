@@ -188,12 +188,12 @@
 ## C) Shared（docs则：shared/*）
 
 ### markmap-protocol.md
-- `crates/services/src/render/markmap/transformer.rs`
-- `crates/services/src/render/markmap/initializer.rs`
-- `crates/services/src/render/markmap/fold.rs`
-- `crates/services/src/render/markmap/options.rs`
+- `crates/services/src/render/markmap/pipeline/transformer.rs`
+- `crates/services/src/render/markmap/pipeline/initializer.rs`
+- `crates/services/src/render/markmap/pipeline/folder.rs`
+- `crates/services/src/render/markmap/config/options.rs`
 - `crates/services/src/render/markmap/types.rs`
-- `crates/services/src/render/markmap/options_resolver.rs`
+- `crates/services/src/render/markmap/config/provider.rs`
 - `src/features/markmap/MarkmapContainer.tsx`
 - `src/ui/components/markmap/MarkmapCanvas.tsx`
 - `src/features/document/hooks/useDocumentRender.ts`

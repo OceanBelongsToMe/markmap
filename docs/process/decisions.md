@@ -191,3 +191,8 @@ docs/
 
 - 分层目录：traits / source / classify / tree / inline / serializer
 - RenderMarkdown 仅依赖 traits，具体实现下沉到各层
+
+## Markmap 渲染分层落地（2026-01-12）
+
+- 分层目录：traits / pipeline / inline / classify / source / config
+- RenderMarkmap 仅依赖 traits，pipeline 与适配层各自解耦

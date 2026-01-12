@@ -1,5 +1,30 @@
 use serde::Serialize;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MarkmapNodeKind {
+    Heading,
+    List,
+    ListItem,
+    Other,
+}
+
+#[derive(Debug)]
+pub struct MarkmapPureNode {
+    pub content: String,
+    pub children: Vec<MarkmapPureNode>,
+    pub node_id: String,
+}
+
+impl MarkmapPureNode {
+    pub fn new(content: String, node_id: String, children: Vec<MarkmapPureNode>) -> Self {
+        Self {
+            content,
+            children,
+            node_id,
+        }
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct MarkmapRect {
     pub x: i32,

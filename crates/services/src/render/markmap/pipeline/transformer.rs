@@ -1,31 +1,14 @@
 use common::types::AppResult;
 use knowlattice_core::model::NodeId;
 
-use crate::node_types::NodeTypeCache;
-use crate::render::markdown::classify::classifier::{MarkdownKind, NodeTypeClassifier};
-use crate::render::markdown::inline::renderer::InlineRenderer;
 use crate::render::markdown::types::NodeTree;
-
-#[derive(Debug)]
-pub struct MarkmapPureNode {
-    pub content: String,
-    pub children: Vec<MarkmapPureNode>,
-    pub node_id: String,
-}
-
-impl MarkmapPureNode {
-    fn new(content: String, node_id: String, children: Vec<MarkmapPureNode>) -> Self {
-        Self {
-            content,
-            children,
-            node_id,
-        }
-    }
-}
+use crate::render::markmap::traits::{MarkmapClassifying, MarkmapInlineRendering, MarkmapTransforming};
+use crate::render::markmap::types::{MarkmapNodeKind, MarkmapPureNode};
+use std::sync::Arc;
 
 pub struct MarkmapTransformer {
-    classifier: NodeTypeClassifier,
-    inline: std::sync::Arc<dyn InlineRenderer>,
+    classifier: Arc<dyn MarkmapClassifying>,
+    inline: Arc<dyn MarkmapInlineRendering>,
 }
 
 struct StackItem {
@@ -34,14 +17,16 @@ struct StackItem {
 }
 
 impl MarkmapTransformer {
-    pub fn new(node_types: NodeTypeCache, inline: std::sync::Arc<dyn InlineRenderer>) -> Self {
-        Self {
-            classifier: NodeTypeClassifier::new(node_types),
-            inline,
-        }
+    pub fn new(
+        classifier: Arc<dyn MarkmapClassifying>,
+        inline: Arc<dyn MarkmapInlineRendering>,
+    ) -> Self {
+        Self { classifier, inline }
     }
+}
 
-    pub fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode> {
+impl MarkmapTransforming for MarkmapTransformer {
+    fn transform(&self, tree: &NodeTree) -> AppResult<MarkmapPureNode> {
         let mut stack: Vec<StackItem> = vec![];
         stack.push(StackItem {
             level: 0,
@@ -81,7 +66,9 @@ impl MarkmapTransformer {
 
         Ok(root)
     }
+}
 
+impl MarkmapTransformer {
     fn transform_nodes(&self, tree: &NodeTree, node_ids: &[NodeId]) -> Vec<MarkmapPureNode> {
         let mut result = Vec::new();
         for &id in node_ids {
@@ -99,18 +86,18 @@ impl MarkmapTransformer {
         let node_uuid = record.base.id.as_uuid().to_string();
 
         match kind {
-            MarkdownKind::Heading => {
+            MarkmapNodeKind::Heading => {
                 let content = self.get_node_content(tree, node_id);
                 let children = self.transform_children(tree, node_id);
                 vec![MarkmapPureNode::new(content, node_uuid, children)]
             }
-            MarkdownKind::List => self.transform_children(tree, node_id),
-            MarkdownKind::ListItem => {
+            MarkmapNodeKind::List => self.transform_children(tree, node_id),
+            MarkmapNodeKind::ListItem => {
                 let content = self.get_node_content(tree, node_id);
                 let children = self.transform_children(tree, node_id);
                 vec![MarkmapPureNode::new(content, node_uuid, children)]
             }
-            _ => vec![],
+            MarkmapNodeKind::Other => vec![],
         }
     }
 
@@ -133,13 +120,16 @@ impl MarkmapTransformer {
     }
 
     fn get_node_content(&self, tree: &NodeTree, node_id: NodeId) -> String {
-        self.inline.render_inline(tree, node_id, &self.classifier)
+        self.inline.render_inline(tree, node_id)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::MarkmapTransformer;
+    use crate::render::markmap::classify::classifier::MarkmapClassifierAdapter;
+    use crate::render::markmap::inline::renderer::MarkmapInlineAdapter;
+    use crate::render::markmap::traits::MarkmapTransforming;
     use crate::node_types::NodeTypeCache;
     use crate::render::markdown::inline::renderer::InlineHtmlRenderer;
     use crate::render::markdown::types::{NodeRecord, NodeTree};
@@ -250,8 +240,10 @@ mod tests {
         map.insert(2, "Link".to_string());
         map.insert(3, "Text".to_string());
         let cache = NodeTypeCache::new(map);
+        let classifier = Arc::new(MarkmapClassifierAdapter::new(cache));
         let inline = Arc::new(InlineHtmlRenderer::new());
-        let transformer = MarkmapTransformer::new(cache, inline);
+        let inline = Arc::new(MarkmapInlineAdapter::new(inline, Arc::clone(&classifier)));
+        let transformer = MarkmapTransformer::new(classifier, inline);
         let node = transformer.transform(&tree).expect("transform");
 
         assert!(node.content.contains("<a href=\"https://example.com\">"));

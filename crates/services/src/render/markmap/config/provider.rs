@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use common::types::AppResult;
 use knowlattice_core::model::{DocumentId, WorkspaceId};
 use knowlattice_storage::repo::{
@@ -6,19 +7,23 @@ use knowlattice_storage::repo::{
 use std::sync::Arc;
 
 use super::options::MarkmapOptions;
+use crate::render::markmap::traits::MarkmapOptionsProviding;
 
 const KEY_INITIAL_EXPAND_LEVEL: &str = "initial_expand_level";
 
-pub struct MarkmapOptionsResolver {
+pub struct MarkmapOptionsProvider {
     user_settings: Arc<dyn UserSettingsRepository>,
 }
 
-impl MarkmapOptionsResolver {
+impl MarkmapOptionsProvider {
     pub fn new(user_settings: Arc<dyn UserSettingsRepository>) -> Self {
         Self { user_settings }
     }
+}
 
-    pub async fn resolve(
+#[async_trait]
+impl MarkmapOptionsProviding for MarkmapOptionsProvider {
+    async fn resolve(
         &self,
         user_id: Option<String>,
         workspace_id: Option<WorkspaceId>,
@@ -26,8 +31,14 @@ impl MarkmapOptionsResolver {
     ) -> AppResult<MarkmapOptions> {
         let mut options = MarkmapOptions::default();
         let scopes = [
-            (UserSettingScope::Document, document_id.map(|id| id.as_uuid().to_string())),
-            (UserSettingScope::Workspace, workspace_id.map(|id| id.as_uuid().to_string())),
+            (
+                UserSettingScope::Document,
+                document_id.map(|id| id.as_uuid().to_string()),
+            ),
+            (
+                UserSettingScope::Workspace,
+                workspace_id.map(|id| id.as_uuid().to_string()),
+            ),
             (UserSettingScope::Global, None),
         ];
 
@@ -50,10 +61,7 @@ impl MarkmapOptionsResolver {
                         break;
                     }
                     Err(err) => {
-                        common::log_error!(
-                            "markmap options decode failed: {}",
-                            err.to_string()
-                        );
+                        common::log_error!("markmap options decode failed: {}", err.to_string());
                     }
                 }
             }

@@ -10,19 +10,19 @@
 
 职责拆分建议（落地版）：
 
-- `transformer.rs`：仅负责结构转换（`NodeTree -> PureNode`），不写 state/payload。
-- `initializer.rs`：`PureNode -> INode`，补齐 `state/payload`（id/path/key/depth/rect/size）。
-- `fold.rs`：折叠策略（fold=2 递归折叠 + initialExpandLevel）。
-- `options.rs`：`MarkmapOptions`（默认值 + 用户配置入口）。
+- `pipeline/transformer.rs`：仅负责结构转换（`NodeTree -> PureNode`），不写 state/payload。
+- `pipeline/initializer.rs`：`PureNode -> INode`，补齐 `state/payload`（id/path/key/depth/rect/size）。
+- `pipeline/folder.rs`：折叠策略（fold=2 递归折叠 + initialExpandLevel）。
+- `config/options.rs`：`MarkmapOptions`（默认值 + 用户配置入口）。
 - `types.rs`：后端输出的 INode 结构定义。
 
 推荐流水线（实现管线）：
 
 ```
 RenderMarkmap::execute
-  -> MarkmapTransformer::transform (PureNode)
-  -> NodeInitializer::apply (INode)
-  -> FoldPolicy::apply (INode, options)
+  -> MarkmapTransforming::transform (PureNode)
+  -> MarkmapInitializing::initialize (INode)
+  -> MarkmapFolding::apply (INode, options)
   -> JSON 输出
 ```
 
