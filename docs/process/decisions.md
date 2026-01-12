@@ -181,3 +181,8 @@ docs/
 
 - 自研 inline 渲染保持性能优先，不使用 comrak 片段渲染
 - 拆分职责：文本提取 / Markdown 序列化 / HTML 序列化
+
+## Inline 渲染接口化（2026-01-11）
+
+- 抽象接口：InlineContext / InlineFormat / InlineRenderEngine
+- 规则与遍历解耦：RenderEngine 与 Markmap 复用同一规则接口

@@ -1,7 +1,9 @@
 use knowlattice_core::model::NodeId;
 
 use crate::render::markdown::classifier::NodeTypeClassifier;
-use crate::render::markdown::inline::html_serializer::InlineHtmlSerializer;
+use crate::render::markdown::inline::context::InlineTreeContext;
+use crate::render::markdown::inline::engine::InlineRenderEngine;
+use crate::render::markdown::inline::format::HtmlInlineFormat;
 use crate::render::markdown::inline::text_extractor::InlineTextExtractor;
 use crate::render::markdown::types::NodeTree;
 
@@ -193,13 +195,13 @@ impl InlineRenderer for InlineTextRenderer {
 }
 
 pub struct InlineHtmlRenderer {
-    serializer: InlineHtmlSerializer,
+    format: HtmlInlineFormat,
 }
 
 impl InlineHtmlRenderer {
     pub fn new() -> Self {
         Self {
-            serializer: InlineHtmlSerializer::new(),
+            format: HtmlInlineFormat::new(),
         }
     }
 }
@@ -211,6 +213,8 @@ impl InlineRenderer for InlineHtmlRenderer {
         node_id: NodeId,
         classifier: &NodeTypeClassifier,
     ) -> String {
-        self.serializer.render_inline(tree, node_id, classifier)
+        let ctx = InlineTreeContext::new(tree, classifier);
+        let engine = InlineRenderEngine::new(&self.format);
+        engine.render_inline(&ctx, node_id)
     }
 }
