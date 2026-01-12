@@ -10,6 +10,7 @@ knowlattice-search = { path = "../search" }
 knowlattice-export = { path = "../export" }
 common = { package = "knowlattice-common", path = "../common" }
 comrak = { workspace = true }
+ammonia = { workspace = true }
 sqlx = { workspace = true }
 async-trait = { workspace = true }
 tokio = { version = "1", features = ["fs", "rt", "sync", "macros"] }

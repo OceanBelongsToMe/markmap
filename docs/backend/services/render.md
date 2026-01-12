@@ -16,6 +16,7 @@
 - RenderDocument：仅负责按 format 路由到具体渲染用例。
 - RenderHtml：仅负责编排（数据加载 → Markdown→HTML → 后处理 → 可选净化），不包含渲染规则。
 - Inline 渲染策略：RenderHtml 与 RenderMarkmap 共享 inline 规则以保证预览一致性。
+- 可选净化开关：通过环境变量 `KNOWLATTICE_RENDER_HTML_SANITIZE` 启用 HTML 净化。
 
 ## 3) 输出与共享契约
 

@@ -7,7 +7,7 @@ use crate::builder::ServiceRegistry;
 use crate::render::RenderOutput;
 use crate::render::html::postprocess::{HtmlPostProcessor, NoopPostProcessor};
 use crate::render::html::renderer::{ComrakRenderer, MarkdownToHtml};
-use crate::render::html::sanitizer::HtmlSanitizer;
+use crate::render::html::sanitizer::{AmmoniaSanitizer, HtmlSanitizer};
 use crate::render::html::source::{MarkdownSourceProvider, RenderMarkdownSource};
 use crate::render::markdown::RenderMarkdown;
 
@@ -26,7 +26,11 @@ impl RenderHtml {
         let renderer: Arc<dyn MarkdownToHtml> = Arc::new(ComrakRenderer::new());
         let postprocessors: Vec<Arc<dyn HtmlPostProcessor>> =
             vec![Arc::new(NoopPostProcessor)];
-        let sanitizer: Option<Arc<dyn HtmlSanitizer>> = None;
+        let sanitizer: Option<Arc<dyn HtmlSanitizer>> = if sanitize_html_env() {
+            Some(Arc::new(AmmoniaSanitizer::new()))
+        } else {
+            None
+        };
 
         registry.register(Arc::new(RenderHtml {
             source,
@@ -50,4 +54,11 @@ impl RenderHtml {
 
         Ok(RenderOutput::Text(html))
     }
+}
+
+fn sanitize_html_env() -> bool {
+    std::env::var("KNOWLATTICE_RENDER_HTML_SANITIZE")
+        .ok()
+        .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE"))
+        .unwrap_or(false)
 }

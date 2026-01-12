@@ -171,3 +171,8 @@ docs/
 
 - 归属修正：`docs/backend/render.md` 调整为 `docs/backend/services/render.md`
 - 导航更新：`docs/index.md`、`docs/backend/overview.md`、`docs/architecture-summary.md`、`docs/backend/services.md`
+
+## HTML 渲染净化开关（2026-01-11）
+
+- 新增环境变量：`KNOWLATTICE_RENDER_HTML_SANITIZE`，用于开启 HTML 输出净化
+- 默认关闭：预览一致性优先，导出/分享可按需开启

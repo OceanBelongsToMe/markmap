@@ -14,3 +14,4 @@ sqlx = { version = "^0.8", features = ["sqlite", "runtime-tokio", "migrate"] }
 async-trait = "^0.1"
 pulldown-cmark = "^0.13"
 comrak = "^0.23"
+ammonia = "^4.0"
