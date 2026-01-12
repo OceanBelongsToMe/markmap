@@ -26,3 +26,7 @@
 ## HTML 导出/分享显式净化开关
 - [ ] 说明：导出/分享路径增加显式 Sanitizer 开关，不依赖环境变量。
 - [ ] 原因：避免 raw HTML 在导出场景误用，安全策略由调用方控制。
+
+## Inline HTML 规则规范化
+- [ ] 说明：明确 Math inline / FootnoteReference / Wiki 的 HTML 输出规范。
+- [ ] 原因：避免渲染规则不一致导致预览差异。
