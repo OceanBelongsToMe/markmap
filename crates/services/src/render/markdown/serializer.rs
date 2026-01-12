@@ -6,6 +6,8 @@ use super::types::NodeTree;
 mod block;
 mod engine;
 mod inline_adapter;
+pub mod policy;
+pub mod profile;
 pub mod rules;
 mod state;
 mod table;
@@ -13,15 +15,26 @@ mod traversal;
 
 pub struct MarkdownSerializer {
     classifier: NodeTypeClassifier,
+    profile: profile::MarkdownStyleProfile,
+    spacing: Box<dyn policy::SpacingPolicy>,
 }
 
 impl MarkdownSerializer {
     pub fn new(classifier: NodeTypeClassifier) -> Self {
-        Self { classifier }
+        Self {
+            classifier,
+            profile: profile::MarkdownStyleProfile::new(),
+            spacing: Box::new(policy::DefaultSpacingPolicy::new()),
+        }
     }
 
     pub fn serialize(&self, tree: &NodeTree) -> AppResult<String> {
-        let engine = engine::RenderEngine::new(tree, &self.classifier);
+        let engine = engine::RenderEngine::new(
+            tree,
+            &self.classifier,
+            &self.profile,
+            self.spacing.as_ref(),
+        );
         engine.render()
     }
 }
