@@ -186,3 +186,8 @@ docs/
 
 - 抽象接口：InlineContext / InlineFormat / InlineRenderEngine
 - 规则与遍历解耦：RenderEngine 与 Markmap 复用同一规则接口
+
+## Markdown 渲染分层落地（2026-01-11）
+
+- 分层目录：traits / source / classify / tree / inline / serializer
+- RenderMarkdown 仅依赖 traits，具体实现下沉到各层

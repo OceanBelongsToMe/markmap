@@ -16,6 +16,7 @@
 - RenderDocument：仅负责按 format 路由到具体渲染用例。
 - RenderHtml：仅负责编排（数据加载 → Markdown→HTML → 后处理 → 可选净化），不包含渲染规则。
 - Inline 渲染策略：RenderMarkmap 使用自研 inline 渲染并按 SRP 拆分（文本提取 / 规则格式化 / 遍历引擎 / 渲染编排），以保持性能与规则可控。
+- Markdown 渲染分层：traits + source + classify + tree + inline + serializer，职责单一且依赖倒置。
 - 可选净化开关：通过环境变量 `KNOWLATTICE_RENDER_HTML_SANITIZE` 启用 HTML 净化。
 - 待办事项：导出/分享路径显式净化开关见 `../../process/task-log.md`。
 
