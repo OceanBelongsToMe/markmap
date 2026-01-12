@@ -3,7 +3,7 @@ use knowlattice_core::model::NodeId;
 
 use crate::node_types::NodeTypeCache;
 use crate::render::markdown::classifier::{MarkdownKind, NodeTypeClassifier};
-use crate::render::markdown::inline_renderer::InlineRenderer;
+use crate::render::markdown::inline::renderer::InlineRenderer;
 use crate::render::markdown::types::NodeTree;
 
 #[derive(Debug)]
@@ -141,7 +141,7 @@ impl MarkmapTransformer {
 mod tests {
     use super::MarkmapTransformer;
     use crate::node_types::NodeTypeCache;
-    use crate::render::markdown::inline_renderer::InlineHtmlRenderer;
+    use crate::render::markdown::inline::renderer::InlineHtmlRenderer;
     use crate::render::markdown::types::{NodeRecord, NodeTree};
     use common::time::{Clock, SystemClock, UtcTimestamp};
     use knowlattice_core::model::node_base::NodeBase;

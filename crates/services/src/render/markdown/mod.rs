@@ -1,5 +1,5 @@
 pub mod classifier;
-pub mod inline_renderer;
+pub mod inline;
 pub mod loader;
 pub mod serializer;
 pub mod service;
