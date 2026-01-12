@@ -136,3 +136,125 @@ impl MarkmapTransformer {
         self.inline.render_inline(tree, node_id, &self.classifier)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::MarkmapTransformer;
+    use crate::node_types::NodeTypeCache;
+    use crate::render::markdown::inline_renderer::InlineHtmlRenderer;
+    use crate::render::markdown::types::{NodeRecord, NodeTree};
+    use common::time::{Clock, SystemClock, UtcTimestamp};
+    use knowlattice_core::model::node_base::NodeBase;
+    use knowlattice_core::model::node_heading::NodeHeading;
+    use knowlattice_core::model::node_link::{LinkType, NodeLink};
+    use knowlattice_core::model::node_text::NodeText;
+    use knowlattice_core::model::{DocumentId, HeadingLevel, NodeId};
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    fn now() -> UtcTimestamp {
+        SystemClock.now()
+    }
+
+    fn node_base(
+        doc_id: DocumentId,
+        node_id: NodeId,
+        parent_id: Option<NodeId>,
+        node_type_id: i64,
+    ) -> NodeBase {
+        NodeBase::new(node_id, doc_id, parent_id, node_type_id, now(), now())
+            .expect("node base")
+    }
+
+    #[test]
+    fn transform_uses_inline_html_renderer() {
+        let doc_id = DocumentId::new();
+        let heading_id = NodeId::new();
+        let link_id = NodeId::new();
+        let text_id = NodeId::new();
+
+        let heading_record = NodeRecord {
+            base: node_base(doc_id, heading_id, None, 1),
+            text: None,
+            range: None,
+            heading: Some(NodeHeading {
+                node_id: heading_id,
+                level: HeadingLevel::new(1).expect("heading level"),
+            }),
+            footnote_definition: None,
+            list: None,
+            code_block: None,
+            table: None,
+            image: None,
+            link: None,
+            task: None,
+            wiki: None,
+        };
+
+        let link_record = NodeRecord {
+            base: node_base(doc_id, link_id, Some(heading_id), 2),
+            text: None,
+            range: None,
+            heading: None,
+            footnote_definition: None,
+            list: None,
+            code_block: None,
+            table: None,
+            image: None,
+            link: Some(NodeLink {
+                node_id: link_id,
+                href: "https://example.com".to_string(),
+                title: None,
+                link_type: LinkType::Inline,
+                ref_id: None,
+            }),
+            task: None,
+            wiki: None,
+        };
+
+        let text_record = NodeRecord {
+            base: node_base(doc_id, text_id, Some(link_id), 3),
+            text: Some(NodeText {
+                node_id: text_id,
+                text: "Example".to_string(),
+            }),
+            range: None,
+            heading: None,
+            footnote_definition: None,
+            list: None,
+            code_block: None,
+            table: None,
+            image: None,
+            link: None,
+            task: None,
+            wiki: None,
+        };
+
+        let mut nodes = HashMap::new();
+        nodes.insert(heading_id, heading_record);
+        nodes.insert(link_id, link_record);
+        nodes.insert(text_id, text_record);
+
+        let mut children = HashMap::new();
+        children.insert(heading_id, vec![link_id]);
+        children.insert(link_id, vec![text_id]);
+
+        let tree = NodeTree {
+            roots: vec![heading_id],
+            nodes_by_id: nodes,
+            children_by_id: children,
+        };
+
+        let mut map = HashMap::new();
+        map.insert(1, "Heading".to_string());
+        map.insert(2, "Link".to_string());
+        map.insert(3, "Text".to_string());
+        let cache = NodeTypeCache::new(map);
+        let inline = Arc::new(InlineHtmlRenderer::new());
+        let transformer = MarkmapTransformer::new(cache, inline);
+        let node = transformer.transform(&tree).expect("transform");
+
+        assert!(node.content.contains("<a href=\"https://example.com\">"));
+        assert!(node.content.contains("Example"));
+    }
+}
