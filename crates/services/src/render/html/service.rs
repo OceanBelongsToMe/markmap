@@ -62,3 +62,98 @@ fn sanitize_html_env() -> bool {
         .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE"))
         .unwrap_or(false)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::RenderHtml;
+    use crate::render::RenderOutput;
+    use crate::render::html::postprocess::HtmlPostProcessor;
+    use crate::render::html::renderer::MarkdownToHtml;
+    use crate::render::html::sanitizer::HtmlSanitizer;
+    use crate::render::html::source::MarkdownSourceProvider;
+    use common::types::AppResult;
+    use knowlattice_core::model::DocumentId;
+    use std::sync::{Arc, Mutex};
+
+    struct StubSource {
+        trace: Arc<Mutex<Vec<&'static str>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl MarkdownSourceProvider for StubSource {
+        async fn load_markdown(&self, _doc_id: DocumentId) -> AppResult<String> {
+            self.trace.lock().expect("trace").push("source");
+            Ok("**md**".to_string())
+        }
+    }
+
+    struct StubRenderer {
+        trace: Arc<Mutex<Vec<&'static str>>>,
+    }
+
+    impl MarkdownToHtml for StubRenderer {
+        fn render(&self, markdown: &str) -> AppResult<String> {
+            self.trace.lock().expect("trace").push("renderer");
+            Ok(format!("<p>{markdown}</p>"))
+        }
+    }
+
+    struct StubPostProcessor {
+        trace: Arc<Mutex<Vec<&'static str>>>,
+    }
+
+    impl HtmlPostProcessor for StubPostProcessor {
+        fn process(&self, html: &str) -> AppResult<String> {
+            self.trace.lock().expect("trace").push("post");
+            Ok(format!("{html}<!--post-->"))
+        }
+    }
+
+    struct StubSanitizer {
+        trace: Arc<Mutex<Vec<&'static str>>>,
+    }
+
+    impl HtmlSanitizer for StubSanitizer {
+        fn sanitize(&self, html: &str) -> AppResult<String> {
+            self.trace.lock().expect("trace").push("sanitize");
+            Ok(format!("<!--sanitized-->{html}"))
+        }
+    }
+
+    #[tokio::test]
+    async fn render_html_pipeline_orders_steps() {
+        let trace = Arc::new(Mutex::new(Vec::new()));
+        let service = RenderHtml {
+            source: Arc::new(StubSource {
+                trace: Arc::clone(&trace),
+            }),
+            renderer: Arc::new(StubRenderer {
+                trace: Arc::clone(&trace),
+            }),
+            postprocessors: vec![Arc::new(StubPostProcessor {
+                trace: Arc::clone(&trace),
+            })],
+            sanitizer: Some(Arc::new(StubSanitizer {
+                trace: Arc::clone(&trace),
+            })),
+        };
+
+        let output = service
+            .execute(DocumentId::new())
+            .await
+            .expect("execute");
+
+        assert_eq!(
+            trace.lock().expect("trace").as_slice(),
+            ["source", "renderer", "post", "sanitize"]
+        );
+
+        match output {
+            RenderOutput::Text(html) => {
+                assert!(html.contains("<!--sanitized-->"));
+                assert!(html.contains("<!--post-->"));
+            }
+            _ => panic!("expected html text output"),
+        }
+    }
+}
