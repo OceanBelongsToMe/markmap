@@ -41,3 +41,9 @@
 - [ ] 说明：按阶段迁移 markmap 渲染目录结构（traits / pipeline / inline / classify / source / config）。
 - [ ] 迁移阶段：1) 增加 traits 端口；2) pipeline 依赖 traits（transform/init/fold）；3) 增加 inline/classify/source/config 适配层；4) service 纯编排；5) 清理旧依赖与路径。
 - [ ] 验收：每阶段测试全绿，输出一致。
+
+## 界面布局与交互优化 (2026-01-13)
+- [x] 说明：优化 Sash 拖拽体验，放宽布局尺寸限制，调整默认视图状态。
+- [x] Sash 修复：使用 offset 修正点击坐标，解决跳变问题。
+- [x] 约束放宽：Editor min 200px / no max; Preview max 1500px。
+- [x] 默认状态：默认单栏，悬浮面板按需渲染（消除空容器背景）。

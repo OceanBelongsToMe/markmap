@@ -88,9 +88,7 @@ export const WorkspacePage = () => {
         </div>
       }
       floatingPanel={
-        <WorkspaceFloatingPanel>
-          <FloatingEditorPanelContent />
-        </WorkspaceFloatingPanel>
+        <FloatingEditorPanelContent />
       }
     />
   );

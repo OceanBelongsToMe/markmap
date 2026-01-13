@@ -4,7 +4,7 @@ import { useI18n } from "../../../i18n/context";
 
 export const useFloatingEditorPanel = () => {
   const { t } = useI18n();
-  const [isOpen, setIsOpen] = createSignal(true);
+  const [isOpen, setIsOpen] = createSignal(false);
   let panelRef: HTMLDivElement | undefined;
   let previousFocus: HTMLElement | null = null;
 

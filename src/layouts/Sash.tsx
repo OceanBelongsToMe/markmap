@@ -12,8 +12,13 @@ export const Sash = (props: SashProps) => {
     sashRef?.setPointerCapture(event.pointerId);
     document.documentElement.dataset.resizing = "true";
 
+    // Calculate the initial offset relative to the logical center (props.left)
+    // This ensures that clicking anywhere on the sash (even with visual transforms) doesn't cause a jump
+    const initialOffset = event.clientX - props.left;
+
     const onPointerMove = (moveEvent: PointerEvent) => {
-      props.onDrag(moveEvent.clientX);
+      // Adjust the reported clientX by the initial offset
+      props.onDrag(moveEvent.clientX - initialOffset);
     };
 
     const onPointerUp = () => {

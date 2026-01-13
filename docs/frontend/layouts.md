@@ -74,6 +74,11 @@
     - `900px <= W < 1200px`：侧栏折叠为图标栏/抽屉。
     - `768px <= W < 900px`：工具栏精简为图标 + 更多菜单。
     - `W < 768px`：单列内容，预览仅以浮层/抽屉出现。
+  - 布局尺寸规则（src/layouts/rules/workspaceLayoutSizes.ts）：
+    - 侧栏：`minPx: 180`, `initialPx: 240`
+    - 编辑区：`minPx: 200`（原480，下调以提升灵活性）, `maxPx: 无限制`（原1200，避免宽屏下无法左扩）
+    - 预览区：`minPx: 300`, `maxPx: 1500`（原1000，适应宽屏预览）
+    - 默认状态：`layoutMode` 默认为 `single`（单栏编辑），预览与悬浮面板默认关闭，按需开启。
   - 代码模块建议（SRP）：
   - 规则层（纯函数/配置）：`src/layouts/rules/layoutBreakpoints.ts`
   - 状态层（监听尺寸 → variant）：`src/state/useResponsiveLayout.ts`
