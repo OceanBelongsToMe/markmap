@@ -14,10 +14,9 @@
     "windows": [
       {
         "title": "",
-        "width": 800,
         "titleBarStyle": "Overlay",
         "dragDropEnabled": false,
-        "height": 600
+        "fullscreen": true
       }
     ],
     "security": {
