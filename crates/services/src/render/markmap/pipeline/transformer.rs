@@ -40,7 +40,7 @@ impl MarkmapTransforming for MarkmapTransformer {
         let mut stack: Vec<StackItem> = vec![];
         stack.push(StackItem {
             level: 0,
-            node: MarkmapPureNode::new("".to_string(), "root".to_string(), vec![]),
+            node: MarkmapPureNode::new("".to_string(), "root".to_string(), vec![], None),
         });
 
         for &root_id in &tree.roots {
@@ -103,17 +103,23 @@ impl MarkmapTransformer {
             MarkmapNodeKind::Heading => {
                 let content = self.get_node_content(tree, node_id);
                 let children = self.transform_children(tree, node_id)?;
-                vec![MarkmapPureNode::new(content, node_uuid, children)]
+                let heading_level = Some(self.get_node_level(tree, node_id));
+                vec![MarkmapPureNode::new(
+                    content,
+                    node_uuid,
+                    children,
+                    heading_level,
+                )]
             }
             MarkmapNodeKind::List => self.transform_children(tree, node_id)?,
             MarkmapNodeKind::ListItem => {
                 let content = self.get_node_content(tree, node_id);
                 let children = self.transform_children(tree, node_id)?;
-                vec![MarkmapPureNode::new(content, node_uuid, children)]
+                vec![MarkmapPureNode::new(content, node_uuid, children, None)]
             }
             MarkmapNodeKind::Table => {
                 let content = self.block.render_table_html(tree, node_id)?;
-                vec![MarkmapPureNode::new(content, node_uuid, vec![])]
+                vec![MarkmapPureNode::new(content, node_uuid, vec![], None)]
             }
             MarkmapNodeKind::Other => vec![],
         };

@@ -14,14 +14,21 @@ pub struct MarkmapPureNode {
     pub content: String,
     pub children: Vec<MarkmapPureNode>,
     pub node_id: String,
+    pub heading_level: Option<u8>,
 }
 
 impl MarkmapPureNode {
-    pub fn new(content: String, node_id: String, children: Vec<MarkmapPureNode>) -> Self {
+    pub fn new(
+        content: String,
+        node_id: String,
+        children: Vec<MarkmapPureNode>,
+        heading_level: Option<u8>,
+    ) -> Self {
         Self {
             content,
             children,
             node_id,
+            heading_level,
         }
     }
 }
@@ -74,6 +81,8 @@ pub struct MarkmapPayload {
     pub fold: Option<u8>,
     pub path: String,
     pub node_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heading_level: Option<u8>,
 }
 
 impl MarkmapPayload {
@@ -82,6 +91,7 @@ impl MarkmapPayload {
             fold: None,
             path: String::new(),
             node_id,
+            heading_level: None,
         }
     }
 }

@@ -28,6 +28,7 @@ impl NodeInitializer {
             path: path.clone(),
             node_id: node.node_id,
             fold: None,
+            heading_level: node.heading_level,
         };
         let state = MarkmapState {
             id,

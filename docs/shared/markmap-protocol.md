@@ -32,6 +32,7 @@ RenderMarkmap::execute
 - `state.key` 使用后端 `node_id`（UUID 字符串），保证稳定性。
 - `state.path` 为数字路径（例如 `1.2.3`）。
 - `payload.path` 与 `state.path` 保持一致。
+- `payload.heading_level`：仅 heading 节点填入 `1-6`，其它节点为 `null/缺省`（前端用于图标/样式）。
 - `initialExpandLevel` 通过 `MarkmapOptions` 进入（默认 -1）。
 - 表格节点 `content` 输出 HTML `<table>` 片段（与 RenderHtml 一致）。
 
