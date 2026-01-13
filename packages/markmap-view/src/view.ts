@@ -390,19 +390,9 @@ export class Markmap {
           .join(' '),
       );
 
-    // Update lines under the content
-    const mmLine = mmGMerge
+    mmGMerge
       .selectAll<SVGLineElement, INode>(childSelector<SVGLineElement>('line'))
-      .data(
-        (d) => [d],
-        (d) => d.state.key,
-      );
-    const mmLineEnter = mmLine
-      .enter()
-      .append('line')
-      .attr('stroke', (d) => color(d))
-      .attr('stroke-width', 0);
-    const mmLineMerge = mmLine.merge(mmLineEnter);
+      .remove();
 
     // Circle to link to children of the node
     const mmCircle = mmGMerge
@@ -492,7 +482,7 @@ export class Markmap {
         const originRect = getOriginSourceRect(d.target);
         const pathOrigin: [number, number] = [
           originRect.x + originRect.width,
-          originRect.y + originRect.height,
+          originRect.y + originRect.height / 2,
         ];
         return linkShape({ source: pathOrigin, target: pathOrigin });
       })
@@ -536,31 +526,13 @@ export class Markmap {
       (d) => `translate(${d.state.rect.x},${d.state.rect.y})`,
     );
 
-    const mmLineExit = mmGExit.selectAll<SVGLineElement, INode>(
-      childSelector<SVGLineElement>('line'),
-    );
-    this.transition(mmLineExit)
-      .attr('x1', (d) => d.state.rect.width)
-      .attr('stroke-width', 0);
-    mmLineEnter
-      .attr('x1', (d) => d.state.rect.width)
-      .attr('x2', (d) => d.state.rect.width);
-    mmLineMerge
-      .attr('y1', (d) => d.state.rect.height + lineWidth(d) / 2)
-      .attr('y2', (d) => d.state.rect.height + lineWidth(d) / 2);
-    this.transition(mmLineMerge)
-      .attr('x1', -1)
-      .attr('x2', (d) => d.state.rect.width + 2)
-      .attr('stroke', (d) => color(d))
-      .attr('stroke-width', lineWidth);
-
     const mmCircleExit = mmGExit.selectAll<SVGCircleElement, INode>(
       childSelector<SVGCircleElement>('circle'),
     );
     this.transition(mmCircleExit).attr('r', 0).attr('stroke-width', 0);
     mmCircleMerge
       .attr('cx', (d) => d.state.rect.width)
-      .attr('cy', (d) => d.state.rect.height + lineWidth(d) / 2);
+      .attr('cy', (d) => d.state.rect.height / 2);
     this.transition(mmCircleMerge).attr('r', 6).attr('stroke-width', '1.5');
 
     this.transition(mmFoExit).style('opacity', 0);
@@ -574,7 +546,7 @@ export class Markmap {
         const targetRect = getOriginTargetRect(d.target);
         const pathTarget: [number, number] = [
           targetRect.x + targetRect.width,
-          targetRect.y + targetRect.height + lineWidth(d.target) / 2,
+          targetRect.y + targetRect.height / 2,
         ];
         return linkShape({ source: pathTarget, target: pathTarget });
       })
@@ -589,15 +561,11 @@ export class Markmap {
         const origTarget = d.target;
         const source: [number, number] = [
           origSource.state.rect.x + origSource.state.rect.width,
-          origSource.state.rect.y +
-            origSource.state.rect.height +
-            lineWidth(origSource) / 2,
+          origSource.state.rect.y + origSource.state.rect.height / 2,
         ];
         const target: [number, number] = [
           origTarget.state.rect.x,
-          origTarget.state.rect.y +
-            origTarget.state.rect.height +
-            lineWidth(origTarget) / 2,
+          origTarget.state.rect.y + origTarget.state.rect.height / 2,
         ];
         return linkShape({ source, target });
       });
