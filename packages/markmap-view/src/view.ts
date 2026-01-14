@@ -1,15 +1,12 @@
 import type * as d3 from 'd3';
 import {
   linkHorizontal,
-  max,
-  min,
   minIndex,
   select,
   zoom,
   zoomIdentity,
   zoomTransform,
 } from 'd3';
-import { flextree } from 'd3-flextree';
 import {
   Hook,
   INode,
@@ -29,6 +26,20 @@ import {
   IPadding,
 } from './types';
 import { childSelector, simpleHash } from './util';
+import {
+  buildHighlightRect,
+  buildLinks,
+  buildOriginMap,
+  collectVisibleNodes,
+} from './view/data';
+import { applyRectsToNodes, computeLayout } from './view/layout';
+import { animateEnterExit } from './view/animation';
+import {
+  measureNodeSizes,
+  renderHighlight,
+  renderLinks,
+  renderNodes,
+} from './view/render';
 
 export const globalCSS = css;
 
@@ -212,64 +223,6 @@ export class Markmap {
     return node as INode;
   }
 
-  private _relayout() {
-    if (!this.state.data) return;
-
-    this.g
-      .selectAll<SVGGElement, INode>(childSelector<SVGGElement>(SELECTOR_NODE))
-      .selectAll<SVGForeignObjectElement, INode>(
-        childSelector<SVGForeignObjectElement>('foreignObject'),
-      )
-      .each(function (d) {
-        const el = this.firstChild?.firstChild as HTMLDivElement;
-        const newSize: [number, number] = [el.scrollWidth, el.scrollHeight];
-        d.state.size = newSize;
-      });
-
-    const { lineWidth, paddingX, spacingHorizontal, spacingVertical } =
-      this.options;
-    const layout = flextree<INode>({})
-      .children((d) => {
-        if (!d.payload?.fold) return d.children;
-      })
-      .nodeSize((node) => {
-        const [width, height] = node.data.state.size;
-        return [height, width + (width ? paddingX * 2 : 0) + spacingHorizontal];
-      })
-      .spacing((a, b) => {
-        return (
-          (a.parent === b.parent ? spacingVertical : spacingVertical * 2) +
-          lineWidth(a.data)
-        );
-      });
-    const tree = layout.hierarchy(this.state.data);
-    layout(tree);
-    const fnodes = tree.descendants();
-    fnodes.forEach((fnode) => {
-      const node = fnode.data;
-      node.state.rect = {
-        x: fnode.y,
-        y: fnode.x - fnode.xSize / 2,
-        width: fnode.ySize - spacingHorizontal,
-        height: fnode.xSize,
-      };
-    });
-    this.state.rect = {
-      x1: min(fnodes, (fnode) => fnode.data.state.rect.x) || 0,
-      y1: min(fnodes, (fnode) => fnode.data.state.rect.y) || 0,
-      x2:
-        max(
-          fnodes,
-          (fnode) => fnode.data.state.rect.x + fnode.data.state.rect.width,
-        ) || 0,
-      y2:
-        max(
-          fnodes,
-          (fnode) => fnode.data.state.rect.y + fnode.data.state.rect.height,
-        ) || 0,
-    };
-  }
-
   setOptions(opts?: Partial<IMarkmapOptions>): void {
     this.options = {
       ...this.options,
@@ -300,275 +253,97 @@ export class Markmap {
     await this.renderData();
   }
 
-  private _getHighlightRect(highlight: INode) {
-    const svgNode = this.svg.node()!;
-    const transform = zoomTransform(svgNode);
-    const padding = 4 / transform.k;
-    const rect = {
-      ...highlight.state.rect,
-    };
-    rect.x -= padding;
-    rect.y -= padding;
-    rect.width += 2 * padding;
-    rect.height += 2 * padding;
-    return rect;
-  }
-
   async renderData(originData?: INode) {
-    const { paddingX, autoFit, color, maxWidth, lineWidth } = this.options;
+    const { paddingX, autoFit, color, lineWidth } = this.options;
     const rootNode = this.state.data;
     if (!rootNode) return;
 
+    const { nodes, parentMap } = collectVisibleNodes(rootNode);
     const nodeMap: Record<number, INode> = {};
-    const parentMap: Record<number, number> = {};
-    const nodes: INode[] = [];
-    walkTree(rootNode, (item, next, parent) => {
-      if (!item.payload?.fold) next();
-      nodeMap[item.state.id] = item;
-      if (parent) parentMap[item.state.id] = parent.state.id;
-      nodes.push(item);
+    nodes.forEach((node) => {
+      nodeMap[node.state.id] = node;
     });
-
-    const originMap: Record<number, number> = {};
+    const originMap = buildOriginMap(originData, rootNode);
     const sourceRectMap: Record<
       number,
       { x: number; y: number; width: number; height: number }
-    > = {};
-    const setOriginNode = (originNode: INode | undefined) => {
-      if (!originNode || originMap[originNode.state.id]) return;
-      walkTree(originNode, (item, next) => {
-        originMap[item.state.id] = originNode.state.id;
-        next();
-      });
+    > = {
+      [rootNode.state.id]: rootNode.state.rect,
     };
-    const getOriginSourceRect = (node: INode) => {
-      const rect = sourceRectMap[originMap[node.state.id]];
-      return rect || rootNode.state.rect;
-    };
-    const getOriginTargetRect = (node: INode) =>
-      (nodeMap[originMap[node.state.id]] || rootNode).state.rect;
-    sourceRectMap[rootNode.state.id] = rootNode.state.rect;
-    if (originData) setOriginNode(originData);
-
-    // Update highlight
-    let { highlight } = this.state;
-    if (highlight && !nodeMap[highlight.state.id]) highlight = undefined;
-    let highlightNodes = this.g
-      .selectAll(childSelector(SELECTOR_HIGHLIGHT))
-      .selectAll<SVGRectElement, INode>(childSelector<SVGRectElement>('rect'))
-      .data(highlight ? [this._getHighlightRect(highlight)] : [])
-      .join('rect')
-      .attr('x', (d) => d.x)
-      .attr('y', (d) => d.y)
-      .attr('width', (d) => d.width)
-      .attr('height', (d) => d.height);
-
-    // Update the nodes
-    const mmG = this.g
-      .selectAll<SVGGElement, INode>(childSelector<SVGGElement>(SELECTOR_NODE))
-      .each((d) => {
-        // Save the current rects before updating nodes
-        sourceRectMap[d.state.id] = d.state.rect;
-      })
-      .data(nodes, (d) => d.state.key);
-    const mmGEnter = mmG
-      .enter()
-      .append('g')
-      .attr('data-depth', (d) => d.state.depth)
-      .attr('data-path', (d) => d.state.path)
-      .each((d) => {
-        setOriginNode(nodeMap[parentMap[d.state.id]]);
+    const svgNode = this.svg.node()!;
+    const transform = zoomTransform(svgNode);
+    const highlight = this.state.highlight;
+    const highlightVisible =
+      highlight && nodeMap[highlight.state.id] ? highlight : undefined;
+    const initialHighlightRect = highlightVisible
+      ? buildHighlightRect(highlightVisible, rootNode, transform)
+      : undefined;
+    const highlightNodes = renderHighlight(
+      this.g,
+      SELECTOR_HIGHLIGHT,
+      initialHighlightRect,
+    );
+    const { mmGEnter, mmGExit, mmGMerge, mmCircleMerge, mmFoExit, mmFoMerge } =
+      renderNodes({
+        svg: this.svg,
+        g: this.g,
+        nodeSelector: SELECTOR_NODE,
+        nodes,
+        nodeMap,
+        parentMap,
+        originMap,
+        sourceRectMap,
+        paddingX,
+        color,
+        maxWidth: this.options.maxWidth,
+        nodeContent: this.options.nodeContent,
+        handleClick: this.handleClick,
+        stopPropagation,
+        observer: this._observer,
       });
-    const mmGExit = mmG.exit<INode>().each((d) => {
-      setOriginNode(nodeMap[parentMap[d.state.id]]);
+    const links = buildLinks(nodes);
+    const rootSourceRect = sourceRectMap[rootNode.state.id];
+    const { mmPathExit, mmPathMerge } = renderLinks({
+      g: this.g,
+      linkSelector: SELECTOR_LINK,
+      links,
+      originMap,
+      sourceRectMap,
+      rootRect: rootSourceRect,
+      linkShape,
     });
-    const mmGMerge = mmG
-      .merge(mmGEnter)
-      .attr('class', (d) =>
-        ['markmap-node', d.payload?.fold && 'markmap-fold']
-          .filter(Boolean)
-          .join(' '),
-      );
-
-    mmGMerge
-      .selectAll<SVGLineElement, INode>(childSelector<SVGLineElement>('line'))
-      .remove();
-
-    // Circle to link to children of the node
-    const mmCircle = mmGMerge
-      .selectAll<
-        SVGCircleElement,
-        INode
-      >(childSelector<SVGCircleElement>('circle'))
-      .data(
-        (d) => (d.children?.length ? [d] : []),
-        (d) => d.state.key,
-      );
-    const mmCircleEnter = mmCircle
-      .enter()
-      .append('circle')
-      .attr('stroke-width', 0)
-      .attr('r', 0)
-      .on('click', (e, d) => this.handleClick(e, d))
-      .on('mousedown', stopPropagation);
-    const mmCircleMerge = mmCircleEnter
-      .merge(mmCircle)
-      .attr('stroke', (d) => color(d))
-      .attr('fill', (d) =>
-        d.payload?.fold && d.children
-          ? color(d)
-          : 'var(--markmap-circle-open-bg)',
-      );
-
-    const observer = this._observer;
-    const mmFo = mmGMerge
-      .selectAll<
-        SVGForeignObjectElement,
-        INode
-      >(childSelector<SVGForeignObjectElement>('foreignObject'))
-      .data(
-        (d) => [d],
-        (d) => d.state.key,
-      );
-    const mmFoEnter = mmFo
-      .enter()
-      .append('foreignObject')
-      .attr('class', 'markmap-foreign')
-      .attr('x', paddingX)
-      .attr('y', 0)
-      .style('opacity', 0)
-      .on('mousedown', stopPropagation)
-      .on('dblclick', stopPropagation);
-    mmFoEnter
-      // The outer `<div>` with a width of `maxWidth`
-      .append<HTMLDivElement>('xhtml:div')
-      // The inner `<div>` with `display: inline-block` to get the proper width
-      .append<HTMLDivElement>('xhtml:div')
-      .html((d) => this.options.nodeContent?.(d) ?? d.content)
-      .attr('xmlns', 'http://www.w3.org/1999/xhtml');
-    mmFoEnter.each(function () {
-      const el = this.firstChild?.firstChild as Element;
-      observer.observe(el);
-    });
-    const mmFoExit = mmGExit.selectAll<SVGForeignObjectElement, INode>(
-      childSelector<SVGForeignObjectElement>('foreignObject'),
-    );
-    mmFoExit.each(function () {
-      const el = this.firstChild?.firstChild as Element;
-      observer.unobserve(el);
-    });
-    const mmFoMerge = mmFoEnter.merge(mmFo);
-
-    // Update the links
-    const links = nodes.flatMap((node) =>
-      node.payload?.fold
-        ? []
-        : node.children.map((child) => ({ source: node, target: child })),
-    );
-    const mmPath = this.g
-      .selectAll<
-        SVGPathElement,
-        { source: INode; target: INode }
-      >(childSelector<SVGPathElement>(SELECTOR_LINK))
-      .data(links, (d) => d.target.state.key);
-    const mmPathExit = mmPath.exit<{ source: INode; target: INode }>();
-    const mmPathEnter = mmPath
-      .enter()
-      .insert('path', 'g')
-      .attr('class', 'markmap-link')
-      .attr('data-depth', (d) => d.target.state.depth)
-      .attr('data-path', (d) => d.target.state.path)
-      .attr('d', (d) => {
-        const originRect = getOriginSourceRect(d.target);
-        const pathOrigin: [number, number] = [
-          originRect.x + originRect.width,
-          originRect.y + originRect.height / 2,
-        ];
-        return linkShape({ source: pathOrigin, target: pathOrigin });
-      })
-      .attr('stroke-width', 0);
-    const mmPathMerge = mmPathEnter.merge(mmPath);
-
-    this.svg.style(
-      '--markmap-max-width',
-      maxWidth ? `${maxWidth}px` : (null as any),
-    );
     await new Promise(requestAnimationFrame);
-    // Note: d.state.rect is only available after relayout
-    this._relayout();
+    measureNodeSizes(this.g, SELECTOR_NODE);
+    const { rects, bounds } = computeLayout(rootNode, this.options);
+    applyRectsToNodes(rects, nodes);
+    this.state.rect = bounds;
+    const rootTargetRect = rootNode.state.rect;
 
-    highlightNodes = highlightNodes
-      .data(highlight ? [this._getHighlightRect(highlight)] : [])
-      .join('rect');
-    this.transition(highlightNodes)
-      .attr('x', (d) => d.x)
-      .attr('y', (d) => d.y)
-      .attr('width', (d) => d.width)
-      .attr('height', (d) => d.height);
-
-    mmGEnter.attr('transform', (d) => {
-      const originRect = getOriginSourceRect(d);
-      return `translate(${originRect.x + originRect.width - d.state.rect.width},${
-        originRect.y + originRect.height - d.state.rect.height
-      })`;
+    const updatedHighlightRect = highlightVisible
+      ? buildHighlightRect(highlightVisible, rootNode, transform)
+      : undefined;
+    animateEnterExit({
+      duration: this.options.duration,
+      highlightNodes,
+      highlightRect: updatedHighlightRect,
+      mmGEnter,
+      mmGExit,
+      mmGMerge,
+      mmCircleMerge,
+      mmFoExit,
+      mmFoMerge,
+      mmPathExit,
+      mmPathMerge,
+      nodeMap,
+      originMap,
+      sourceRectMap,
+      rootSourceRect,
+      rootTargetRect,
+      linkShape,
+      paddingX,
+      color,
+      lineWidth,
     });
-    this.transition(mmGExit)
-      .attr('transform', (d) => {
-        const targetRect = getOriginTargetRect(d);
-        const targetX = targetRect.x + targetRect.width - d.state.rect.width;
-        const targetY = targetRect.y + targetRect.height - d.state.rect.height;
-        return `translate(${targetX},${targetY})`;
-      })
-      .remove();
-
-    this.transition(mmGMerge).attr(
-      'transform',
-      (d) => `translate(${d.state.rect.x},${d.state.rect.y})`,
-    );
-
-    const mmCircleExit = mmGExit.selectAll<SVGCircleElement, INode>(
-      childSelector<SVGCircleElement>('circle'),
-    );
-    this.transition(mmCircleExit).attr('r', 0).attr('stroke-width', 0);
-    mmCircleMerge
-      .attr('cx', (d) => d.state.rect.width)
-      .attr('cy', (d) => d.state.rect.height / 2);
-    this.transition(mmCircleMerge).attr('r', 6).attr('stroke-width', '1.5');
-
-    this.transition(mmFoExit).style('opacity', 0);
-    mmFoMerge
-      .attr('width', (d) => Math.max(0, d.state.rect.width - paddingX * 2))
-      .attr('height', (d) => d.state.rect.height);
-    this.transition(mmFoMerge).style('opacity', 1);
-
-    this.transition(mmPathExit)
-      .attr('d', (d) => {
-        const targetRect = getOriginTargetRect(d.target);
-        const pathTarget: [number, number] = [
-          targetRect.x + targetRect.width,
-          targetRect.y + targetRect.height / 2,
-        ];
-        return linkShape({ source: pathTarget, target: pathTarget });
-      })
-      .attr('stroke-width', 0)
-      .remove();
-
-    this.transition(mmPathMerge)
-      .attr('stroke', (d) => color(d.target))
-      .attr('stroke-width', (d) => lineWidth(d.target))
-      .attr('d', (d) => {
-        const origSource = d.source;
-        const origTarget = d.target;
-        const source: [number, number] = [
-          origSource.state.rect.x + origSource.state.rect.width,
-          origSource.state.rect.y + origSource.state.rect.height / 2,
-        ];
-        const target: [number, number] = [
-          origTarget.state.rect.x,
-          origTarget.state.rect.y + origTarget.state.rect.height / 2,
-        ];
-        return linkShape({ source, target });
-      });
 
     if (autoFit) this.fit();
   }
