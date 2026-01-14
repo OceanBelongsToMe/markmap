@@ -12,6 +12,10 @@ export interface IMarkmapState {
   };
 }
 
+export interface INodeLoader {
+  loadChildren: (nodeId: string) => Promise<INode[]>;
+}
+
 /**
  * Portable options that can be derived into `IMarkmapOptions`.
  */

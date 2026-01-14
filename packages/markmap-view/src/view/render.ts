@@ -118,7 +118,9 @@ export function renderNodes(args: {
       INode
     >(childSelector<SVGCircleElement>('circle'))
     .data(
-      (d) => (d.children?.length ? [d] : []),
+      (d) => {
+        return (d.payload as any)?.has_children ? [d] : [];
+      },
       (d) => d.state.key,
     );
   const mmCircleEnter = mmCircle
@@ -131,11 +133,10 @@ export function renderNodes(args: {
   const mmCircleMerge = mmCircleEnter
     .merge(mmCircle)
     .attr('stroke', (d) => color(d))
-    .attr('fill', (d) =>
-      d.payload?.fold && d.children
-        ? color(d)
-        : 'var(--markmap-circle-open-bg)',
-    );
+    .attr('fill', (d) => {
+      const filled = Boolean((d.payload as any)?.show_children_indicator);
+      return filled ? color(d) : 'var(--markmap-circle-open-bg)';
+    });
 
   const mmFo = mmGMerge
     .selectAll<

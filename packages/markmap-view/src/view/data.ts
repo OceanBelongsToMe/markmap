@@ -50,3 +50,7 @@ export function buildHighlightRect(
   rect.height += 2 * padding;
   return rect;
 }
+
+export function computeIndicatorFilled(node: INode) {
+  return Boolean((node.payload as any)?.show_children_indicator);
+}

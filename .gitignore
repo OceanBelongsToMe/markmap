@@ -7,3 +7,7 @@ packages/*/dist
 packages/*/coverage
 packages/*/types
 *.tsbuildinfo
+
+.gemini/
+_bmad/
+_bmad-output/

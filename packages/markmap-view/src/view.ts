@@ -23,6 +23,7 @@ import {
   ID3SVGElement,
   IMarkmapOptions,
   IMarkmapState,
+  INodeLoader,
   IPadding,
 } from './types';
 import { childSelector, simpleHash } from './util';
@@ -77,6 +78,8 @@ export class Markmap {
   zoom: d3.ZoomBehavior<SVGElement, INode>;
 
   private _observer: ResizeObserver;
+
+  private _nodeLoader?: INodeLoader;
 
   private _disposeList: (() => void)[] = [];
 
@@ -151,22 +154,10 @@ export class Markmap {
   };
 
   async toggleNode(data: INode, recursive = false) {
-    const fold = data.payload?.fold ? 0 : 1;
-    if (recursive) {
-      // recursively
-      walkTree(data, (item, next) => {
-        item.payload = {
-          ...item.payload,
-          fold,
-        };
-        next();
-      });
-    } else {
-      data.payload = {
-        ...data.payload,
-        fold: data.payload?.fold ? 0 : 1,
-      };
-    }
+    const shouldLoad = this._shouldLoadChildren(data);
+    if (shouldLoad) await this._loadAndAttachChildren(data);
+    const fold = this._computeNextFold(data, { forceOpen: shouldLoad });
+    this._applyFold(data, fold, recursive);
     await this.renderData(data);
   }
 
@@ -175,6 +166,121 @@ export class Markmap {
     if (isMacintosh ? e.metaKey : e.ctrlKey) recursive = !recursive;
     this.toggleNode(d, recursive);
   };
+
+  setNodeLoader(loader?: INodeLoader) {
+    this._nodeLoader = loader;
+  }
+
+  private _shouldLoadChildren(node: INode) {
+    const hasChildren = Boolean((node.payload as any)?.has_children);
+    const childrenLoaded = Boolean((node.payload as any)?.children_loaded);
+    return Boolean(hasChildren && !childrenLoaded && this._nodeLoader);
+  }
+
+  private async _loadAndAttachChildren(parent: INode) {
+    if (!this._nodeLoader) return;
+    const nodeId = (parent.payload as any)?.node_id ?? parent.state.key;
+    const children = await this._nodeLoader.loadChildren(String(nodeId));
+    this.addNode(parent, children);
+  }
+
+  private _computeNextFold(node: INode, opts: { forceOpen: boolean }) {
+    if (opts.forceOpen) return 0;
+    return node.payload?.fold ? 0 : 1;
+  }
+
+  private _applyFold(node: INode, fold: number, recursive: boolean) {
+    if (recursive) {
+      // recursively
+      walkTree(node, (item, next) => {
+        item.payload = {
+          ...item.payload,
+          fold,
+        };
+        this._updateIndicatorFromPayload(item);
+        next();
+      });
+    } else {
+      node.payload = {
+        ...node.payload,
+        fold,
+      };
+      this._updateIndicatorFromPayload(node);
+    }
+  }
+
+  private _getMaxStateId(rootNode: INode) {
+    let maxId = 0;
+    walkTree(rootNode, (item, next) => {
+      if (item.state?.id && item.state.id > maxId) maxId = item.state.id;
+      next();
+    });
+    return maxId;
+  }
+
+  private _reindexSubtree(
+    parent: INode,
+    children: INode[],
+    nextIdRef: { value: number },
+  ) {
+    const parentPath = parent.state?.path || `${parent.state?.id || 0}`;
+    const parentDepth = parent.state?.depth || 0;
+    children.forEach((child) => {
+      const id = (nextIdRef.value += 1);
+      const path = `${parentPath}.${id}`;
+      child.state = {
+        ...child.state,
+        id,
+        depth: parentDepth + 1,
+        path,
+      };
+      child.payload = {
+        ...child.payload,
+        path,
+      };
+      if (child.children?.length) {
+        this._reindexSubtree(child, child.children, nextIdRef);
+      }
+    });
+  }
+
+  addNode(parent: INode, children: INode[]) {
+    const normalizedChildren = children ?? [];
+    this._normalizeSubtreeIds(parent, normalizedChildren);
+    this._attachChildren(parent, normalizedChildren);
+    this._updateChildStats(parent, normalizedChildren);
+  }
+
+  private _normalizeSubtreeIds(parent: INode, children: INode[]) {
+    const rootNode = this.state.data;
+    if (!rootNode || !children.length) return;
+    const nextIdRef = { value: this._getMaxStateId(rootNode) };
+    this._reindexSubtree(parent, children, nextIdRef);
+  }
+
+  private _attachChildren(parent: INode, children: INode[]) {
+    parent.children = children;
+  }
+
+  private _updateChildStats(parent: INode, children: INode[]) {
+    parent.payload = {
+      ...parent.payload,
+      children_loaded: true,
+      has_children: children.length > 0,
+      children_count: children.length,
+    } as any;
+    this._updateIndicatorFromPayload(parent);
+  }
+
+  private _updateIndicatorFromPayload(node: INode) {
+    const payload = node.payload as any;
+    if (payload?.has_children === undefined) return;
+    const hasChildren = Boolean(payload.has_children);
+    const isFolded = Boolean(payload.fold);
+    const needsLazyIndicator = payload.children_loaded === false;
+    payload.show_children_indicator =
+      hasChildren && (isFolded || needsLazyIndicator);
+  }
 
   private _initializeData(node: IPureNode | INode) {
     let nodeId = 0;
