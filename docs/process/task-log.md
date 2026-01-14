@@ -51,6 +51,12 @@
 ## Markmap 子节点数量圆点显示
 - [x] 说明：在折叠圆中显示 `payload.children_count`（实心/空心一致）。
 
+## Markmap ListItem 文本渲染
+- [x] 说明：inline 遍历需展开 Paragraph 作为容器，避免 ListItem 为空。
+
+## Markmap ListItem Paragraph 承载
+- [x] 说明：ListItem 文本由 Paragraph 承载时，由 markmap inline 适配层展开。
+
 ## 界面布局与交互优化 (2026-01-13)
 - [x] 说明：优化 Sash 拖拽体验，放宽布局尺寸限制，调整默认视图状态。
 - [x] Sash 修复：使用 offset 修正点击坐标，解决跳变问题。

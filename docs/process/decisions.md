@@ -223,3 +223,11 @@ docs/
 
 - `payload.children_count` 用于折叠圆中的子节点数量展示（协议见 `docs/shared/markmap-protocol.md`）。
 - 视觉渲染仅消费协议字段，不新增前端推导逻辑。
+
+## Markmap ListItem 空文本修复（2026-01-14）
+
+- Inline 引擎需展开 Paragraph 作为 inline 容器，保证 ListItem 文本可渲染。
+
+## Markmap ListItem Paragraph 承载规则（2026-01-14）
+
+- Markmap 的 ListItem 内容由 Paragraph 子节点承载时，需在 markmap inline 适配层展开 Paragraph。
