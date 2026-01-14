@@ -19,6 +19,8 @@ export function animateEnterExit(args: {
   mmGExit: d3.Selection<SVGGElement, INode, any, any>;
   mmGMerge: d3.Selection<SVGGElement, INode, any, any>;
   mmCircleMerge: d3.Selection<SVGCircleElement, INode, any, any>;
+  mmCircleTextMerge: d3.Selection<SVGTextElement, INode, any, any>;
+  mmCircleTextExit: d3.Selection<SVGTextElement, INode, any, any>;
   mmFoExit: d3.Selection<SVGForeignObjectElement, INode, any, any>;
   mmFoMerge: d3.Selection<SVGForeignObjectElement, INode, any, any>;
   mmPathExit: d3.Selection<
@@ -57,6 +59,8 @@ export function animateEnterExit(args: {
     mmGExit,
     mmGMerge,
     mmCircleMerge,
+    mmCircleTextMerge,
+    mmCircleTextExit,
     mmFoExit,
     mmFoMerge,
     mmPathExit,
@@ -123,6 +127,12 @@ export function animateEnterExit(args: {
     .attr('cx', (d) => d.state.rect.width)
     .attr('cy', (d) => d.state.rect.height / 2);
   transition(mmCircleMerge).attr('r', 6).attr('stroke-width', '1.5');
+
+  transition(mmCircleTextExit).attr('opacity', 0).remove();
+  mmCircleTextMerge
+    .attr('x', (d) => d.state.rect.width)
+    .attr('y', (d) => d.state.rect.height / 2);
+  transition(mmCircleTextMerge).attr('opacity', 1);
 
   transition(mmFoExit).style('opacity', 0);
   mmFoMerge

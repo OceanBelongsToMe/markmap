@@ -137,6 +137,33 @@ export function renderNodes(args: {
       const filled = Boolean((d.payload as any)?.show_children_indicator);
       return filled ? color(d) : 'var(--markmap-circle-open-bg)';
     });
+  const mmCircleText = mmGMerge
+    .selectAll<
+      SVGTextElement,
+      INode
+    >(childSelector<SVGTextElement>('text.markmap-circle-text'))
+    .data(
+      (d) => {
+        return (d.payload as any)?.has_children ? [d] : [];
+      },
+      (d) => d.state.key,
+    );
+  const mmCircleTextEnter = mmCircleText
+    .enter()
+    .append('text')
+    .attr('class', 'markmap-circle-text')
+    .attr('opacity', 0);
+  const mmCircleTextMerge = mmCircleTextEnter
+    .merge(mmCircleText)
+    .text((d) => {
+      const count = (d.payload as any)?.children_count;
+      return typeof count === 'number' ? String(count) : '';
+    })
+    .attr('fill', (d) => {
+      const filled = Boolean((d.payload as any)?.show_children_indicator);
+      return filled ? 'var(--markmap-circle-text-filled)' : color(d);
+    });
+  const mmCircleTextExit = mmCircleText.exit<INode>();
 
   const mmFo = mmGMerge
     .selectAll<
@@ -178,7 +205,16 @@ export function renderNodes(args: {
 
   svg.style('--markmap-max-width', maxWidth ? `${maxWidth}px` : (null as any));
 
-  return { mmGEnter, mmGExit, mmGMerge, mmCircleMerge, mmFoExit, mmFoMerge };
+  return {
+    mmGEnter,
+    mmGExit,
+    mmGMerge,
+    mmCircleMerge,
+    mmCircleTextMerge,
+    mmCircleTextExit,
+    mmFoExit,
+    mmFoMerge,
+  };
 }
 
 export function renderLinks(args: {

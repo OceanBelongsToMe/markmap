@@ -8,6 +8,7 @@
   --markmap-table-border: 1px solid currentColor;
   --markmap-font: 300 16px/20px sans-serif;
   --markmap-circle-open-bg: #fff;
+  --markmap-circle-text-filled: #fff;
   --markmap-text-color: #333;
   --markmap-highlight-node-bg: #ff02;
 
@@ -23,6 +24,13 @@
     will-change: transform;
     > circle {
       cursor: pointer;
+    }
+    > text.markmap-circle-text {
+      font-size: 8px;
+      font-weight: 600;
+      dominant-baseline: middle;
+      text-anchor: middle;
+      pointer-events: none;
     }
   }
 

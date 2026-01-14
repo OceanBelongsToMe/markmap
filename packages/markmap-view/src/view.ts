@@ -389,24 +389,32 @@ export class Markmap {
       SELECTOR_HIGHLIGHT,
       initialHighlightRect,
     );
-    const { mmGEnter, mmGExit, mmGMerge, mmCircleMerge, mmFoExit, mmFoMerge } =
-      renderNodes({
-        svg: this.svg,
-        g: this.g,
-        nodeSelector: SELECTOR_NODE,
-        nodes,
-        nodeMap,
-        parentMap,
-        originMap,
-        sourceRectMap,
-        paddingX,
-        color,
-        maxWidth: this.options.maxWidth,
-        nodeContent: this.options.nodeContent,
-        handleClick: this.handleClick,
-        stopPropagation,
-        observer: this._observer,
-      });
+    const {
+      mmGEnter,
+      mmGExit,
+      mmGMerge,
+      mmCircleMerge,
+      mmCircleTextMerge,
+      mmCircleTextExit,
+      mmFoExit,
+      mmFoMerge,
+    } = renderNodes({
+      svg: this.svg,
+      g: this.g,
+      nodeSelector: SELECTOR_NODE,
+      nodes,
+      nodeMap,
+      parentMap,
+      originMap,
+      sourceRectMap,
+      paddingX,
+      color,
+      maxWidth: this.options.maxWidth,
+      nodeContent: this.options.nodeContent,
+      handleClick: this.handleClick,
+      stopPropagation,
+      observer: this._observer,
+    });
     const links = buildLinks(nodes);
     const rootSourceRect = sourceRectMap[rootNode.state.id];
     const { mmPathExit, mmPathMerge } = renderLinks({
@@ -436,6 +444,8 @@ export class Markmap {
       mmGExit,
       mmGMerge,
       mmCircleMerge,
+      mmCircleTextMerge,
+      mmCircleTextExit,
       mmFoExit,
       mmFoMerge,
       mmPathExit,
