@@ -218,3 +218,8 @@ docs/
 - 新增加载模式：`outline`，用于输出仅包含 heading 的大纲树（见 `docs/shared/markmap-protocol.md`）。
 - 新增字段：`payload.show_children_indicator`，由后端计算，前端只读。
 - 配置更新：`markmap.load_mode.root`/`markmap.load_mode.child` 支持 `"full" | "lazy" | "outline"`（见 `docs/shared/config-scopes.md`）。
+
+## Markmap 子节点数量展示（2026-01-14）
+
+- `payload.children_count` 用于折叠圆中的子节点数量展示（协议见 `docs/shared/markmap-protocol.md`）。
+- 视觉渲染仅消费协议字段，不新增前端推导逻辑。

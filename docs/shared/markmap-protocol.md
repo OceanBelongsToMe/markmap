@@ -54,7 +54,7 @@ RenderMarkmap::execute
 
 - `payload.has_children: boolean`：节点是否存在子节点（用于展示折叠圆）。
 - `payload.children_loaded: boolean`：子节点是否已加载（用于避免重复加载）。
-- `payload.children_count?: number`：可选，子节点数量提示（用于 UX 或调试）。
+- `payload.children_count?: number`：可选，子节点数量提示（用于折叠圆数字展示）。
 - `payload.show_children_indicator: boolean`：折叠圆的“实心/空心”状态，由后端统一计算。
 
 模式约定（配置）：

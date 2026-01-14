@@ -48,6 +48,9 @@
 ## Markmap 混合加载策略（root/child 分离）
 - [x] 说明：支持 root/child 两级加载策略（root=outline + child=lazy 默认），并更新配置键与协议。
 
+## Markmap 子节点数量圆点显示
+- [x] 说明：在折叠圆中显示 `payload.children_count`（实心/空心一致）。
+
 ## 界面布局与交互优化 (2026-01-13)
 - [x] 说明：优化 Sash 拖拽体验，放宽布局尺寸限制，调整默认视图状态。
 - [x] Sash 修复：使用 offset 修正点击坐标，解决跳变问题。
