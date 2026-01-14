@@ -41,3 +41,29 @@ RenderMarkmap::execute
 - 不再使用 `setData/_initializeData`。
 - 只写入 `mm.state.data` 并调用 `renderData()`。
 - 不依赖 `markmap-common` 的运行期工具。
+
+## 2.5 Markmap 懒加载扩展（协议）
+
+- 责任边界：懒加载所需字段与模式定义。
+- 不负责：加载策略、缓存实现、渲染触发时机。
+- 目录映射：`docs/shared/markmap-protocol.md`、`docs/shared/config-scopes.md`。
+- 交付物：字段约定、模式定义、前后端契约说明。
+- 验收指标：懒加载前后端行为一致、字段语义不冲突。
+
+字段扩展（payload）：
+
+- `payload.has_children: boolean`：节点是否存在子节点（用于展示折叠圆）。
+- `payload.children_loaded: boolean`：子节点是否已加载（用于避免重复加载）。
+- `payload.children_count?: number`：可选，子节点数量提示（用于 UX 或调试）。
+
+模式约定（配置）：
+
+- namespace: `markmap`
+- key: `load_mode`
+- value: `"full" | "lazy"`
+
+前端行为约定：
+
+- `has_children = true` 且 `children_loaded = false` 时可触发加载。
+- 加载完成后，前端必须将 `children_loaded` 置为 `true`。
+- 未加载子节点时，前端不应假设 `children` 已完整。

@@ -29,7 +29,17 @@ impl NodeInitializer {
             node_id: node.node_id,
             fold: None,
             heading_level: node.heading_level,
+            has_children: Some(!node.children.is_empty()),
+            children_loaded: Some(true),
+            children_count: if node.children.is_empty() {
+                None
+            } else {
+                Some(node.children.len() as u32)
+            },
+            show_children_indicator: None,
         };
+        let mut payload = payload;
+        payload.update_children_indicator();
         let state = MarkmapState {
             id,
             depth,

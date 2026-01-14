@@ -206,3 +206,9 @@ docs/
 
 - 表格节点 `content` 直接输出 HTML `<table>` 片段
 - RenderHtml 与 Markmap 复用 MarkdownSerializer + Comrak，保持预览一致性
+
+## Markmap 懒加载协议扩展（2026-01-14）
+
+- 新增懒加载字段约定：`payload.has_children`、`payload.children_loaded`、`payload.children_count?`
+- 新增配置项：`markmap.load_mode`（`"full" | "lazy"`），见 `docs/shared/config-scopes.md`
+- 协议归属：`docs/shared/markmap-protocol.md`，服务文档仅保留链接引用

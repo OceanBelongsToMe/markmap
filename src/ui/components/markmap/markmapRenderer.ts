@@ -1,4 +1,4 @@
-import { Markmap } from "markmap-view";
+import { Markmap, type INodeLoader } from "markmap-view";
 import { wrapFunction } from "markmap-common";
 
 export type MarkmapAfterRenderContext = {
@@ -14,6 +14,7 @@ const RENDER_DATA_ORIGINAL = Symbol("markmap-renderData-original");
 type MarkmapRenderer = {
   ensure: (svg: SVGSVGElement, options?: any) => Markmap;
   setData: (data: any) => void;
+  setNodeLoader: (loader?: INodeLoader) => void;
   destroy: () => void;
 };
 
@@ -64,6 +65,12 @@ export const createMarkmapRenderer = (
       (mm as any).state.data = data;
       mm.updateStyle();
       mm.renderData();
+    },
+    setNodeLoader(loader) {
+      if (!mm) return;
+      if (typeof (mm as any).setNodeLoader === "function") {
+        (mm as any).setNodeLoader(loader);
+      }
     },
     destroy() {
       if (!mm) return;

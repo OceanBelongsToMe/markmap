@@ -30,6 +30,12 @@
 - `src/state/workspace/useActiveDocument.ts`：当前打开文档与资源状态。
 - `src/state/workspace/useWorkspaceTree.ts`：工作区文件树状态与资源。
 
+### 5) Markmap 懒加载状态
+
+- 仅维护“加载状态/已加载标记”，不负责数据请求。
+- 数据请求与加载策略放在 `features/*` 的 hooks（如 `useMarkmapTreeActions`）。
+- 若需要跨组件共享加载进度，可在 `src/state/` 定义轻量状态（如 `children_loaded`、`loading`）。
+
 ## SRP 约束
 
 - 状态层只管理 state 与派生 state，不直接执行数据请求或命令调用。

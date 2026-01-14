@@ -15,6 +15,7 @@ impl FoldPolicy {
         {
             node.payload.fold = Some(1);
         }
+        node.payload.update_children_indicator();
 
         for child in node.children.iter_mut() {
             Self::apply_node(child, fold_recursively, options);

@@ -42,6 +42,14 @@ export type RenderDocumentResponse = {
   content: string | object; // content can be string (md/html) or object (markmap json)
 };
 
+export type MarkmapRootResponse = {
+  content: object;
+};
+
+export type MarkmapChildrenResponse = {
+  content: object[];
+};
+
 export type WorkspaceAttachFolderRequest = {
   root_path: string;
   workspace_name?: string | null;
@@ -75,6 +83,24 @@ export const renderDocument = async (documentId: string, format: "markdown" | "h
         document_id: documentId,
         format 
       } 
+    }
+  });
+};
+
+export const fetchMarkmapRoot = async (documentId: string) => {
+  return invoke<DispatchResponse<MarkmapRootResponse>>("dispatch", {
+    req: {
+      command: "markmap_get_root",
+      payload: { document_id: documentId }
+    }
+  });
+};
+
+export const fetchMarkmapChildren = async (documentId: string, nodeId: string) => {
+  return invoke<DispatchResponse<MarkmapChildrenResponse>>("dispatch", {
+    req: {
+      command: "markmap_get_children",
+      payload: { document_id: documentId, node_id: nodeId }
     }
   });
 };

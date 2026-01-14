@@ -6,6 +6,9 @@ import { createMarkmapRenderer } from "./markmapRenderer";
 export type MarkmapCanvasProps = {
   data: any; // The JSON structure from backend
   options?: any; // Markmap options
+  loader?: {
+    loadChildren: (nodeId: string) => Promise<any[]>;
+  };
   class?: string;
 };
 
@@ -16,6 +19,7 @@ export const MarkmapCanvas = (props: MarkmapCanvasProps) => {
   createEffect(() => {
     if (!svgRef || !props.data) return;
     renderer.ensure(svgRef, props.options);
+    renderer.setNodeLoader(props.loader);
     renderer.setData(props.data);
   });
 

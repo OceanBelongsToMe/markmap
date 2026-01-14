@@ -1,9 +1,9 @@
-import { Component, Show } from "solid-js";
+import { Component, Show, createResource } from "solid-js";
 import { MarkmapCanvas } from "../../ui/components/markmap/MarkmapCanvas";
-import { useDocumentRender } from "../document/hooks/useDocumentRender";
 import { useActiveDocument } from "../../state/workspace/useActiveDocument";
 import { defaultOptions } from "markmap-view";
 import { nodeContentWithHeadingIcons } from "../../ui/components/markmap/markmapNodeContent";
+import { fetchMarkmapChildren, fetchMarkmapRoot } from "../workspace/api/workspaceApi";
 
 export type MarkmapContainerProps = {
   class?: string;
@@ -17,8 +17,27 @@ const MARKMAP_OPTIONS = {
 export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
   const { activeDocId } = useActiveDocument();
 
-  // Fetch markmap JSON
-  const { data, loading, error } = useDocumentRender(activeDocId, () => "markmap");
+  const [data] = createResource(
+    () => activeDocId(),
+    async (docId) => {
+      if (!docId) return null;
+      const response = await fetchMarkmapRoot(docId);
+      if (response.ok) return response.data.content;
+      throw new Error(response.error?.message || "Failed to load markmap root");
+    }
+  );
+  const loading = () => data.loading;
+  const error = () => data.error;
+
+  const loader = {
+    loadChildren: async (nodeId: string) => {
+      const docId = activeDocId();
+      if (!docId) return [];
+      const response = await fetchMarkmapChildren(docId, nodeId);
+      if (response.ok) return response.data.content || [];
+      throw new Error(response.error?.message || "Failed to load markmap children");
+    },
+  };
 
   return (
     <div class={props.class}>
@@ -33,7 +52,7 @@ export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
           </div>
         }>
           <Show when={data()}>
-            <MarkmapCanvas data={data()} options={MARKMAP_OPTIONS} class="h-full" />
+            <MarkmapCanvas data={data()} options={MARKMAP_OPTIONS} loader={loader} class="h-full" />
           </Show>
           <Show when={error()}>
             <div class="absolute top-0 left-0 right-0 bg-red-100 text-red-800 p-2 z-20">

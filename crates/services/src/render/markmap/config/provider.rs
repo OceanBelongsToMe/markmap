@@ -7,10 +7,11 @@ use knowlattice_storage::repo::{
 };
 use std::sync::Arc;
 
-use super::options::MarkmapOptions;
+use super::options::{MarkmapLoadMode, MarkmapOptions};
 use crate::render::markmap::traits::MarkmapOptionsProviding;
 
 const KEY_INITIAL_EXPAND_LEVEL: &str = "initial_expand_level";
+const KEY_LOAD_MODE: &str = "load_mode";
 
 pub struct MarkmapOptionsProvider {
     document_repo: Arc<dyn DocumentRepository>,
@@ -68,7 +69,8 @@ impl MarkmapOptionsProviding for MarkmapOptionsProvider {
             (UserSettingScope::Global, None),
         ];
 
-        for (scope, scope_id) in scopes {
+        let mut load_mode_set = false;
+        for (scope, scope_id) in scopes.iter().cloned() {
             let setting = self
                 .user_settings
                 .get(&UserSettingQuery {
@@ -91,6 +93,38 @@ impl MarkmapOptionsProviding for MarkmapOptionsProvider {
                     }
                 }
             }
+        }
+
+        for (scope, scope_id) in scopes.iter().cloned() {
+            let setting = self
+                .user_settings
+                .get(&UserSettingQuery {
+                    user_id: user_id.clone(),
+                    scope,
+                    scope_id,
+                    namespace: UserSettingNamespace::Markmap,
+                    key: KEY_LOAD_MODE.to_string(),
+                })
+                .await?;
+
+            if let Some(setting) = setting {
+                match serde_json::from_str::<String>(&setting.value_json) {
+                    Ok(parsed) => {
+                        options.load_mode = match parsed.as_str() {
+                            "lazy" => MarkmapLoadMode::Lazy,
+                            _ => MarkmapLoadMode::Full,
+                        };
+                        load_mode_set = true;
+                        break;
+                    }
+                    Err(err) => {
+                        common::log_error!("markmap options decode failed: {}", err.to_string());
+                    }
+                }
+            }
+        }
+        if !load_mode_set {
+            options.load_mode = MarkmapLoadMode::Lazy;
         }
 
         Ok(options)

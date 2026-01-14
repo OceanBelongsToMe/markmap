@@ -14,6 +14,7 @@ pub mod inline {
 pub mod pipeline {
     pub mod folder;
     pub mod initializer;
+    pub mod lazy;
     pub mod transformer;
 }
 pub mod registry;
@@ -21,6 +22,7 @@ pub mod service;
 pub mod source {
     pub mod provider;
 }
+pub mod tree;
 pub mod traits;
 pub mod types;
 
