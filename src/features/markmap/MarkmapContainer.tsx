@@ -3,6 +3,7 @@ import { MarkmapCanvas } from "../../ui/components/markmap/MarkmapCanvas";
 import { useDocumentRender } from "../document/hooks/useDocumentRender";
 import { useActiveDocument } from "../../state/workspace/useActiveDocument";
 import { defaultOptions } from "markmap-view";
+import { nodeContentWithHeadingIcons } from "../../ui/components/markmap/markmapNodeContent";
 
 export type MarkmapContainerProps = {
   class?: string;
@@ -10,6 +11,7 @@ export type MarkmapContainerProps = {
 
 const MARKMAP_OPTIONS = {
   ...defaultOptions,
+  nodeContent: nodeContentWithHeadingIcons,
 };
 
 export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {

@@ -6,7 +6,6 @@ import { useSidebarState } from "../state/useSidebarState";
 import { useResponsiveLayout } from "../state/useResponsiveLayout";
 import { FloatingEditorPanelContent } from "../features/workspace/FloatingEditorPanelContent";
 import { WorkspaceToolbarContent } from "../features/workspace/WorkspaceToolbarContent";
-import { WorkspaceFloatingPanel } from "../ui/patterns/workspace/WorkspaceFloatingPanel";
 import { WorkspaceEditorPane } from "../ui/patterns/workspace/WorkspaceEditorPane";
 import { WorkspacePreviewPane } from "../ui/patterns/workspace/WorkspacePreviewPane";
 import { WorkspaceSidebar } from "../ui/patterns/workspace/WorkspaceSidebar";
@@ -34,13 +33,13 @@ export const WorkspacePage = () => {
   return (
     <MainLayout
       toolbar={
-        <ToolbarShell 
+        <ToolbarShell
           left={
-            <WorkspaceToolbarContent 
-              fileTreeStyle={fileTreeStyle()} 
-              onFileTreeStyleChange={setFileTreeStyle} 
+            <WorkspaceToolbarContent
+              fileTreeStyle={fileTreeStyle()}
+              onFileTreeStyleChange={setFileTreeStyle}
             />
-          } 
+          }
         />
       }
       content={
