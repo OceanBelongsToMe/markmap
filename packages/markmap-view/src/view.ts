@@ -444,7 +444,7 @@ export class Markmap {
       .append<HTMLDivElement>('xhtml:div')
       // The inner `<div>` with `display: inline-block` to get the proper width
       .append<HTMLDivElement>('xhtml:div')
-      .html((d) => d.content)
+      .html((d) => this.options.nodeContent?.(d) ?? d.content)
       .attr('xmlns', 'http://www.w3.org/1999/xhtml');
     mmFoEnter.each(function () {
       const el = this.firstChild?.firstChild as Element;

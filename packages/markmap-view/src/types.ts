@@ -56,6 +56,9 @@ export interface IMarkmapOptions {
   paddingX: number;
   spacingHorizontal: number;
   spacingVertical: number;
+
+  // Node content rendering
+  nodeContent?: (node: INode) => string;
 }
 
 export interface IPadding {
