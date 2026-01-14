@@ -37,7 +37,8 @@
 
 - namespace: `markmap`
 - key: `initial_expand_level`
-- key: `load_mode`  // "full" | "lazy"
+- key: `load_mode.root`  // "full" | "lazy" | "outline"
+- key: `load_mode.child` // "full" | "lazy" | "outline"
 
 scope 约定：
 

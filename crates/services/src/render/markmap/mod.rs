@@ -15,6 +15,8 @@ pub mod pipeline {
     pub mod folder;
     pub mod initializer;
     pub mod lazy;
+    pub mod mode;
+    pub mod outline;
     pub mod transformer;
 }
 pub mod registry;

@@ -42,6 +42,12 @@
 - [ ] 迁移阶段：1) 增加 traits 端口；2) pipeline 依赖 traits（transform/init/fold）；3) 增加 inline/classify/source/config 适配层；4) service 纯编排；5) 清理旧依赖与路径。
 - [ ] 验收：每阶段测试全绿，输出一致。
 
+## Markmap Outline 加载模式
+- [x] 说明：新增仅输出 heading 的大纲模式（outline），补齐协议字段并由后端负责指示器状态。
+
+## Markmap 混合加载策略（root/child 分离）
+- [x] 说明：支持 root/child 两级加载策略（root=outline + child=lazy 默认），并更新配置键与协议。
+
 ## 界面布局与交互优化 (2026-01-13)
 - [x] 说明：优化 Sash 拖拽体验，放宽布局尺寸限制，调整默认视图状态。
 - [x] Sash 修复：使用 offset 修正点击坐标，解决跳变问题。

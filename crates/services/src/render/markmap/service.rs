@@ -6,7 +6,7 @@ use crate::render::markmap::traits::{
     MarkmapFolding, MarkmapInitializing, MarkmapInputProviding, MarkmapOptionsProviding,
     MarkmapTransforming,
 };
-use crate::render::markmap::pipeline::lazy;
+use crate::render::markmap::pipeline::mode;
 use knowlattice_core::model::NodeId;
 use crate::render::RenderOutput;
 
@@ -41,7 +41,7 @@ impl RenderMarkmap {
         let pure = self.transformer.transform(&tree).await?;
         let mut node = self.initializer.initialize(pure);
         self.folder.apply(&mut node, &options);
-        lazy::apply_load_mode_root(&mut node, options.load_mode);
+        mode::apply_load_mode_root(&mut node, options.load_mode_root);
         let json = serde_json::to_value(node).expect("MarkmapNode serialization failed");
 
         Ok(RenderOutput::Json(json))
@@ -53,7 +53,7 @@ impl RenderMarkmap {
         let pure = self.transformer.transform(&tree).await?;
         let mut node = self.initializer.initialize(pure);
         self.folder.apply(&mut node, &options);
-        lazy::apply_load_mode_root(&mut node, options.load_mode);
+        mode::apply_load_mode_root(&mut node, options.load_mode_root);
         let json = serde_json::to_value(node).expect("MarkmapNode serialization failed");
         Ok(RenderOutput::Json(json))
     }
@@ -84,7 +84,7 @@ impl RenderMarkmap {
 
         let mut node = self.initializer.initialize(virtual_root);
         self.folder.apply(&mut node, &options);
-        lazy::apply_load_mode_root(&mut node, options.load_mode);
+        mode::apply_load_mode_root(&mut node, options.load_mode_child);
 
         let json = serde_json::to_value(node.children).expect("MarkmapNode serialization failed");
         Ok(RenderOutput::Json(json))

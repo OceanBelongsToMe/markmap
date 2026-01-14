@@ -55,15 +55,33 @@ RenderMarkmap::execute
 - `payload.has_children: boolean`：节点是否存在子节点（用于展示折叠圆）。
 - `payload.children_loaded: boolean`：子节点是否已加载（用于避免重复加载）。
 - `payload.children_count?: number`：可选，子节点数量提示（用于 UX 或调试）。
+- `payload.show_children_indicator: boolean`：折叠圆的“实心/空心”状态，由后端统一计算。
 
 模式约定（配置）：
 
 - namespace: `markmap`
-- key: `load_mode`
-- value: `"full" | "lazy"`
+- key: `load_mode.root`
+- value: `"full" | "lazy" | "outline"`
+- key: `load_mode.child`
+- value: `"full" | "lazy" | "outline"`
 
 前端行为约定：
 
 - `has_children = true` 且 `children_loaded = false` 时可触发加载。
 - 加载完成后，前端必须将 `children_loaded` 置为 `true`。
 - 未加载子节点时，前端不应假设 `children` 已完整。
+- `show_children_indicator` 由后端计算，前端只读，不得推导或兜底。
+
+Outline 模式约定：
+
+- 仅输出 heading 节点组成的大纲树（非 heading 节点不出现在输出中）。
+- `children_loaded = false`（只输出 heading 子树，完整子树需按 child 策略加载）。
+- 仍保留 `has_children/children_count` 以标示大纲层级是否有子标题。
+- 叶子 heading 规则：若原始子树存在但无子 heading，则视为“折叠未加载”，圆点实心。
+- 非叶子 heading 规则：已有子 heading 展示，圆点空心。
+
+混合策略约定（root/child 分离）：
+
+- 根渲染使用 `load_mode.root`，子树加载使用 `load_mode.child`。
+- 组合示例：`root=outline` + `child=lazy`（默认）。
+- `child=outline` 时仅保留子树内 heading。

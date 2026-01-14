@@ -11,7 +11,8 @@ use super::options::{MarkmapLoadMode, MarkmapOptions};
 use crate::render::markmap::traits::MarkmapOptionsProviding;
 
 const KEY_INITIAL_EXPAND_LEVEL: &str = "initial_expand_level";
-const KEY_LOAD_MODE: &str = "load_mode";
+const KEY_LOAD_MODE_ROOT: &str = "load_mode.root";
+const KEY_LOAD_MODE_CHILD: &str = "load_mode.child";
 
 pub struct MarkmapOptionsProvider {
     document_repo: Arc<dyn DocumentRepository>,
@@ -69,7 +70,6 @@ impl MarkmapOptionsProviding for MarkmapOptionsProvider {
             (UserSettingScope::Global, None),
         ];
 
-        let mut load_mode_set = false;
         for (scope, scope_id) in scopes.iter().cloned() {
             let setting = self
                 .user_settings
@@ -95,6 +95,7 @@ impl MarkmapOptionsProviding for MarkmapOptionsProvider {
             }
         }
 
+        let mut root_set = false;
         for (scope, scope_id) in scopes.iter().cloned() {
             let setting = self
                 .user_settings
@@ -103,18 +104,19 @@ impl MarkmapOptionsProviding for MarkmapOptionsProvider {
                     scope,
                     scope_id,
                     namespace: UserSettingNamespace::Markmap,
-                    key: KEY_LOAD_MODE.to_string(),
+                    key: KEY_LOAD_MODE_ROOT.to_string(),
                 })
                 .await?;
 
             if let Some(setting) = setting {
                 match serde_json::from_str::<String>(&setting.value_json) {
                     Ok(parsed) => {
-                        options.load_mode = match parsed.as_str() {
+                        options.load_mode_root = match parsed.as_str() {
                             "lazy" => MarkmapLoadMode::Lazy,
+                            "outline" => MarkmapLoadMode::Outline,
                             _ => MarkmapLoadMode::Full,
                         };
-                        load_mode_set = true;
+                        root_set = true;
                         break;
                     }
                     Err(err) => {
@@ -123,8 +125,42 @@ impl MarkmapOptionsProviding for MarkmapOptionsProvider {
                 }
             }
         }
-        if !load_mode_set {
-            options.load_mode = MarkmapLoadMode::Lazy;
+        if !root_set {
+            options.load_mode_root = MarkmapLoadMode::Outline;
+        }
+
+        let mut child_set = false;
+        for (scope, scope_id) in scopes.iter().cloned() {
+            let setting = self
+                .user_settings
+                .get(&UserSettingQuery {
+                    user_id: user_id.clone(),
+                    scope,
+                    scope_id,
+                    namespace: UserSettingNamespace::Markmap,
+                    key: KEY_LOAD_MODE_CHILD.to_string(),
+                })
+                .await?;
+
+            if let Some(setting) = setting {
+                match serde_json::from_str::<String>(&setting.value_json) {
+                    Ok(parsed) => {
+                        options.load_mode_child = match parsed.as_str() {
+                            "lazy" => MarkmapLoadMode::Lazy,
+                            "outline" => MarkmapLoadMode::Outline,
+                            _ => MarkmapLoadMode::Full,
+                        };
+                        child_set = true;
+                        break;
+                    }
+                    Err(err) => {
+                        common::log_error!("markmap options decode failed: {}", err.to_string());
+                    }
+                }
+            }
+        }
+        if !child_set {
+            options.load_mode_child = MarkmapLoadMode::Full;
         }
 
         Ok(options)

@@ -37,6 +37,7 @@ pub fn apply_load_mode_root(root: &mut MarkmapNode, mode: MarkmapLoadMode) {
             // Keep only one level for initial load.
             prune_to_depth(root, 0, 1);
         }
+        MarkmapLoadMode::Outline => {}
     }
 }
 
