@@ -4,10 +4,14 @@ import type { Locale } from "../../i18n";
 import { Label } from "../../ui/components/Label";
 import { Select } from "../../ui/components/Select";
 import type { FileTreeStyle } from "../sidebar/file-tree";
+import Code from "lucide-solid/icons/code";
+import ChartNetwork from "lucide-solid/icons/chart-network";
 
 export type WorkspaceToolbarContentProps = {
   fileTreeStyle: FileTreeStyle;
   onFileTreeStyleChange: (style: FileTreeStyle) => void;
+  viewMode: "code" | "markmap";
+  onViewModeChange: (mode: "code" | "markmap") => void;
 };
 
 export const WorkspaceToolbarContent = (props: WorkspaceToolbarContentProps) => {
@@ -46,6 +50,25 @@ export const WorkspaceToolbarContent = (props: WorkspaceToolbarContentProps) => 
             options={styleOptions}
             onChange={(value) => props.onFileTreeStyleChange(value as FileTreeStyle)}
           />
+        </div>
+        <div style={{ width: "1px", height: "16px", background: "var(--color-border-subtle)" }} />
+        <div style={{ display: "flex", "align-items": "center", gap: "6px" }}>
+          <button
+            class={`px-2 py-1 rounded flex items-center justify-center ${props.viewMode === "code" ? "bg-gray-200 font-medium" : "hover:bg-gray-100"}`}
+            onClick={() => props.onViewModeChange("code")}
+            title="Code"
+            aria-label="Code"
+          >
+            <Code size={16} />
+          </button>
+          <button
+            class={`px-2 py-1 rounded flex items-center justify-center ${props.viewMode === "markmap" ? "bg-gray-200 font-medium" : "hover:bg-gray-100"}`}
+            onClick={() => props.onViewModeChange("markmap")}
+            title="Mind Map"
+            aria-label="Mind Map"
+          >
+            <ChartNetwork size={16} />
+          </button>
         </div>
       </div>
     </>

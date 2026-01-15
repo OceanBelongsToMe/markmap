@@ -23,7 +23,7 @@ impl Default for MarkmapOptions {
         Self {
             initial_expand_level: -1,
             load_mode_root: MarkmapLoadMode::Outline,
-            load_mode_child: MarkmapLoadMode::Full,
+            load_mode_child: MarkmapLoadMode::Lazy,
         }
     }
 }

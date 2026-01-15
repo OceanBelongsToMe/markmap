@@ -160,7 +160,7 @@ impl MarkmapOptionsProviding for MarkmapOptionsProvider {
             }
         }
         if !child_set {
-            options.load_mode_child = MarkmapLoadMode::Full;
+            options.load_mode_child = MarkmapLoadMode::Lazy;
         }
 
         Ok(options)

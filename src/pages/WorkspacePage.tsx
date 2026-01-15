@@ -27,6 +27,7 @@ export const WorkspacePage = () => {
     workspaceLayoutMins
   );
   const [fileTreeStyle, setFileTreeStyle] = createSignal<FileTreeStyle>("ark");
+  const [viewMode, setViewMode] = createSignal<"code" | "markmap">("code");
   const showPreview = () => layoutMode() === "split" && layoutVariant() === "three-pane";
   const showSidebar = () => layoutVariant() !== "single-pane";
 
@@ -38,6 +39,8 @@ export const WorkspacePage = () => {
             <WorkspaceToolbarContent
               fileTreeStyle={fileTreeStyle()}
               onFileTreeStyleChange={setFileTreeStyle}
+              viewMode={viewMode()}
+              onViewModeChange={setViewMode}
             />
           }
         />
@@ -58,7 +61,7 @@ export const WorkspacePage = () => {
               ) : undefined
             }
             sidebarWidth={sidebarWidth()}
-            editor={<WorkspaceEditorPane />}
+            editor={<WorkspaceEditorPane viewMode={viewMode()} />}
             preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
             onSizesChange={(sizes) => {
               if (!showSidebar()) return;

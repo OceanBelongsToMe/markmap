@@ -8,13 +8,16 @@ import { useWorkspaceTreeState } from "../../../state/workspace/useWorkspaceTree
 import { useWorkspaceActions } from "../../../features/workspace/hooks/useWorkspaceActions";
 import { useDocumentRender } from "../../../features/document/hooks/useDocumentRender";
 
-type ViewMode = "code" | "markmap";
+export type WorkspaceEditorViewMode = "code" | "markmap";
 
-export const WorkspaceEditorPane = () => {
+export type WorkspaceEditorPaneProps = {
+  viewMode: WorkspaceEditorViewMode;
+};
+
+export const WorkspaceEditorPane = (props: WorkspaceEditorPaneProps) => {
   const [editorRef, setEditorRef] = createSignal<HTMLDivElement | undefined>();
   const { contentVariant } = useResponsiveContent(() => editorRef());
-  const [viewMode, setViewMode] = createSignal<ViewMode>("code");
-  
+
   const { activeDocId } = useActiveDocument();
   const { isWorkspaceEmpty } = useWorkspaceTreeState();
   const { importFolder } = useWorkspaceActions();
@@ -43,23 +46,6 @@ export const WorkspaceEditorPane = () => {
 
   return (
     <EditorPane ref={(el) => setEditorRef(el)} class={`content-${contentVariant()}`}>
-      <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white">
-        <div class="flex gap-2">
-          <button 
-            class={`px-3 py-1 text-sm rounded ${viewMode() === "code" ? "bg-gray-200 font-medium" : "hover:bg-gray-100"}`}
-            onClick={() => setViewMode("code")}
-          >
-            Code
-          </button>
-          <button 
-            class={`px-3 py-1 text-sm rounded ${viewMode() === "markmap" ? "bg-gray-200 font-medium" : "hover:bg-gray-100"}`}
-            onClick={() => setViewMode("markmap")}
-          >
-            Mind Map
-          </button>
-        </div>
-      </div>
-
       <div class="flex-1 min-h-0 relative">
         <Show when={activeDocId()} fallback={
           <div class="flex flex-col items-center justify-center h-full text-gray-400 gap-4">
@@ -78,7 +64,7 @@ export const WorkspaceEditorPane = () => {
             </Show>
           </div>
         }>
-          <div class="h-full" style={{ display: viewMode() === "code" ? "block" : "none" }}>
+          <div class="h-full" style={{ display: props.viewMode === "code" ? "block" : "none" }}>
             <MarkdownEditor 
               value={editorContent()} 
               onChange={setEditorContent} 
@@ -86,7 +72,7 @@ export const WorkspaceEditorPane = () => {
             />
           </div>
           
-          <Show when={viewMode() === "markmap"}>
+          <Show when={props.viewMode === "markmap"}>
              <div class="h-full">
                 <MarkmapContainer class="h-full" />
              </div>
