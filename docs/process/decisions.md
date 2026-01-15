@@ -269,3 +269,15 @@ docs/
 ## Architecture Summary 与代码对齐（2026-01-15）
 
 - 补齐 `Export` 与 `Common` 模块入口，修正导出流程描述与现有 `services::export → export::pipeline` 一致。
+
+## Export 文档与实现对齐（2026-01-15）
+
+- `docs/backend/export.md` 调整为 export crate + services 导出入口的当前结构，移除插件导出钩子描述。
+
+## Services 文档入口补齐（2026-01-15）
+
+- `docs/backend/services.md` 补齐 services 模块高层入口，使其与 `crates/services/src/` 目录结构一致。
+
+## Services 子模块占位（2026-01-15）
+
+- 新增 `docs/backend/services/*` 子模块入口（index/search/document/workspace/export/config/node_types），与 services 子目录对齐。

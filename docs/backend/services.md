@@ -22,3 +22,28 @@
   - GetNodeDetails：获取节点详情（含 NodeExtra）
   - GetSearchSuggestions（可选）：标签/标题建议
   - 具体查询与高亮策略见 `crates/search/src/`
+ - services::document（文档用例编排）
+   - 文档读写、渲染入口与生命周期编排（与 render/search 协作）。
+   - 实现入口：`crates/services/src/document/`
+ - services::workspace（工作区与文件树）
+   - 当前工作区获取、文件树构建、配置覆盖等编排。
+   - 实现入口：`crates/services/src/workspace/`
+ - services::export（导出入口）
+   - 导出用例入口与调度（当前为占位实现）。
+   - 实现入口：`crates/services/src/export/`
+ - services::config（配置加载）
+   - 运行期配置加载与装配入口。
+   - 实现入口：`crates/services/src/config/`
+- services::node_types（节点类型初始化）
+  - NodeType/NodeTypeMeta 等初始化与映射入口。
+  - 实现入口：`crates/services/src/node_types/`
+
+## 入口索引（细分模块）
+
+- index：`services/index.md`
+- search：`services/search.md`
+- document：`services/document.md`
+- workspace：`services/workspace.md`
+- export：`services/export.md`
+- config：`services/config.md`
+- node_types：`services/node_types.md`

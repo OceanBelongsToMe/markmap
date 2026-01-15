@@ -36,3 +36,4 @@
 
 - Services 设计：`services.md`
 - 后端架构与数据流：`architecture.md`
+- Render 入口索引：`services/render.md`

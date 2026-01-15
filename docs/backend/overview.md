@@ -29,7 +29,7 @@
 │  ├─ services/           # 用例编排
 │  ├─ storage/            # 持久化
 │  ├─ search/             # 索引与检索
-│  ├─ export/             # 导出协议
+│  ├─ export/             # 导出与格式管道
 │  ├─ api/                # 命令与 DTO 边界
 │  ├─ plugins/            # 扩展与钩子
 │  └─ common/             # 共享基础设施
@@ -49,5 +49,3 @@
 - plugins：`docs/backend/plugins.md`
 - tauri 入口：`docs/backend/tauri-entry.md`
 - 依赖/数据流/用户流程：`docs/backend/architecture.md`
-- Markmap 协议：`docs/shared/markmap-protocol.md`
-- 配置策略：`docs/shared/config-scopes.md`
