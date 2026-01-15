@@ -25,15 +25,14 @@
 
 - Frontend 概览：`docs/frontend/overview.md`
 - Backend 概览：`docs/backend/overview.md`
-- 核心流程：`docs/backend/architecture.md`
-- 共享契约：`docs/shared/`
+- Shared 概览：`docs/shared/overview.md`
+- Process 概览：`docs/process/overview.md`
 
 ## 5) 构建与运行（常用）
 
 - 前端开发：`bun run dev`
 - Tauri 开发：`bun tauri dev`
 
-## 6) 维护规则
+## 6) 文档维护规则（IMPORT！！！）
 
-- 文档更新规范：`docs/process/documentation-guidelines.md`
-- 维护检查清单：`docs/process/maintenance-checklist.md`
+- 过程与记录入口：`docs/process/overview.md`

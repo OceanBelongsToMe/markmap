@@ -237,3 +237,31 @@ docs/
 - Recent 与 Files 平级展示，Recent 采用扁平文件列表（不渲染树结构）。
 - Recent 按 “今天 / 过去7天 / 更早” 分组，触底自动分页（默认 20）。
 - 跨设备同步列为待办，不在本次实现。
+
+## 共享契约入口总览（2026-01-15）
+
+- 为 `docs/shared/` 增加 `overview.md` 作为共享契约总览入口。
+- `project-context.md` 只保留 Shared 总览入口，避免列出具体契约细节。
+
+## 文档归档（2026-01-15）
+
+- 将 `docs/task.md`、`docs/module-design.md`、`docs/ux-ui-design.md` 迁移至 `docs/_archive/`。
+- 保留现行入口于 `docs/process/` 与 `docs/frontend/` / `docs/backend/` / `docs/shared/`。
+
+## 过程文档入口总览（2026-01-15）
+
+- 新增 `docs/process/overview.md` 作为过程与记录的入口索引。
+- `project-context.md` 指向 process overview，避免在入口层列出过程细节。
+
+## Project Context 入口收敛（2026-01-15）
+
+- `project-context.md` 关键模块索引只保留 Backend 概览，不单列 `backend/architecture.md`。
+
+## Architecture Summary 入口收敛（2026-01-15）
+
+- `docs/architecture-summary.md` 入口索引收敛到系统级入口，避免与 `docs/index.md` / 各模块 overview 重复。
+
+## 文档入口职责分层（2026-01-15）
+
+- `project-context.md` 仅保留全局入口与模块 overview 入口。
+- `docs/architecture-summary.md` 聚焦系统摘要，入口只指向 `docs/index.md`。

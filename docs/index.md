@@ -11,7 +11,7 @@
 
 - 初次上手：index → frontend/IA → frontend/layouts → backend/tauri-entry
 - UI 任务：frontend/ui-components → frontend/state-management
-- 数据/渲染：backend/services → backend/search → shared/markmap-protocol
+- 数据/渲染：backend/services → backend/search → shared/markmap-protocol → shared/config-scopes
 
 ## 前端（Frontend）
 
@@ -42,12 +42,14 @@
 
 ## 共享（Shared）
 
+- 共享契约总览：[shared/overview.md](shared/overview.md)
 - Markmap 协议：[shared/markmap-protocol.md](shared/markmap-protocol.md)
 - 配置策略：[shared/config-scopes.md](shared/config-scopes.md)
 - 命名规范：[shared/naming-conventions.md](shared/naming-conventions.md)
 
 ## 过程与记录（Process）
 
+- 过程与记录总览：[process/overview.md](process/overview.md)
 - 拆分决策：[process/decisions.md](process/decisions.md)
 - 评审与协作：[process/review-collab.md](process/review-collab.md)
 - 版本记录：[process/ux-ui-design-changelog.md](process/ux-ui-design-changelog.md)
