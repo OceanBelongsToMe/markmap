@@ -18,7 +18,9 @@
 - Storage：持久化与迁移（`crates/storage/`）
 - Search：解析/索引/检索（`crates/search/`）
 - API/DTO：命令与契约边界（`crates/api/`）
+- Export：导出与格式管道（`crates/export/`）
 - Plugins：扩展与钩子（`crates/plugins/`）
+- Common：共享基础能力（`crates/common/`）
 - Shared：跨端契约（`docs/shared/*`）
 
 ## 3) 关键数据流
@@ -30,7 +32,7 @@
 - 索引：sqlite 写入 node_* 与 FTS
 - 查询：services::search 触发 SearchQuery
 - 渲染：services::render 生成 markdown/html/markmap
-- 导出：plugins::hook::on_export 产出文件
+- 导出：services::export → export::pipeline 产出文件
 
 ## 4) SRP 边界摘要
 
@@ -39,6 +41,7 @@
 - storage：持久化与迁移
 - search：解析与检索能力
 - api：命令/DTO 边界
+- export：导出与格式管道
 - plugins：扩展钩子
 
 ## 5) 入口索引

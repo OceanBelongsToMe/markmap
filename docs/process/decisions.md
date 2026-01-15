@@ -265,3 +265,7 @@ docs/
 
 - `project-context.md` 仅保留全局入口与模块 overview 入口。
 - `docs/architecture-summary.md` 聚焦系统摘要，入口只指向 `docs/index.md`。
+
+## Architecture Summary 与代码对齐（2026-01-15）
+
+- 补齐 `Export` 与 `Common` 模块入口，修正导出流程描述与现有 `services::export → export::pipeline` 一致。
