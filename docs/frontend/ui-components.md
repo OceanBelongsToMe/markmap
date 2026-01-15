@@ -8,7 +8,7 @@
 - 组件层级（建议）：
   - 基础组件：Button、Input、Select、Label、Tabs、Tooltip、IconButton
   - 复合组件：TreeView（文件树）、SearchBar（搜索栏）、Breadcrumb（路径）、TagList（标签）
-  - 编辑组件：EditorToolbar、MarkdownEditor、MarkmapCanvas
+  - 编辑组件：EditorToolbar、MarkdownEditor、MarkmapCanvas、EditorViewModeToggle（view mode 切换）
 - 模式清单（建议）：
   - 空状态模式：无文件/无内容时引导与建议动作
   - 搜索筛选模式：左侧搜索 + 结果列表
@@ -56,6 +56,12 @@
   - 行为层：`src/ui/ark/select/Select.tsx`（组合 Ark Select primitives）
   - 组件层：`src/ui/components/Select.tsx`（封装 props + class）
   - 样式层：`src/ui/styles/select.css`（基于 `data-state`/`data-disabled`）
+
+补充示例（当前项目）：
+- EditorViewModeToggle：`src/features/workspace/components/EditorViewModeToggle.tsx`
+  - 行为层：Ark ToggleGroup（仅状态机与可访问性）
+  - 样式层：`src/features/workspace/components/editor-view-toggle.css`（使用 `data-part`/`data-state`）
+  - 业务层：`WorkspaceToolbarContent` 仅消费组件接口
 
 ## 4.2 Ark 组件迁移清单与优先级（建议）
 
