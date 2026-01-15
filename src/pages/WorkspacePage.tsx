@@ -22,7 +22,7 @@ export const WorkspacePage = () => {
     setWidth: setSidebarWidth
   } = useSidebarState();
   const [shellRef, setShellRef] = createSignal<HTMLDivElement | undefined>();
-  const { layoutVariant, width, viewportWidth } = useResponsiveLayout(
+  const { layoutVariant } = useResponsiveLayout(
     () => shellRef(),
     workspaceLayoutMins
   );
@@ -47,22 +47,6 @@ export const WorkspacePage = () => {
           ref={(el) => setShellRef(el)}
           style={{ width: "100%", height: "100%", position: "relative" }}
         >
-          <div
-            style={{
-              position: "absolute",
-              right: "12px",
-              bottom: "12px",
-              background: "rgba(15, 15, 15, 0.85)",
-              color: "#ffffff",
-              padding: "6px 10px",
-              "border-radius": "6px",
-              "font-size": "12px",
-              "z-index": 30
-            }}
-          >
-            variant: {layoutVariant()} | container: {Math.round(width())} | viewport:{" "}
-            {Math.round(viewportWidth())}
-          </div>
           <WorkspaceSplitShell
             sidebar={
               showSidebar() ? (

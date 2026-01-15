@@ -20,6 +20,8 @@ export type FileTreeViewProps = {
   ariaLabel?: string;
   onSelect?: (id: string) => void;
   onExpandedChange?: (ids: string[]) => void;
+  onReachEnd?: () => void;
+  endThreshold?: number;
   style?: FileTreeStyle;
 };
 
@@ -62,6 +64,8 @@ export const FileTreeView = (props: FileTreeViewProps) => {
           flatIds={flatIds}
           entryMap={entryMap}
           rowHeight={ROW_HEIGHT}
+          onReachEnd={props.onReachEnd}
+          endThreshold={props.endThreshold}
           style={props.style}
         />
       </TreeView.Tree>

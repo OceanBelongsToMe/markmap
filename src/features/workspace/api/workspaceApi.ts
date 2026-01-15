@@ -63,6 +63,27 @@ export type WorkspaceAttachFolderResponse = {
   imported: number;
 };
 
+export type WorkspaceRecentFileRequest = {
+  workspace_id: string;
+  document_id: string;
+  position: number;
+};
+
+export type WorkspaceRecentFileResponse = {
+  workspace_id: string;
+  document_id: string;
+  last_opened_at: number;
+  position: number;
+};
+
+export type WorkspaceRecentFilesRequest = {
+  workspace_id: string;
+};
+
+export type WorkspaceRecentFilesResponse = {
+  items: WorkspaceRecentFileResponse[];
+};
+
 export const fetchCurrentWorkspace = async () => {
   return invoke<DispatchResponse<WorkspaceCurrentResponsePayload>>("dispatch", {
     req: { command: "workspace_current", payload: {} }
@@ -108,5 +129,17 @@ export const fetchMarkmapChildren = async (documentId: string, nodeId: string) =
 export const attachFolder = async (payload: WorkspaceAttachFolderRequest) => {
   return invoke<DispatchResponse<WorkspaceAttachFolderResponse>>("dispatch", {
     req: { command: "workspace_attach_folder", payload }
+  });
+};
+
+export const recordWorkspaceRecentFile = async (payload: WorkspaceRecentFileRequest) => {
+  return invoke<DispatchResponse<WorkspaceRecentFileResponse>>("dispatch", {
+    req: { command: "workspace_recent_file_record", payload }
+  });
+};
+
+export const fetchWorkspaceRecentFiles = async (payload: WorkspaceRecentFilesRequest) => {
+  return invoke<DispatchResponse<WorkspaceRecentFilesResponse>>("dispatch", {
+    req: { command: "workspace_recent_files_list", payload }
   });
 };

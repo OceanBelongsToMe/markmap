@@ -40,3 +40,23 @@
 - 视图层：`src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
   - 消费 `documentResource`，根据 loading/error 状态渲染骨架屏或 `MarkdownEditor`。
   - 布局与组件细节见 `docs/frontend/layouts.md` 与 `docs/frontend/ui-components.md`。
+
+## Recent 文件列表（SRP）
+
+### 模块拆分
+
+- API 适配层：`src/features/workspace/api/workspaceApi.ts`
+  - `workspace_recent_files_list` / `workspace_recent_file_record`
+- 状态层：`src/state/workspace/useRecentFiles.ts`
+  - `items` / `page` / `pageSize` / `loading` / `hasMore`
+- 视图模型层：`src/features/sidebar/recent-files/data/*`
+  - recent + fileTree 映射为扁平 `FileTreeNode[]`
+  - 按 “今天 / 过去7天 / 更早” 分组
+- 视图层：`src/features/sidebar/recent-files/ui/RecentFilesSection.tsx`
+  - 与 Files 平级展示，空列表不渲染
+
+### 交互与职责边界
+
+- `openDocument` 成功触发时记录 recent，不依赖 UI 组件。
+- Recent 只展示文件节点（扁平列表），不展示树结构。
+- 列表触底自动加载，分页由状态层控制。

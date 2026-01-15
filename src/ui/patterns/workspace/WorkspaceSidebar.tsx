@@ -6,6 +6,7 @@ import { TreeView, type TreeNode } from "../../components/TreeView";
 import { SidebarSection } from "../sidebar/SidebarSection";
 import { useI18n } from "../../../i18n/context";
 import { FileTreeSection, type FileTreeStyle } from "../../../features/sidebar/file-tree";
+import { RecentFilesSection } from "../../../features/sidebar/recent-files/ui/RecentFilesSection";
 
 export type WorkspaceSidebarProps = {
   collapsed?: boolean;
@@ -46,11 +47,16 @@ export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
               onExpandedChange={setNavExpandedIds}
             />
           </SidebarSection>
+          <RecentFilesSection
+            ariaLabel={t("recent")}
+            style={props.fileTreeStyle}
+            class="tight-section"
+          />
           <SidebarSection
             title={t("files")}
             collapsed={filesCollapsed()}
             onToggle={() => setFilesCollapsed(!filesCollapsed())}
-            class="is-grow"
+            class="is-grow tight-section files-tight-section"
           >
             <FileTreeSection
               loadingLabel={t("loading")}

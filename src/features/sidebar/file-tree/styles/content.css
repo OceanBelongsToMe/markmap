@@ -61,7 +61,10 @@
   flex: 1 1 auto;
   min-width: 0;
   justify-content: flex-start;
-  padding-left: calc(8px + var(--depth, 0) * var(--file-tree-indent));
+  padding-left: calc(
+    8px + var(--file-tree-left-offset, 0) +
+      var(--depth, 0) * var(--file-tree-indent)
+  );
 }
 
 .file-tree-branch-leading,
@@ -73,6 +76,7 @@
 
 .file-tree-branch-trailing {
   margin-left: auto;
+  margin-right: var(--file-tree-scrollbar-pad, 0);
 }
 
 .file-tree-branch-trigger {
@@ -85,7 +89,9 @@
 
 .file-tree [data-part="branch-control"],
 .file-tree [data-part="branch-trigger"] {
-  padding-right: var(--file-tree-right-padding, 8px);
+  padding-right: calc(
+    var(--file-tree-right-padding, 8px) + var(--file-tree-scrollbar-pad, 0)
+  );
   padding-left: 0;
   gap: 6px;
 }

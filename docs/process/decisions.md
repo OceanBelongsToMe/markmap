@@ -231,3 +231,9 @@ docs/
 ## Markmap ListItem Paragraph 承载规则（2026-01-14）
 
 - Markmap 的 ListItem 内容由 Paragraph 子节点承载时，需在 markmap inline 适配层展开 Paragraph。
+
+## Recent 文件列表前端接入（2026-01-14）
+
+- Recent 与 Files 平级展示，Recent 采用扁平文件列表（不渲染树结构）。
+- Recent 按 “今天 / 过去7天 / 更早” 分组，触底自动分页（默认 20）。
+- 跨设备同步列为待办，不在本次实现。

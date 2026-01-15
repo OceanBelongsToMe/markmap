@@ -57,6 +57,14 @@
 ## Markmap ListItem Paragraph 承载
 - [x] 说明：ListItem 文本由 Paragraph 承载时，由 markmap inline 适配层展开。
 
+## Recent 最近打开接入
+- [ ] 说明：Recent 与 Files 平级，扁平列表，触底分页加载；跨设备同步列为待办。
+  - 回归：选择 Files 内任一非首位文件 → Recent 立即置顶；重复点击同一文件不再发 `workspace_recent_file_record`；滚动条出现时折叠箭头不被遮挡。
+
+## Recent 滚动触底 createRoot 警告
+- [ ] 说明：滚动触底时出现 “computations created outside a createRoot or render”，需定位调用栈并确认是否仍会复现；当前使用 runWithOwner 包装但未做根因确认。
+- [ ] 状态：挂起，待复现与堆栈信息。
+
 ## 界面布局与交互优化 (2026-01-13)
 - [x] 说明：优化 Sash 拖拽体验，放宽布局尺寸限制，调整默认视图状态。
 - [x] Sash 修复：使用 offset 修正点击坐标，解决跳变问题。

@@ -8,6 +8,8 @@ export type FileTreeVirtualListProps = {
   flatIds: Accessor<string[]>;
   entryMap: Accessor<Map<string, FlatFileTreeNode>>;
   rowHeight: number;
+  onReachEnd?: () => void;
+  endThreshold?: number;
   style?: FileTreeStyle;
 };
 
@@ -19,6 +21,8 @@ export const FileTreeVirtualList = (props: FileTreeVirtualListProps) => {
       windowClass="file-tree-window"
       items={props.flatIds}
       rowHeight={props.rowHeight}
+      onReachEnd={props.onReachEnd}
+      endThreshold={props.endThreshold}
     >
       {(id) => {
         const entry = () => props.entryMap().get(id);

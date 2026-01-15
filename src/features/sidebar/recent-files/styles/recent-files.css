@@ -1,0 +1,29 @@
+.recent-files-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.recent-files-group-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  padding: 0 0 0 18px;
+}
+
+.recent-file-list.file-tree {
+  height: auto;
+  flex: 0 0 auto;
+  min-height: auto;
+  max-height: calc(var(--file-tree-row-height, 28px) * 8);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-file-item {
+  width: 100%;
+  box-shadow: none;
+}

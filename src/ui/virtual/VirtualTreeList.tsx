@@ -6,6 +6,8 @@ export type VirtualTreeListProps<T> = {
   items: Accessor<T[]>;
   rowHeight: number;
   overscanCount?: number;
+  endThreshold?: number;
+  onReachEnd?: () => void;
   class?: string;
   innerClass?: string;
   windowClass?: string;
@@ -33,8 +35,26 @@ export const VirtualTreeList = <T,>(props: VirtualTreeListProps<T>) => {
   const containerHeight = () =>
     virtualState()?.containerHeight ?? props.items().length * props.rowHeight;
   const viewerTop = () => virtualState()?.viewerTop ?? 0;
+  let reachLock = false;
+
+  const checkReachEnd = () => {
+    const el = scrollEl();
+    if (!el || !props.onReachEnd) return;
+    const threshold = props.endThreshold ?? props.rowHeight * 2;
+    const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+    if (atEnd) {
+      if (!reachLock) {
+        reachLock = true;
+        props.onReachEnd();
+      }
+      return;
+    }
+    reachLock = false;
+  };
+
   const onScroll = (event: Event) => {
     virtualList()?.[1](event);
+    checkReachEnd();
   };
 
   const measureHeight = (el: HTMLDivElement) => {
@@ -68,6 +88,7 @@ export const VirtualTreeList = <T,>(props: VirtualTreeListProps<T>) => {
 
   createEffect(() => {
     props.items();
+    reachLock = false;
     const el = scrollEl();
     if (el) {
       onScroll({ target: el } as unknown as Event);
