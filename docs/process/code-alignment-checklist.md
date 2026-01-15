@@ -42,6 +42,8 @@
 - `src/ui/components/collapsible.css`
 - `src/ui/components/markmap/MarkmapCanvas.tsx`
 - `src/ui/components/markmap/markmap.css`
+- `src/features/workspace/components/EditorViewModeToggle.tsx`
+- `src/features/workspace/components/editor-view-toggle.css`
 
 ### ui-components.md（patterns 扩展）
 - `src/ui/patterns/MultiPaneShell.tsx`
@@ -83,6 +85,7 @@
 - `src/features/editor/MarkdownEditor.tsx`
 - `src/features/document/hooks/useDocumentRender.ts`
 - `src/features/markmap/MarkmapContainer.tsx`
+- `src/features/sidebar/recent-files/*`
 
 ### sidebar-file-tree（features 子模块示例）
 - `src/features/sidebar/file-tree/index.ts`
@@ -156,6 +159,7 @@
 - `crates/services/src/render/*`
 - `crates/services/src/export/*`
 - `crates/services/src/config/*`
+- `crates/services/src/node_types/*`
 
 ### storage.md
 - `crates/storage/src/lib.rs`
@@ -217,7 +221,10 @@
 ## D) Process（docs则：process/*）
 
 ### task-log.md
-- `docs/task.md`（迁移内容，不涉及代码）
+- `docs/process/task-log.md`
 
 ### decisions.md
 - `docs/process/decisions.md`
+
+### overview.md
+- `docs/process/overview.md`

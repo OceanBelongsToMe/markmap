@@ -16,6 +16,7 @@
 - 保持五段模板：责任边界 / 不负责 / 目录映射 / 交付物 / 验收指标。
 - 避免在规范文档中写实现细节（实现细节放代码或模块文档）。
 - 保持命名与路径一致性（如 `docs/shared/*` 只放跨端契约）。
+- 入口职责保持单一：`project-context.md` 仅保留全局入口与 overview；细分导航放 `docs/index.md` 或各模块 overview。
 
 ## C) 更新后（SRP 快速复核）
 
@@ -28,4 +29,4 @@
 
 - 重要变更追加到 `docs/process/decisions.md`。
 - 新增/迁移文档更新 `docs/index.md`。
-- 迁移旧文档保留“迁移提示”。
+- 迁移旧文档移入 `docs/_archive/`，入口保持在新路径。

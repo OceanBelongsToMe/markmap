@@ -281,3 +281,7 @@ docs/
 ## Services 子模块占位（2026-01-15）
 
 - 新增 `docs/backend/services/*` 子模块入口（index/search/document/workspace/export/config/node_types），与 services 子目录对齐。
+
+## Code Alignment Checklist 对齐（2026-01-15）
+
+- `docs/process/code-alignment-checklist.md` 补齐 recent-files、node_types、EditorViewModeToggle 等入口，并修正 task-log 路径。
