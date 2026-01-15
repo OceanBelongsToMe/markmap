@@ -1,5 +1,4 @@
 import { createMemo } from "solid-js";
-import { PanelLeft } from "lucide-solid";
 import { useI18n } from "../../i18n/context";
 import type { Locale } from "../../i18n";
 import { Label } from "../../ui/components/Label";
@@ -12,8 +11,6 @@ export type WorkspaceToolbarContentProps = {
   onFileTreeStyleChange: (style: FileTreeStyle) => void;
   viewMode: "code" | "markmap";
   onViewModeChange: (mode: "code" | "markmap") => void;
-  sidebarCollapsed: boolean;
-  onToggleSidebar: () => void;
 };
 
 export const WorkspaceToolbarContent = (props: WorkspaceToolbarContentProps) => {
@@ -34,25 +31,6 @@ export const WorkspaceToolbarContent = (props: WorkspaceToolbarContentProps) => 
   return (
     <>
       <div style={{ display: "flex", "align-items": "center", gap: "12px" }}>
-        <button
-          onClick={props.onToggleSidebar}
-          title={props.sidebarCollapsed ? t("showSidebar") : t("hideSidebar")}
-          style={{
-            display: "flex",
-            "align-items": "center",
-            "justify-content": "center",
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            padding: "4px",
-            color: "var(--color-text-description)",
-            opacity: props.sidebarCollapsed ? 0.6 : 1,
-            transition: "opacity 0.2s"
-          }}
-        >
-          <PanelLeft size={18} />
-        </button>
-        <div style={{ width: "1px", height: "16px", background: "var(--color-border-subtle)" }} />
         <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
           <Label for="locale-select" text={t("language")} />
           <Select

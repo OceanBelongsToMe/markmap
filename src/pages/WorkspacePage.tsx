@@ -1,9 +1,35 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import { MainLayout } from "../layouts/MainLayout";
-// ... (其他 import 保持不变)
+import { workspaceLayoutMins } from "../layouts/rules/workspaceLayoutSizes";
+import { useLayoutState } from "../state/useLayoutState";
+import { useSidebarState } from "../state/useSidebarState";
+import { useResponsiveLayout } from "../state/useResponsiveLayout";
+import { FloatingEditorPanelContent } from "../features/workspace/FloatingEditorPanelContent";
+import { WorkspaceToolbarContent } from "../features/workspace/WorkspaceToolbarContent";
+import { WorkspaceEditorPane } from "../ui/patterns/workspace/WorkspaceEditorPane";
+import { WorkspacePreviewPane } from "../ui/patterns/workspace/WorkspacePreviewPane";
+import { WorkspaceSidebar } from "../ui/patterns/workspace/WorkspaceSidebar";
+import { WorkspaceSplitShell } from "../ui/patterns/workspace/WorkspaceSplitShell";
+import { ToolbarShell } from "../ui/patterns/ToolbarShell";
+import type { FileTreeStyle } from "../features/sidebar/file-tree";
 
 export const WorkspacePage = () => {
-  // ... (状态定义保持不变)
+  const { layoutMode } = useLayoutState();
+  const {
+    collapsed,
+    setCollapsed,
+    width: sidebarWidth,
+    setWidth: setSidebarWidth
+  } = useSidebarState();
+  const [shellRef, setShellRef] = createSignal<HTMLDivElement | undefined>();
+  const { layoutVariant } = useResponsiveLayout(
+    () => shellRef(),
+    workspaceLayoutMins
+  );
+  const [fileTreeStyle, setFileTreeStyle] = createSignal<FileTreeStyle>("ark");
+  const [viewMode, setViewMode] = createSignal<"code" | "markmap">("code");
+  const showPreview = () => layoutMode() === "split" && layoutVariant() === "three-pane";
+  const showSidebar = () => layoutVariant() !== "single-pane";
 
   return (
     <MainLayout
@@ -15,12 +41,6 @@ export const WorkspacePage = () => {
               onFileTreeStyleChange={setFileTreeStyle}
               viewMode={viewMode()}
               onViewModeChange={setViewMode}
-              sidebarCollapsed={collapsed()}
-              onToggleSidebar={() => {
-                const next = !collapsed();
-                setCollapsed(next);
-                if (!next) setIsHoveringSidebar(false);
-              }}
             />
           }
         />
@@ -28,74 +48,29 @@ export const WorkspacePage = () => {
       content={
         <div
           ref={(el) => setShellRef(el)}
-          style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden" }}
+          style={{ width: "100%", height: "100%", position: "relative" }}
         >
-          {/* 1. 边缘触发器 */}
-          <Show when={collapsed()}>
-            <div
-              class="sidebar-trigger"
-              onMouseEnter={() => setIsHoveringSidebar(true)}
-            />
-          </Show>
-
-          {/* 2. 悬停 Overlay */}
-          <Show when={collapsed()}>
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                bottom: 0,
-                "z-index": 1000,
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                transform: isRevealing() ? "translateX(0)" : "translateX(-100%)",
-                width: "280px",
-                "pointer-events": isRevealing() ? "auto" : "none",
-                "box-shadow": isRevealing() ? "4px 0 16px rgba(0,0,0,0.1)" : "none",
-                background: "var(--color-bg-surface)"
-              }}
-              onMouseLeave={() => setIsHoveringSidebar(false)}
-            >
-              <WorkspaceSidebar
-                collapsed={false}
-                isOverlay={true}
-                fileTreeStyle={fileTreeStyle()}
-              />
-            </div>
-          </Show>
-
-          {/* 3. 主布局：使用 Show 隔离状态 */}
-          <Show
-            when={!collapsed()}
-            fallback={
-              <WorkspaceSplitShell
-                sidebar={undefined}
-                editor={<WorkspaceEditorPane viewMode={viewMode()} />}
-                preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
-              />
+          <WorkspaceSplitShell
+            sidebar={
+              showSidebar() ? (
+                <WorkspaceSidebar
+                  collapsed={collapsed()}
+                  onToggle={() => setCollapsed(!collapsed())}
+                  fileTreeStyle={fileTreeStyle()}
+                />
+              ) : undefined
             }
-          >
-            <WorkspaceSplitShell
-              sidebar={
-                showSidebar() ? (
-                  <WorkspaceSidebar
-                    collapsed={false}
-                    fileTreeStyle={fileTreeStyle()}
-                  />
-                ) : undefined
+            sidebarWidth={sidebarWidth()}
+            editor={<WorkspaceEditorPane viewMode={viewMode()} />}
+            preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
+            onSizesChange={(sizes) => {
+              if (!showSidebar()) return;
+              const next = sizes[0];
+              if (typeof next === "number") {
+                setSidebarWidth(next);
               }
-              sidebarWidth={sidebarWidth()}
-              editor={<WorkspaceEditorPane viewMode={viewMode()} />}
-              preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
-              onSizesChange={(sizes) => {
-                if (!showSidebar()) return;
-                const next = sizes[0];
-                if (typeof next === "number") {
-                  setSidebarWidth(next);
-                }
-              }}
-            />
-          </Show>
+            }}
+          />
         </div>
       }
       floatingPanel={

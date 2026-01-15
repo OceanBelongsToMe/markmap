@@ -12,25 +12,28 @@ export type WorkspaceSidebarProps = {
   collapsed?: boolean;
   onToggle?: () => void;
   fileTreeStyle?: FileTreeStyle;
-  // New props for hover reveal
-  isOverlay?: boolean;
-  isHidden?: boolean;
-  onHover?: (isHovering: boolean) => void;
 };
 
 export const WorkspaceSidebar = (props: WorkspaceSidebarProps) => {
   const { t } = useI18n();
-  // ... existing signals
-
+  const [navCollapsed, setNavCollapsed] = createSignal(false);
+  const [filesCollapsed, setFilesCollapsed] = createSignal(false);
+  const [navExpandedIds, setNavExpandedIds] = createSignal(
+    navModel.map((item) => item.id)
+  );
+  const nodes = createMemo<TreeNode[]>(() =>
+    navModel.map((item) => ({
+      id: item.id,
+      label: t(item.labelKey),
+      children: item.children?.map((child) => ({
+        id: child.id,
+        label: t(child.labelKey)
+      }))
+    }))
+  );
   return (
     <Sidebar>
-      <SidebarShell
-        collapsed={props.collapsed}
-        overlay={props.isOverlay}
-        hidden={props.isHidden}
-        onMouseEnter={() => props.onHover?.(true)}
-        onMouseLeave={() => props.onHover?.(false)}
-      >
+      <SidebarShell collapsed={props.collapsed}>
         <nav>
           <SidebarSection
             title={t("navigation")}
