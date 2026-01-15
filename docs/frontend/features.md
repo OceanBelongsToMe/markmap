@@ -1,56 +1,49 @@
-# 任务流与交互
+# 任务流与交互（Frontend）
 
-- 责任边界：关键任务链路、状态流转、错误与恢复策略、交互反馈规则。
-- 不负责：视觉主题与组件样式。
-- 目录映射：`src/features/`（内聚在具体特性模块中）
-- 交付物：任务流图、状态机/流程编排、错误处理与恢复规则。
-- 验收指标：任务完成率、错误率、恢复成功率。
+> 目的：用最少信息快速理解“前端做什么、从哪进入、如何验收”  
+> 非目标：实现细节、函数/字段、组件内部逻辑
 
-## Workspace 文件树前端拆分（SRP）
+## 1) 任务流清单（只写流程与入口）
 
-### 模块拆分
+- Workspace 文件树浏览
+  - 入口：`src/ui/patterns/workspace/WorkspaceSidebar.tsx`
+  - 相关 UI：`src/features/sidebar/file-tree/`
+  - 验收要点：文件树可展开/收起，选择节点触发打开文档
 
-- API 适配层：`src/features/workspace/api/workspaceApi.ts`
-- 状态层：`src/state/workspace/useWorkspaceTree.ts`
-- 行为层：`src/features/workspace/hooks/useWorkspaceTreeActions.ts`
-- 视图层：`src/ui/patterns/workspace/WorkspaceSidebar.tsx`
-  - 只负责渲染树，不负责数据请求
+- 文档打开与渲染
+  - 入口：`src/state/workspace/useActiveDocument.ts`
+  - 相关 UI：`src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
+  - 验收要点：选择文件后编辑区正确显示内容
 
-### 交互与职责边界
+- Recent 文件列表
+  - 入口：`src/features/sidebar/recent-files/ui/RecentFilesSection.tsx`
+  - 相关 UI：`src/features/sidebar/recent-files/`
+  - 验收要点：列表展示最近打开文件，滚动触底自动加载
 
-- `WorkspaceSidebar` 消费状态，不执行 `invoke`。
-- API 层只做命令调用与 DTO 映射，不包含业务逻辑。
-- 状态层负责缓存与刷新策略，避免 UI 组件重复请求。
+- 编辑器视图模式切换
+  - 入口：`src/features/workspace/WorkspaceToolbarContent.tsx`
+  - 相关 UI：`src/features/workspace/components/EditorViewModeToggle.tsx`
+  - 验收要点：切换后 Code / Mind Map 视图正确显示
 
-## 文档打开流程（SRP）
+- Markmap 视图展示
+  - 入口：`src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
+  - 相关 UI：`src/features/markmap/MarkmapContainer.tsx`
+  - 验收要点：切换到 Mind Map 后渲染节点内容
 
-### 模块拆分
+## 2) 入口索引（路径清单）
 
-- API 适配层：`src/features/workspace/api/workspaceApi.ts`
-  - `renderDocument(docId, format)`: 调用后端命令获取渲染内容。
-- 状态层：`src/state/workspace/useActiveDocument.ts`
-- 事件层：`src/state/workspace/useDocumentEvents.ts`
-- 渲染资源：`src/features/document/hooks/useDocumentRender.ts`
-- 交互层：`src/features/sidebar/file-tree/`
-  - 监听节点选中事件，调用 `openDocument`。
-- 视图层：`src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
-  - 布局与组件细节见 `docs/frontend/layouts.md` 与 `docs/frontend/ui-components.md`。
+- `src/ui/patterns/workspace/WorkspaceSidebar.tsx`
+- `src/features/sidebar/file-tree/`
+- `src/state/workspace/useActiveDocument.ts`
+- `src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
+- `src/features/sidebar/recent-files/ui/RecentFilesSection.tsx`
+- `src/features/sidebar/recent-files/`
+- `src/features/workspace/WorkspaceToolbarContent.tsx`
+- `src/features/workspace/components/EditorViewModeToggle.tsx`
+- `src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
+- `src/features/markmap/MarkmapContainer.tsx`
 
-## Recent 文件列表（SRP）
+## 3) 变更边界（SRP）
 
-### 模块拆分
-
-- API 适配层：`src/features/workspace/api/workspaceApi.ts`
-  - `workspace_recent_files_list` / `workspace_recent_file_record`
-- 状态层：`src/state/workspace/useRecentFiles.ts`
-- 视图模型层：`src/features/sidebar/recent-files/data/*`
-  - recent + fileTree 映射为扁平 `FileTreeNode[]`
-  - 按 “今天 / 过去7天 / 更早” 分组
-- 视图层：`src/features/sidebar/recent-files/ui/RecentFilesSection.tsx`
-  - 与 Files 平级展示，空列表不渲染
-
-### 交互与职责边界
-
-- Recent 订阅 `document-open` 事件并乐观置顶，同时异步记录最近打开。
-- Recent 只展示文件节点（扁平列表），不展示树结构。
-- 列表触底自动加载，分页由状态层控制。
+- 任务流发生变化 → 更新本文件  
+- 实现细节变化 → 更新对应模块文档（不要在这里写）
