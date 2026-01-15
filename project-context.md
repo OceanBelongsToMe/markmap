@@ -20,6 +20,7 @@
 
 - 文档导航：`docs/index.md`
 - 架构摘要：`docs/architecture-summary.md`
+- AI 协作协议：`AGENTS.md`
 
 ## 4) 关键模块索引
 

@@ -47,6 +47,10 @@
 - 配置策略：[shared/config-scopes.md](shared/config-scopes.md)
 - 命名规范：[shared/naming-conventions.md](shared/naming-conventions.md)
 
+## AI 协作 (AI Collaboration)
+
+- AI 协作协议：[../AGENTS.md](../AGENTS.md)
+
 ## 过程与记录（Process）
 
 - 过程与记录总览：[process/overview.md](process/overview.md)
