@@ -285,3 +285,8 @@ docs/
 ## Code Alignment Checklist 对齐（2026-01-15）
 
 - `docs/process/code-alignment-checklist.md` 补齐 recent-files、node_types、EditorViewModeToggle 等入口，并修正 task-log 路径。
+
+## Frontend Features 文档对齐（2026-01-15）
+
+- `docs/frontend/features.md` 对齐 workspace/tree、document render 与 recent 事件流的实际实现。
+- 从 `docs/frontend/features.md` 移除具体函数/字段，改为入口级索引；函数名移动到 code-alignment-checklist。

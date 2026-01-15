@@ -67,6 +67,8 @@
 - `src/state/window/fullscreen.ts`
 - `src/state/workspace/useActiveDocument.ts`
 - `src/state/workspace/useWorkspaceTree.ts`
+- `src/state/workspace/useDocumentEvents.ts`
+- `src/state/workspace/useRecentFiles.ts`
 
 ### features.md
 - `src/features/workspace/WorkspacePanel.tsx`

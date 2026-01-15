@@ -11,11 +11,8 @@
 ### 模块拆分
 
 - API 适配层：`src/features/workspace/api/workspaceApi.ts`
-  - `getCurrentWorkspace()` / `getWorkspaceFileTree(workspaceId)`
 - 状态层：`src/state/workspace/useWorkspaceTree.ts`
-  - `currentWorkspace` / `tree` / `loading` / `error`
 - 行为层：`src/features/workspace/hooks/useWorkspaceTreeActions.ts`
-  - `loadCurrentWorkspace()` / `refreshTree()`
 - 视图层：`src/ui/patterns/workspace/WorkspaceSidebar.tsx`
   - 只负责渲染树，不负责数据请求
 
@@ -32,13 +29,11 @@
 - API 适配层：`src/features/workspace/api/workspaceApi.ts`
   - `renderDocument(docId, format)`: 调用后端命令获取渲染内容。
 - 状态层：`src/state/workspace/useActiveDocument.ts`
-  - `activeDocId`: 当前激活的文档 ID。
-  - `documentResource`: 基于 activeDocId 的异步资源（content/loading/error）。
-  - `openDocument(id)`: 动作入口。
+- 事件层：`src/state/workspace/useDocumentEvents.ts`
+- 渲染资源：`src/features/document/hooks/useDocumentRender.ts`
 - 交互层：`src/features/sidebar/file-tree/`
   - 监听节点选中事件，调用 `openDocument`。
 - 视图层：`src/ui/patterns/workspace/WorkspaceEditorPane.tsx`
-  - 消费 `documentResource`，根据 loading/error 状态渲染骨架屏或 `MarkdownEditor`。
   - 布局与组件细节见 `docs/frontend/layouts.md` 与 `docs/frontend/ui-components.md`。
 
 ## Recent 文件列表（SRP）
@@ -48,7 +43,6 @@
 - API 适配层：`src/features/workspace/api/workspaceApi.ts`
   - `workspace_recent_files_list` / `workspace_recent_file_record`
 - 状态层：`src/state/workspace/useRecentFiles.ts`
-  - `items` / `page` / `pageSize` / `loading` / `hasMore`
 - 视图模型层：`src/features/sidebar/recent-files/data/*`
   - recent + fileTree 映射为扁平 `FileTreeNode[]`
   - 按 “今天 / 过去7天 / 更早” 分组
@@ -57,6 +51,6 @@
 
 ### 交互与职责边界
 
-- `openDocument` 成功触发时记录 recent，不依赖 UI 组件。
+- Recent 订阅 `document-open` 事件并乐观置顶，同时异步记录最近打开。
 - Recent 只展示文件节点（扁平列表），不展示树结构。
 - 列表触底自动加载，分页由状态层控制。
