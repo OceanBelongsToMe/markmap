@@ -14,8 +14,8 @@ export type WorkspaceSplitShellProps = {
 };
 
 export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
-  const panes = createMemo<Array<Pane & { size?: PaneSize }>>(() => {
-    const next: Array<Pane & { size?: PaneSize }> = [];
+  const panes = createMemo<Array<Pane & { size?: PaneSize; key: string }>>(() => {
+    const next: Array<Pane & { size?: PaneSize; key: string }> = [];
 
     if (props.sidebar) {
       next.push({

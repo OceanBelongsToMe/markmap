@@ -8,7 +8,7 @@
 - Workspace 文件树浏览
   - 入口：`src/ui/patterns/workspace/WorkspaceSidebar.tsx`
   - 相关 UI：`src/features/sidebar/file-tree/`
-  - 验收要点：文件树可展开/收起，选择节点触发打开文档
+  - 验收要点：支持侧栏完全隐藏模式；隐藏时通过鼠标划过屏幕左边缘触发 Overlay 悬停显示；点击工具栏按钮切换固定/隐藏。
 
 - 文档打开与渲染
   - 入口：`src/state/workspace/useActiveDocument.ts`

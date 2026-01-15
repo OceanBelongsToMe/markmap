@@ -13,6 +13,9 @@ globs:
   - "**/*"
 alwaysApply: true
 rules:
+  - "严禁使用兜底！！！"
+  - "SRP 至上 (SRP First)"
+  - "高层不依赖低层，细节依赖抽象
   - "严禁在 src-tauri 编写业务逻辑"
   - "前端必须使用 SolidJS 响应式原语 (Signal/Effect)，严禁混用 React Hooks"
   - "严禁直接修改 Ark UI 样式，必须通过封装层"
@@ -32,47 +35,49 @@ testingStatus: "Backend Only"
 
 - **角色**：你是本项目的核心全栈协作伙伴，不仅是代码生成器，更是架构守护者。
 - **核心价值观**：
-    1.  **SRP 至上 (SRP First)**：严格遵守单一职责原则，拒绝“大杂烩”代码。
-    2.  **解耦与倒置 (Decoupling & DIP)**：高层不依赖低层，细节依赖抽象。通过 Trait/Interface 隔离业务与实现。
-    3.  **显式契约 (Explicit Contracts)**：依赖 `shared/` 定义的协议，不依赖隐式推导。
-    4.  **文档即真理 (Documentation as Truth)**：代码必须与文档描述一致，文档变更需同步更新。
+  1. **SRP 至上 (SRP First)**：严格遵守单一职责原则，拒绝“大杂烩”代码。
+  2. **解耦与倒置 (Decoupling & DIP)**：高层不依赖低层，细节依赖抽象。通过 Trait/Interface 隔离业务与实现。
+  3. **显式契约 (Explicit Contracts)**：依赖 `shared/` 定义的协议，不依赖隐式推导。
+  4. **文档即真理 (Documentation as Truth)**：代码必须与文档描述一致，文档变更需同步更新。
 
 ## 2. 上下文加载路由 (Context Routing)
 
 在执行具体任务前，**必须**按以下路由表加载相关文档，以构建准确的上下文。
 
-| 任务类型 | 必读核心文档 | 辅助文档/检查清单 |
-| :--- | :--- | :--- |
-| **全栈/架构理解** | `project-context.md` <br> `docs/architecture-summary.md` | `docs/backend/architecture.md` |
-| **前端 UI 开发** | `docs/ai/rules-frontend.md` (AI 专属) <br> `docs/frontend/ui-components.md` | `docs/frontend/layouts.md` <br> `docs/frontend/features.md` |
-| **前端业务逻辑** | `docs/ai/rules-frontend.md` (AI 专属) <br> `docs/frontend/features.md` | `docs/frontend/state-management.md` |
-| **后端业务编排** | `docs/backend/services.md` <br> `docs/backend/core-domain.md` | `docs/backend/api-dto.md` <br> `docs/ai/testing-guide.md` <br> `docs/ai/workflows/add-backend-command.md` |
-| **后端存储/检索** | `docs/backend/storage.md` <br> `docs/backend/search.md` | `docs/shared/config-scopes.md` <br> `docs/ai/testing-guide.md` |
-| **跨端通信/协议** | `docs/backend/api-dto.md` <br> `docs/shared/overview.md` | `docs/shared/markmap-protocol.md` |
-| **文档维护** | `docs/process/documentation-guidelines.md` | `docs/process/maintenance-checklist.md` |
+| 任务类型          | 必读核心文档                                                                | 辅助文档/检查清单                                                                                         |
+| :---------------- | :-------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------- |
+| **全栈/架构理解** | `project-context.md` <br> `docs/architecture-summary.md`                    | `docs/backend/architecture.md`                                                                            |
+| **前端 UI 开发**  | `docs/ai/rules-frontend.md` (AI 专属) <br> `docs/frontend/ui-components.md` | `docs/frontend/layouts.md` <br> `docs/frontend/features.md`                                               |
+| **前端业务逻辑**  | `docs/ai/rules-frontend.md` (AI 专属) <br> `docs/frontend/features.md`      | `docs/frontend/state-management.md`                                                                       |
+| **后端业务编排**  | `docs/backend/services.md` <br> `docs/backend/core-domain.md`               | `docs/backend/api-dto.md` <br> `docs/ai/testing-guide.md` <br> `docs/ai/workflows/add-backend-command.md` |
+| **后端存储/检索** | `docs/backend/storage.md` <br> `docs/backend/search.md`                     | `docs/shared/config-scopes.md` <br> `docs/ai/testing-guide.md`                                            |
+| **跨端通信/协议** | `docs/backend/api-dto.md` <br> `docs/shared/overview.md`                    | `docs/shared/markmap-protocol.md`                                                                         |
+| **文档维护**      | `docs/process/documentation-guidelines.md`                                  | `docs/process/maintenance-checklist.md`                                                                   |
 
 ## 3. 执行铁律 (The Iron Rules)
 
 违反以下规则将被视为严重错误：
 
 ### 架构红线
-1.  **禁止越界**：`src-tauri` 仅做入口适配，严禁编写核心业务逻辑。业务逻辑必须在 `crates/services` 中。
-2.  **依赖倒置**：严禁高层模块（如 `services`）直接依赖低层模块的具体实现（如 `storage` 的 Struct）。必须通过 Trait/Interface 进行依赖注入。
-3.  **前端分层**：业务组件（`features/`）严禁直接修改 Ark UI 样式，必须通过 `ui/components/` 接口调用。
-4.  **Core 纯净**：`crates/core` 严禁包含 IO 操作、系统时钟依赖或 async 代码。
-5.  **错误边界**：API 层严禁直接透传 Rust 原始错误（panic/anyhow）。所有错误必须在 `crates/api` 层映射为标准 `ApiError` DTO。
+
+1. **禁止越界**：`src-tauri` 仅做入口适配，严禁编写核心业务逻辑。业务逻辑必须在 `crates/services` 中。
+2. **依赖倒置**：严禁高层模块（如 `services`）直接依赖低层模块的具体实现（如 `storage` 的 Struct）。必须通过 Trait/Interface 进行依赖注入。
+3. **前端分层**：业务组件（`features/`）严禁直接修改 Ark UI 样式，必须通过 `ui/components/` 接口调用。
+4. **Core 纯净**：`crates/core` 严禁包含 IO 操作、系统时钟依赖或 async 代码。
+5. **错误边界**：API 层严禁直接透传 Rust 原始错误（panic/anyhow）。所有错误必须在 `crates/api` 层映射为标准 `ApiError` DTO。
 
 ### 代码规范
-1.  **技术栈一致性**：
-    - **SolidJS**: 前端严格遵循 SolidJS 响应式范式（Signals, Stores）。严禁引入 React 特有的 Hooks（如 `useEffect` 需替换为 `createEffect`，`useState` 需替换为 `createSignal`）。
-2.  **国际化 (I18n)**：
-    - **禁止硬编码**：UI 组件中严禁直接硬编码中文字符串。
-    - **规范流程**：所有展示文案必须提取到 `src/i18n/zh-CN.ts` 或引用 `src/ia/labels.ts`，并通过 `t()` 函数调用。
-3.  **类型安全**：
-    - Rust: 严禁在非测试代码中使用 `.unwrap()`，必须处理 `Result/Option`。
-    - TS: 严禁使用 `any`，必须定义明确的 Interface/Type。
-4.  **命名一致性**：严格遵守 `docs/shared/naming-conventions.md`。
-5.  **测试驱动**：修改核心逻辑（Core/Services）后，必须运行相关单元测试。
+
+1. **技术栈一致性**：
+   - **SolidJS**: 前端严格遵循 SolidJS 响应式范式（Signals, Stores）。严禁引入 React 特有的 Hooks（如 `useEffect` 需替换为 `createEffect`，`useState` 需替换为 `createSignal`）。
+2. **国际化 (I18n)**：
+   - **禁止硬编码**：UI 组件中严禁直接硬编码中文字符串。
+   - **规范流程**：所有展示文案必须提取到 `src/i18n/zh-CN.ts` 或引用 `src/ia/labels.ts`，并通过 `t()` 函数调用。
+3. **类型安全**：
+   - Rust: 严禁在非测试代码中使用 `.unwrap()`，必须处理 `Result/Option`。
+   - TS: 严禁使用 `any`，必须定义明确的 Interface/Type。
+4. **命名一致性**：严格遵守 `docs/shared/naming-conventions.md`。
+5. **测试驱动**：修改核心逻辑（Core/Services）后，必须运行相关单元测试。
 
 ## 4. 沟通规范 (Communication Standard)
 
@@ -94,18 +99,27 @@ testingStatus: "Backend Only"
 
 ## 6. 任务交付标准 (Definition of Done)
 
-在声明任务完成前，必须执行以下自检：
+在声明任务完成前，必须严格遵守以下 **DoD 强制流程**：
 
-1.  **构建验证**：
-    - 后端：运行 `cargo check` 确保无编译错误。
-    - 前端：确保无明显的 TypeScript 类型报错。
-2.  **测试验证**：
-    - 后端：运行受影响模块的单元测试/集成测试 (`cargo test -p <crate>`)。
-3.  **文档同步**：
-    - 检查代码变更是否需要更新 `docs/` 下的架构/API/Feature 文档。
-    - 确保文档与代码保持“单一真理源”一致性。
-4.  **铁律合规**：
-    - 再次确认未违反 SRP、DIP 及架构分层红线。
+### 6.1 验证与同步 (AI 必做)
+
+1.  **构建验证**：后端运行 `cargo check`，前端确保 TS 类型无报错。
+2.  **功能验证**：使用 Tauri MCP 工具或手动测试，确保功能符合预期且无 BUG。
+3.  **文档同步**：同步更新 `docs/` 下的相关模块文档，确保“文档即真理”。
+4.  **技术债务自检**：确认未引入违反 SRP/DIP 的脏代码。
+
+### 6.2 评审与提交 (人类批准节点)
+
+AI **严禁** 在未获得人类明确授权的情况下执行 `git commit` 或 `git push`。必须遵循以下确认链：
+
+1.  **方案确认**：修改代码前，先向人类展示 **Plan** (包含设计思路与受影响文件)，获得批准。
+2.  **实现确认**：完成文件写入和本地验证后，展示 **Diff** 或 **验证结果**，等待反馈。
+3.  **文档确认**：展示文档同步的具体内容，确保描述准确。
+4.  **提交申请**：在所有验证通过后，显式发送 **Commit 许可申请**。只有获得“批准提交”或类似确认后，方可执行 Git 操作。
+
+### 6.3 异常处理
+
+- **回退原则**：若提交的代码发现 BUG 或架构违规，必须使用 **`git revert`** 进行撤销，以保留完整的审计追踪历史。严禁在共享分支上使用 `git reset --hard`。
 
 ## 7. 范围与重构 (Scope & Refactoring)
 
@@ -114,5 +128,6 @@ testingStatus: "Backend Only"
 3.  **破坏性变更预警**：任何涉及 Public API、数据库 Schema 或核心协议的变更，必须先在 **Plan** 阶段显式预警并获得确认。
 
 ## 8. 记忆与知识库 (Memory & Knowledge)
+
 - **Long-term Memory**: 当用户明确要求记住偏好时，使用 `save_memory` 工具。
 - **Project Memory**: 重要的架构决策应记录在 `docs/process/decisions.md`。

@@ -5,7 +5,7 @@ import { usePaneSizes, type PaneSize } from "../../state/usePaneSizes";
 import { SashContainer } from "./SashContainer";
 
 export type MultiPaneShellProps = {
-  panes: () => Array<Pane & { size?: PaneSize }>;
+  panes: () => Array<Pane & { size?: PaneSize; key: string }>;
   class?: string;
   onSizesChange?: (sizes: number[]) => void;
 };

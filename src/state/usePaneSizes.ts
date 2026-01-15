@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, createMemo, on } from "solid-js";
 
 export type PaneSize = {
   initialPx: number;
@@ -7,68 +7,93 @@ export type PaneSize = {
 };
 
 export type PaneConfig = {
+  key: string; // Must have key for persistence
   size?: PaneSize;
 };
 
 export const usePaneSizes = (getPanes: () => PaneConfig[], containerWidth: () => number) => {
-  const [sizes, setSizes] = createSignal(
-    getPanes().map((pane) => pane.size?.initialPx ?? 300)
-  );
+  // 1. Persistence State: Map<Key, Width>
+  const [sizeMap, setSizeMap] = createSignal<Record<string, number>>({});
 
+  // 2. Computed Output: number[] based on current panes
+  // This satisfies DIP: The View depends on this array, but the State is decoupled.
+  const sizes = createMemo(() => {
+    const map = sizeMap();
+    return getPanes().map((pane) => {
+      // If key exists in map, use it; otherwise use initialPx
+      return map[pane.key] ?? pane.size?.initialPx ?? 300;
+    });
+  });
+
+  // 3. Logic: Layout Clamping (Adapted for Map)
   const clampSizes = () => {
     const width = containerWidth();
     if (!width) return;
     const panes = getPanes();
-    const current = sizes();
-    const next = [...current];
+    if (panes.length === 0) return;
+
+    // Extract current widths
+    const currentSizes = sizes();
+    const nextSizes = [...currentSizes];
+    
+    // ... (Keep existing clamp logic, operating on the array) ...
     let remaining = width;
     const mins = panes.map((pane) => pane?.size?.minPx ?? 120);
 
-    for (let i = 0; i < next.length; i += 1) {
+    for (let i = 0; i < nextSizes.length; i += 1) {
       const min = panes[i]?.size?.minPx ?? 120;
       const max = panes[i]?.size?.maxPx ?? width;
-      next[i] = Math.min(max, Math.max(min, next[i]));
-      remaining -= next[i];
+      nextSizes[i] = Math.min(max, Math.max(min, nextSizes[i]));
+      remaining -= nextSizes[i];
     }
 
-    if (remaining >= 0 && next.length > 0) {
-      const last = next.length - 1;
-      next[last] = Math.max(panes[last]?.size?.minPx ?? 120, next[last] + remaining);
+    if (remaining >= 0 && nextSizes.length > 0) {
+      const last = nextSizes.length - 1;
+      nextSizes[last] = Math.max(panes[last]?.size?.minPx ?? 120, nextSizes[last] + remaining);
     } else if (remaining < 0) {
       let deficit = -remaining;
-      for (let i = next.length - 1; i >= 0 && deficit > 0; i -= 1) {
+      for (let i = nextSizes.length - 1; i >= 0 && deficit > 0; i -= 1) {
         const min = mins[i] ?? 0;
-        const reducible = Math.max(0, next[i] - min);
+        const reducible = Math.max(0, nextSizes[i] - min);
         const reduce = Math.min(deficit, reducible);
-        next[i] -= reduce;
+        nextSizes[i] -= reduce;
         deficit -= reduce;
       }
-
+      
+      // ... (Rest of distribution logic) ...
       if (deficit > 0) {
-        const total = next.reduce((acc, value) => acc + value, 0);
+        const total = nextSizes.reduce((acc, value) => acc + value, 0);
         if (total > 0) {
           const ratio = width / total;
-          for (let i = 0; i < next.length; i += 1) {
-            next[i] = Math.max(32, Math.floor(next[i] * ratio));
+          for (let i = 0; i < nextSizes.length; i += 1) {
+            nextSizes[i] = Math.max(32, Math.floor(nextSizes[i] * ratio));
           }
-
-          if (next.length > 0) {
-            const last = next.length - 1;
-            const sum = next.slice(0, last).reduce((acc, value) => acc + value, 0);
-            next[last] = Math.max(32, width - sum);
+          if (nextSizes.length > 0) {
+            const last = nextSizes.length - 1;
+            const sum = nextSizes.slice(0, last).reduce((acc, value) => acc + value, 0);
+            nextSizes[last] = Math.max(32, width - sum);
           }
         }
       }
     }
 
-    if (next.some((value, index) => value !== current[index])) {
-      setSizes(next);
+    // Write back to Map if changed
+    if (nextSizes.some((value, index) => value !== currentSizes[index])) {
+      setSizeMap(prev => {
+        const nextMap = { ...prev };
+        panes.forEach((pane, i) => {
+          nextMap[pane.key] = nextSizes[i];
+        });
+        return nextMap;
+      });
     }
   };
 
   const handleDrag = (index: number, clientX: number, containerLeft: number, containerWidthValue: number) => {
     const panes = getPanes();
-    const current = sizes();
+    const current = sizes(); // Get current array
+    
+    // ... (Keep existing drag calculation logic) ...
     const start = current.slice(0, index).reduce((acc, w) => acc + w, 0);
     const total = current[index] + current[index + 1];
     const desired = clientX - containerLeft - start;
@@ -89,19 +114,30 @@ export const usePaneSizes = (getPanes: () => PaneConfig[], containerWidth: () =>
       nextLeft = total - nextRight;
     }
 
-    const next = [...current];
-    next[index] = nextLeft;
-    next[index + 1] = nextRight;
-    setSizes(next);
+    // Write directly to Map
+    setSizeMap(prev => ({
+      ...prev,
+      [panes[index].key]: nextLeft,
+      [panes[index + 1].key]: nextRight
+    }));
   };
 
   createEffect(clampSizes);
-  createEffect(() => {
-    const panes = getPanes();
-    if (sizes().length !== panes.length) {
-      setSizes(panes.map((pane) => pane.size?.initialPx ?? 300));
-    }
-  });
+
+  // Sync: When panes change, initialize new keys, keep old ones
+  createEffect(on(getPanes, (panes) => {
+    setSizeMap(prev => {
+      let changed = false;
+      const next = { ...prev };
+      panes.forEach(pane => {
+        if (next[pane.key] === undefined) {
+          next[pane.key] = pane.size?.initialPx ?? 300;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }));
 
   return {
     sizes,

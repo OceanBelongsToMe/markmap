@@ -9,6 +9,49 @@
   background: var(--color-bg-surface);
   width: 100%;
   overflow: visible;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease;
+}
+
+.sidebar-shell.is-overlay {
+  border-right: none;
+}
+
+.sidebar-shell.is-hidden {
+  transform: translateX(-100%);
+}
+
+.sidebar-overlay-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1000;
+  width: 280px;
+  background: var(--color-bg-surface);
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease;
+  transform: translateX(-100%);
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.sidebar-overlay-container.is-visible {
+  transform: translateX(0);
+  pointer-events: auto;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-trigger {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  z-index: 9999;
+  background: transparent;
+}
+
+.sidebar-trigger:hover {
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .sidebar-shell.is-collapsed {
