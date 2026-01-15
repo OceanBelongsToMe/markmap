@@ -1,4 +1,4 @@
-import { Index, createMemo } from "solid-js";
+import { For, createMemo } from "solid-js";
 import type { JSX } from "solid-js";
 
 export type Pane = {
@@ -30,13 +30,13 @@ export const MultiPaneLayout = (props: MultiPaneLayoutProps) => {
         "grid-template-columns": template()
       }}
     >
-      <Index each={props.panes}>
+      <For each={props.panes}>
         {(pane) => (
-          <div class="multi-pane-pane" data-pane-key={pane().key}>
-            {pane().content}
+          <div class="multi-pane-pane" data-pane-key={pane.key}>
+            {pane.content}
           </div>
         )}
-      </Index>
+      </For>
     </div>
   );
 };

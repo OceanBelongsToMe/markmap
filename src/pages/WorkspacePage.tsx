@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { MainLayout } from "../layouts/MainLayout";
 import { workspaceLayoutMins } from "../layouts/rules/workspaceLayoutSizes";
 import { useLayoutState } from "../state/useLayoutState";
@@ -11,9 +11,11 @@ import { WorkspacePreviewPane } from "../ui/patterns/workspace/WorkspacePreviewP
 import { WorkspaceSidebar } from "../ui/patterns/workspace/WorkspaceSidebar";
 import { WorkspaceSplitShell } from "../ui/patterns/workspace/WorkspaceSplitShell";
 import { ToolbarShell } from "../ui/patterns/ToolbarShell";
+import { Sash } from "../layouts/Sash";
 import type { FileTreeStyle } from "../features/sidebar/file-tree";
 
 export const WorkspacePage = () => {
+  // ... (状态保持不变)
   const { layoutMode } = useLayoutState();
   const {
     collapsed,
@@ -33,10 +35,7 @@ export const WorkspacePage = () => {
   const showPreview = () => layoutMode() === "split" && layoutVariant() === "three-pane";
   const showSidebar = () => layoutVariant() !== "single-pane";
 
-  // 核心逻辑：Sidebar 是否固定在布局流中
   const isSidebarFixed = () => !collapsed() && showSidebar();
-  
-  // 核心逻辑：Overlay 是否显示
   const isOverlayVisible = () => collapsed() && isHoveringSidebar();
 
   return (
@@ -61,7 +60,6 @@ export const WorkspacePage = () => {
       }
       content={
         <div style={{ width: "100%", height: "100%", position: "relative" }}>
-          {/* Layer 1: 边缘触发器 */}
           {collapsed() && (
             <div
               class="sidebar-trigger"
@@ -73,15 +71,23 @@ export const WorkspacePage = () => {
           <div
             class="sidebar-overlay-container"
             classList={{ "is-visible": isOverlayVisible() }}
+            style={{ width: `${sidebarWidth()}px` }}
             onMouseLeave={() => setIsHoveringSidebar(false)}
           >
-            {/* 性能优化：仅在可能显示时渲染 */}
             {collapsed() && (
-              <WorkspaceSidebar
-                collapsed={false}
-                isOverlay={true}
-                fileTreeStyle={fileTreeStyle()}
-              />
+              <>
+                <WorkspaceSidebar
+                  collapsed={false}
+                  isOverlay={true}
+                  fileTreeStyle={fileTreeStyle()}
+                />
+                <Show when={isOverlayVisible()}>
+                  <Sash
+                    left={sidebarWidth()}
+                    onDrag={(x) => setSidebarWidth(x)}
+                  />
+                </Show>
+              </>
             )}
           </div>
 
@@ -90,26 +96,26 @@ export const WorkspacePage = () => {
             style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden" }}
           >
             <WorkspaceSplitShell
-            sidebar={
-              isSidebarFixed() ? (
-                <WorkspaceSidebar
-                  collapsed={false}
-                  fileTreeStyle={fileTreeStyle()}
-                />
-              ) : undefined
-            }
-            sidebarWidth={sidebarWidth()}
-            editor={<WorkspaceEditorPane viewMode={viewMode()} />}
-            preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
-            onSizesChange={(sizes) => {
-              if (isSidebarFixed()) {
-                const next = sizes[0];
-                if (typeof next === "number") {
-                  setSidebarWidth(next);
-                }
+              sidebar={
+                isSidebarFixed() ? (
+                  <WorkspaceSidebar
+                    collapsed={false}
+                    fileTreeStyle={fileTreeStyle()}
+                  />
+                ) : undefined
               }
-            }}
-          />
+              sidebarWidth={sidebarWidth()}
+              editor={<WorkspaceEditorPane viewMode={viewMode()} />}
+              preview={showPreview() ? <WorkspacePreviewPane /> : undefined}
+              onSizesChange={(sizes) => {
+                if (isSidebarFixed()) {
+                  const next = sizes[0];
+                  if (typeof next === "number") {
+                    setSidebarWidth(next);
+                  }
+                }
+              }}
+            />
           </div>
         </div>
       }
