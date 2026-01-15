@@ -1,4 +1,4 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import { MainLayout } from "../layouts/MainLayout";
 import { workspaceLayoutMins } from "../layouts/rules/workspaceLayoutSizes";
 import { useLayoutState } from "../state/useLayoutState";
