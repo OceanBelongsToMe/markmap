@@ -14,6 +14,7 @@ import { ToolbarShell } from "../ui/patterns/ToolbarShell";
 import type { FileTreeStyle } from "../features/sidebar/file-tree";
 import { useWorkspacePageOrchestrator } from "../features/workspace/hooks/useWorkspacePageOrchestrator";
 import { UnifiedSidebarShell, type SidebarMode } from "../layouts/UnifiedSidebarShell";
+import { useSidebarInteraction } from "../features/workspace/hooks/useSidebarInteraction";
 
 export const WorkspacePage = () => {
   const { layoutMode } = useLayoutState();
@@ -34,7 +35,9 @@ export const WorkspacePage = () => {
   
   const [fileTreeStyle, setFileTreeStyle] = createSignal<FileTreeStyle>("ark");
   const [viewMode, setViewMode] = createSignal<"code" | "markmap">("code");
-  const [isHoveringSidebar, setIsHoveringSidebar] = createSignal(false);
+  
+  // 使用封装的交互 Hook
+  const { isHovering: isHoveringSidebar, handlers: sidebarHandlers } = useSidebarInteraction(collapsed);
 
   const showPreview = () => layoutMode() === "split" && layoutVariant() === "three-pane";
   const showSidebar = () => layoutVariant() !== "single-pane";
@@ -60,7 +63,7 @@ export const WorkspacePage = () => {
               onToggleSidebar={() => {
                 const next = !collapsed();
                 setCollapsed(next);
-                if (!next) setIsHoveringSidebar(false);
+                if (!next) sidebarHandlers.reset();
               }}
             />
           }
@@ -75,7 +78,7 @@ export const WorkspacePage = () => {
           {collapsed() && (
             <div
               class="sidebar-trigger"
-              onMouseEnter={() => setIsHoveringSidebar(true)}
+              onMouseEnter={sidebarHandlers.onMouseEnter}
             />
           )}
 
@@ -85,9 +88,11 @@ export const WorkspacePage = () => {
             width={sidebarWidth()}
             onWidthChange={setSidebarWidth}
             classList={{ "is-visible": isOverlayVisible() }}
-            onMouseLeave={() => {
-              if (collapsed()) setIsHoveringSidebar(false);
-            }}
+            sashVisible={sidebarMode() === "fixed" || isOverlayVisible()}
+            onDragStart={sidebarHandlers.onDragStart}
+            onDragEnd={sidebarHandlers.onDragEnd}
+            onMouseEnter={sidebarHandlers.onMouseEnter}
+            onMouseLeave={sidebarHandlers.onMouseLeave}
           >
             <WorkspaceSidebar
               collapsed={false} // 始终显示内容，因为 UnifiedSidebarShell 处理形态

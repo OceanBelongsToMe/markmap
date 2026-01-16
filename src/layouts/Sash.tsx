@@ -1,6 +1,7 @@
 export type SashProps = {
   left: number;
   onDrag: (clientX: number) => void;
+  onDragStart?: () => void;
   onDragEnd?: () => void;
 };
 
@@ -11,6 +12,7 @@ export const Sash = (props: SashProps) => {
     event.preventDefault();
     sashRef?.setPointerCapture(event.pointerId);
     document.documentElement.dataset.resizing = "true";
+    props.onDragStart?.();
 
     // Calculate the initial offset relative to the logical center (props.left)
     // This ensures that clicking anywhere on the sash (even with visual transforms) doesn't cause a jump

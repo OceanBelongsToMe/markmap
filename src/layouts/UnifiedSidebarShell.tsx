@@ -13,6 +13,9 @@ export type UnifiedSidebarShellProps = {
   onMouseLeave?: () => void;
   class?: string;
   classList?: Record<string, boolean | undefined>;
+  sashVisible?: boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 };
 
 export const UnifiedSidebarShell = (props: UnifiedSidebarShellProps) => {
@@ -34,15 +37,16 @@ export const UnifiedSidebarShell = (props: UnifiedSidebarShellProps) => {
       <SidebarShell
         width={props.width}
         overlay={isOverlay()}
-        hidden={isHidden()}
       >
         {props.children}
       </SidebarShell>
 
-      <Show when={props.mode !== "hidden"}>
+      <Show when={props.mode !== "hidden" && (props.sashVisible ?? true)}>
         <Sash
           left={props.width}
           onDrag={(x) => props.onWidthChange(x)}
+          onDragStart={props.onDragStart}
+          onDragEnd={props.onDragEnd}
         />
       </Show>
     </div>
