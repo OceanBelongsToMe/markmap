@@ -1,5 +1,6 @@
 import { createMemo } from "solid-js";
-import PanelLeft from "lucide-solid/icons/panel-left";
+import PanelLeftOpen from "lucide-solid/icons/panel-left-open";
+import PanelLeftClose from "lucide-solid/icons/panel-left-close";
 import { useI18n } from "../../i18n/context";
 import type { Locale } from "../../i18n";
 import { Label } from "../../ui/components/Label";
@@ -46,11 +47,17 @@ export const WorkspaceToolbarContent = (props: WorkspaceToolbarContentProps) => 
             cursor: "pointer",
             padding: "4px",
             color: "var(--color-text-description)",
-            opacity: props.sidebarCollapsed ? 0.6 : 1,
-            transition: "opacity 0.2s"
+            opacity: 0.8,
+            transition: "opacity 0.2s, color 0.2s"
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.8")}
         >
-          <PanelLeft size={18} />
+          {props.sidebarCollapsed ? (
+            <PanelLeftOpen size={18} />
+          ) : (
+            <PanelLeftClose size={18} />
+          )}
         </button>
         <div style={{ width: "1px", height: "16px", background: "var(--color-border-subtle)" }} />
         <div style={{ display: "flex", "align-items": "center", gap: "8px" }}>
