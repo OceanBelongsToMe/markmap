@@ -1,7 +1,2 @@
-node_modules
-dist
-.codex/
-.gemini/
-_bmad/
-_bmad-output/
-_mcp_tmp/
+knowlattice.code-workspace
+**/tsconfig.tsbuildinfo
