@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "start": "vite",
     "dev": "vite",
@@ -27,11 +30,8 @@
     "@tauri-apps/plugin-opener": "^2",
     "codemirror": "^6.0.2",
     "lucide-solid": "^0.562.0",
-    "markmap-common": "link:markmap-common",
-    "markmap-html-parser": "link:markmap-html-parser",
-    "markmap-lib": "link:markmap-lib",
-    "markmap-toolbar": "link:markmap-toolbar",
-    "markmap-view": "link:markmap-view",
+    "markmap-common": "workspace:*",
+    "markmap-view": "workspace:*",
     "solid-js": "^1.9.3"
   },
   "devDependencies": {
