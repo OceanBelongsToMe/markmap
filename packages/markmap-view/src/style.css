@@ -14,98 +14,98 @@
 
   font: var(--markmap-font);
   color: var(--markmap-text-color);
+}
 
-  &-link {
-    fill: none;
+.markmap-link {
+  fill: none;
+}
+
+.markmap-node {
+  /* Hint browser to optimize transforms for smoother animations */
+  will-change: transform;
+  > circle {
+    cursor: pointer;
+  }
+  > text.markmap-circle-text {
+    font-size: 8px;
+    font-weight: 600;
+    dominant-baseline: middle;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+}
+
+.markmap-foreign {
+  display: inline-block;
+
+  p {
+    margin: 0;
   }
 
-  &-node {
-    /* Hint browser to optimize transforms for smoother animations */
-    will-change: transform;
-    > circle {
-      cursor: pointer;
-    }
-    > text.markmap-circle-text {
-      font-size: 8px;
-      font-weight: 600;
-      dominant-baseline: middle;
-      text-anchor: middle;
-      pointer-events: none;
+  a {
+    color: var(--markmap-a-color);
+    &:hover {
+      color: var(--markmap-a-hover-color);
     }
   }
 
-  &-foreign {
+  code {
+    padding: 0.25em;
+    font-size: calc(1em - 2px);
+    color: var(--markmap-code-color);
+    background-color: var(--markmap-code-bg);
+    border-radius: 2px;
+  }
+
+  pre {
+    margin: 0;
+    > code {
+      display: block;
+    }
+  }
+
+  del {
+    text-decoration: line-through;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  strong {
+    font-weight: bold;
+  }
+
+  mark {
+    background: var(--markmap-highlight-bg);
+  }
+
+  table,
+  th,
+  td {
+    border-collapse: collapse;
+    border: var(--markmap-table-border);
+  }
+
+  img {
     display: inline-block;
+  }
 
-    p {
-      margin: 0;
-    }
+  svg {
+    fill: currentColor;
+  }
 
-    a {
-      color: var(--markmap-a-color);
-      &:hover {
-        color: var(--markmap-a-hover-color);
-      }
-    }
-
-    code {
-      padding: 0.25em;
-      font-size: calc(1em - 2px);
-      color: var(--markmap-code-color);
-      background-color: var(--markmap-code-bg);
-      border-radius: 2px;
-    }
-
-    pre {
-      margin: 0;
-      > code {
-        display: block;
-      }
-    }
-
-    del {
-      text-decoration: line-through;
-    }
-
-    em {
-      font-style: italic;
-    }
-
-    strong {
-      font-weight: bold;
-    }
-
-    mark {
-      background: var(--markmap-highlight-bg);
-    }
-
-    table,
-    th,
-    td {
-      border-collapse: collapse;
-      border: var(--markmap-table-border);
-    }
-
-    img {
+  > div {
+    width: var(--markmap-max-width);
+    text-align: left;
+    > div {
       display: inline-block;
     }
-
-    svg {
-      fill: currentColor;
-    }
-
-    > div {
-      width: var(--markmap-max-width);
-      text-align: left;
-      > div {
-        display: inline-block;
-      }
-    }
   }
+}
 
-  &-highlight rect {
-    fill: var(--markmap-highlight-node-bg);
-  }
+.markmap-highlight rect {
+  fill: var(--markmap-highlight-node-bg);
 }
 
 .markmap-dark .markmap {
