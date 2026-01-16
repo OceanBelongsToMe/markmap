@@ -127,14 +127,24 @@ export const usePaneSizes = (getPanes: () => PaneConfig[], containerWidth: () =>
   // Sync: When panes change, initialize new keys, keep old ones
   createEffect(on(getPanes, (panes) => {
     setSizeMap(prev => {
+      const next: Record<string, number> = {};
       let changed = false;
-      const next = { ...prev };
+      
+      // Only keep keys that are currently present
       panes.forEach(pane => {
-        if (next[pane.key] === undefined) {
+        if (prev[pane.key] !== undefined) {
+          next[pane.key] = prev[pane.key];
+        } else {
           next[pane.key] = pane.size?.initialPx ?? 300;
           changed = true;
         }
       });
+
+      // Check if any keys were removed (length mismatch)
+      if (!changed && Object.keys(prev).length !== Object.keys(next).length) {
+        changed = true;
+      }
+
       return changed ? next : prev;
     });
   }));
