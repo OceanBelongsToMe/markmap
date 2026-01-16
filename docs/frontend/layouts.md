@@ -94,34 +94,32 @@
 
 - 布局容器（骨架层）：
   - `AppShell`：布局根容器，组织三层结构与全局区域。
-  - `SidebarLayer`：侧栏层，承载 `Sidebar` 区域。
-  - `ContentStage`：主内容层，作为内容插槽容器（不固定内部列数）。
+  - `UnifiedSidebarShell`：统一侧栏容器，负责 Fixed（推挤）与 Overlay（悬浮）模式切换与宽度调整。
+  - `ContentStage`：主内容层，作为内容插槽容器。
   - `FloatingPanelLayer`：浮层宿主，承载悬浮编辑面板插槽。
-  - `ToolbarRegion`：工具栏区域（可在 `AppShell` 内部或单独区域容器）。
+  - `ToolbarRegion`：工具栏区域。
+
 - 多列结构容器：
-  - `MultiPaneLayout`：多列结构容器，按传入列配置渲染，不含交互逻辑。
+  - `WorkspaceSplitShell`：专注于内容区分栏（Editor + Preview），不再管理侧边栏。
+  - `MultiPaneShell`：底层分栏实现，组合多列结构 + 分割线交互。
+  - `MultiPaneLayout`：纯渲染组件，按传入列配置渲染。
+
 - 区域容器：
   - 侧栏区域：文件树/标签/最近等导航区。
-  - 工具栏区域：全局操作区（新建、搜索、同步、设置）。
+  - 工具栏区域：全局操作区。
   - 编辑区：主编辑区容器。
-  - Markmap 主视图区。
-  - 预览区：文档预览容器（按布局状态启用）。
-- 分割线交互（通用组件）：
-  - `Sash`：分割线交互元件（渲染与拖拽入口）。
-  - `SashContainer`（patterns）：集中渲染多条分割线（按列计算位置）。
-- 组合层（patterns）：
-  - `MultiPaneShell`：组合多列结构 + 分割线交互 + 尺寸策略（不含业务逻辑）。
-- 说明：骨架层仅保留 `ToolbarRegion`，`Regions.Toolbar` 不使用。
-- Tauri Overlay 标题栏：
-  - 使用 `titleBarStyle: "Overlay"` 时，工具栏骨架容器需加 `data-tauri-drag-region`，用于窗口拖拽。
-  - 预留左右安全区（如系统按钮区）时，使用 CSS 变量控制内边距（按平台调整）。
-  - macOS 右侧安全区建议值：`--titlebar-inset-right: 10px`。
+  - 预览区：文档预览容器。
+
 - 层级关系（全链路示例）：
-  - `AppShell` → `SidebarLayer` → `Sidebar`
-  - `AppShell` → `ToolbarRegion` → `Toolbar`
-  - `AppShell` → `ContentStage` → `MultiPaneShell` → `MultiPaneLayout` → `EditorPane` / `PreviewPane` / `MarkmapStage`
-  - `AppShell` → `ContentStage` → `SashContainer` → `Sash`
-  - `AppShell` → `FloatingPanelLayer` → `FloatingEditorPanel`
+  - `AppShell` → `ToolbarRegion`
+  - `AppShell` → `UnifiedSidebarShell` (Layer 2) → `WorkspaceSidebar`
+  - `AppShell` → `ContentStage` (Layer 1) → `WorkspaceSplitShell` → `MultiPaneShell` → `EditorPane` / `PreviewPane`
+  - `AppShell` → `FloatingPanelLayer`
+
+- 说明：
+  - `UnifiedSidebarShell` 在 Overlay 模式下脱离文档流，层级高于 `ContentStage`。
+  - `WorkspaceSplitShell` 始终占满 `ContentStage` 的剩余空间。
+  - 侧边栏的宽度调整（Resize）由 `UnifiedSidebarShell` 内部的 `Sash` 独立管理。
  
 - 组件与实现细节请见 `docs/frontend/ui-components.md`。
 
