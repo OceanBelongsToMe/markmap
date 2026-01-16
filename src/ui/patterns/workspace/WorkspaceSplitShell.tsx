@@ -6,29 +6,12 @@ import type { PaneSize } from "../../../state/usePaneSizes";
 import { MultiPaneShell } from "../MultiPaneShell";
 
 export type WorkspaceSplitShellProps = {
-  sidebar?: JSX.Element;
   editor: JSX.Element;
   preview?: JSX.Element;
-  sidebarWidth?: number;
   onSizesChange?: (sizes: number[]) => void;
 };
 
 export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
-  const sidebarSize = createMemo<PaneSize>(() => ({
-    ...workspacePaneSizes.sidebar,
-    initialPx: props.sidebarWidth ?? workspacePaneSizes.sidebar.initialPx
-  }));
-
-  const sidebarPane: Pane & { size?: PaneSize; key: string } = {
-    key: "sidebar",
-    get content() {
-      return props.sidebar as JSX.Element;
-    },
-    get size() {
-      return sidebarSize();
-    }
-  };
-
   const editorPane: Pane & { size?: PaneSize; key: string } = {
     key: "editor",
     get content() {
@@ -47,10 +30,6 @@ export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
 
   const panes = createMemo<Array<Pane & { size?: PaneSize; key: string }>>(() => {
     const next: Array<Pane & { size?: PaneSize; key: string }> = [];
-
-    if (props.sidebar) {
-      next.push(sidebarPane);
-    }
 
     next.push(editorPane);
 
