@@ -14,33 +14,48 @@ export type WorkspaceSplitShellProps = {
 };
 
 export const WorkspaceSplitShell = (props: WorkspaceSplitShellProps) => {
+  const sidebarSize = createMemo<PaneSize>(() => ({
+    ...workspacePaneSizes.sidebar,
+    initialPx: untrack(() => props.sidebarWidth) ?? workspacePaneSizes.sidebar.initialPx
+  }));
+
+  const sidebarPane: Pane & { size?: PaneSize; key: string } = {
+    key: "sidebar",
+    get content() {
+      return props.sidebar as JSX.Element;
+    },
+    get size() {
+      return sidebarSize();
+    }
+  };
+
+  const editorPane: Pane & { size?: PaneSize; key: string } = {
+    key: "editor",
+    get content() {
+      return props.editor;
+    },
+    size: workspacePaneSizes.editor
+  };
+
+  const previewPane: Pane & { size?: PaneSize; key: string } = {
+    key: "preview",
+    get content() {
+      return props.preview as JSX.Element;
+    },
+    size: workspacePaneSizes.preview
+  };
+
   const panes = createMemo<Array<Pane & { size?: PaneSize; key: string }>>(() => {
     const next: Array<Pane & { size?: PaneSize; key: string }> = [];
 
     if (props.sidebar) {
-      next.push({
-        key: "sidebar",
-        content: props.sidebar,
-        size: {
-          ...workspacePaneSizes.sidebar,
-          initialPx:
-            untrack(() => props.sidebarWidth) ?? workspacePaneSizes.sidebar.initialPx
-        }
-      });
+      next.push(sidebarPane);
     }
 
-    next.push({
-      key: "editor",
-      content: props.editor,
-      size: workspacePaneSizes.editor
-    });
+    next.push(editorPane);
 
     if (props.preview) {
-      next.push({
-        key: "preview",
-        content: props.preview,
-        size: workspacePaneSizes.preview
-      });
+      next.push(previewPane);
     }
 
     return next;

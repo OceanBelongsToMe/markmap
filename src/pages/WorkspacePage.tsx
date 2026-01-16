@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { MainLayout } from "../layouts/MainLayout";
 import { workspaceLayoutMins } from "../layouts/rules/workspaceLayoutSizes";
 import { useLayoutState } from "../state/useLayoutState";
@@ -13,6 +13,7 @@ import { WorkspaceSplitShell } from "../ui/patterns/workspace/WorkspaceSplitShel
 import { ToolbarShell } from "../ui/patterns/ToolbarShell";
 import { Sash } from "../layouts/Sash";
 import type { FileTreeStyle } from "../features/sidebar/file-tree";
+import { useWorkspacePageOrchestrator } from "../features/workspace/hooks/useWorkspacePageOrchestrator";
 
 export const WorkspacePage = () => {
   // ... (状态保持不变)
@@ -23,6 +24,7 @@ export const WorkspacePage = () => {
     width: sidebarWidth,
     setWidth: setSidebarWidth
   } = useSidebarState();
+  useWorkspacePageOrchestrator();
   const [shellRef, setShellRef] = createSignal<HTMLDivElement | undefined>();
   const { layoutVariant } = useResponsiveLayout(
     () => shellRef(),
