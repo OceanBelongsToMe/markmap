@@ -11,10 +11,8 @@
 ### 1) 布局与视口状态
 
 - `src/state/useLayoutState.ts`：布局状态聚合（当前布局形态/面板组合）。
-- `src/state/usePaneSizes.ts`：分栏尺寸与持久化策略。
+- `src/state/usePaneSizes.ts`：分栏尺寸策略。采用**基于 Key 的动态管理模式**：状态随 Pane 的生命周期同步，Pane 移除时自动清理其尺寸缓存，确保组件重载（如 Fixed 与 Overlay 切换）时能通过外部 Props 重新同步。
 - `src/state/useMeasuredWidth.ts`：容器宽度测量与派生状态。
-- `src/state/useResponsiveLayout.ts`：断点驱动的布局变体。
-- `src/state/useResponsiveContent.ts`：内容区响应式状态（内容布局变体）。
 
 ### 2) 侧栏状态
 
@@ -42,6 +40,14 @@
 - 数据请求与业务动作放在 `features/*` 的 hooks（如 `useWorkspaceTreeActions`）。
 - 视图层（layouts/ui/components）只消费状态，不修改状态结构。
 - 跨层共享规则：状态变化触发 UI 更新，但不反向决定业务流程。
+
+## 页面级状态编排 (Orchestration)
+
+在复杂页面（如 `WorkspacePage`）中，引入 **Orchestrator Hook**（如 `useWorkspacePageOrchestrator`）作为单一职责的指挥官：
+
+- **状态同步**：负责不同 UI 实例（如 Fixed Sidebar 与 Overlay Sidebar）之间的状态同步。
+- **生命周期协调**：在组件挂载时触发数据初始化，并在相关状态变化时协调跨模块的响应（如文档打开后同步更新最近文件列表）。
+- **逻辑剥离**：确保 UI 组件（Page/Layout）保持纯粹的渲染职责，不包含数据流逻辑。
 
 ## 依赖关系
 
