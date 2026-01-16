@@ -1,2 +1,8 @@
 knowlattice.code-workspace
 **/tsconfig.tsbuildinfo
+.codex/
+.gemini/
+_bmad-output/
+_bmad/
+_mcp_tmp/
+dist/
