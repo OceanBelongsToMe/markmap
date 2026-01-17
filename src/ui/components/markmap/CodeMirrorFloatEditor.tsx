@@ -66,9 +66,9 @@ export const CodeMirrorFloatEditor: Component<Props> = (props) => {
           overflow: "hidden",
         },
         ".cm-content": {
-          padding: "4px 6px",
+          padding: `${2 * props.args.k}px ${4 * props.args.k}px`,
           fontFamily: "ui-sans-serif, system-ui, sans-serif",
-          fontSize: "14px",
+          fontSize: `${14 * props.args.k}px`,
         },
         "&.cm-focused": {
           outline: "none",
@@ -96,9 +96,8 @@ export const CodeMirrorFloatEditor: Component<Props> = (props) => {
           position: "fixed",
           top: `${props.args.rect.top + props.args.rect.height / 2}px`,
           left: `${props.args.rect.left}px`,
-          transform: `translateY(-50%) scale(${props.args.k})`,
-          "transform-origin": "left center",
-          "min-width": `${props.args.rect.width}px`,
+          transform: "translateY(-50%)",
+          "min-width": `${Math.max(props.args.rect.width - 20 * props.args.k, 20)}px`,
           "z-index": 9999,
         }}
       />
