@@ -219,6 +219,35 @@ export function renderNodes(args: {
       event.stopPropagation();
       const svgNode = svg.node() as SVGElement | null;
       closeActiveEditor(svgNode, editable);
+
+      if (editable?.renderEditor) {
+        const inner = getForeignObjectInner(this);
+        if (!inner) return;
+        const rect = inner.getBoundingClientRect();
+        const resolvedId = editable?.getNodeId?.(d) ?? d.state.id;
+
+        if (svgNode) svgNode.style.pointerEvents = 'none';
+
+        const restore = () => {
+          if (svgNode) svgNode.style.pointerEvents = '';
+        };
+
+        editable.renderEditor({
+          node: d,
+          rect,
+          initialContent: d.content,
+          save: (text) => {
+            restore();
+            editable?.onCommit?.(resolvedId, text, d);
+          },
+          cancel: () => {
+            restore();
+            editable?.onCancel?.(resolvedId, d);
+          },
+        });
+        return;
+      }
+
       const inner = getForeignObjectInner(this);
       if (!inner) return;
       const resolvedId = editable?.getNodeId?.(d) ?? d.state.id;

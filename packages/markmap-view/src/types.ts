@@ -77,6 +77,24 @@ export interface IMarkmapEditableOptions {
     node: INode,
   ) => void | Promise<void>;
   onCancel?: (nodeId: string | number, node: INode) => void;
+  /**
+   * Render a custom editor instead of the default contenteditable behavior.
+   * This is useful for integrating rich editors like CodeMirror or Monaco.
+   */
+  renderEditor?: (args: IEditorArgs) => void;
+}
+
+export interface IEditorArgs {
+  /** The node being edited */
+  node: INode;
+  /** The DOM rect of the node's content element (for positioning) */
+  rect: DOMRect;
+  /** The initial text content */
+  initialContent: string;
+  /** Callback to commit changes */
+  save: (newContent: string) => void;
+  /** Callback to cancel editing */
+  cancel: () => void;
 }
 
 export interface IPadding {

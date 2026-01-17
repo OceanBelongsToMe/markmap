@@ -1,15 +1,16 @@
-import { Component, Show, createResource } from "solid-js";
+import { Component, Show, createResource, createSignal } from "solid-js";
 import { MarkmapCanvas } from "../../ui/components/markmap/MarkmapCanvas";
 import { useActiveDocument } from "../../state/workspace/useActiveDocument";
 import { defaultOptions } from "markmap-view";
 import { nodeContentWithHeadingIcons } from "../../ui/components/markmap/markmapNodeContent";
 import { fetchMarkmapChildren, fetchMarkmapRoot } from "../workspace/api/workspaceApi";
+import { CodeMirrorFloatEditor, IEditorArgs } from "../../ui/components/markmap/CodeMirrorFloatEditor";
 
 export type MarkmapContainerProps = {
   class?: string;
 };
 
-const MARKMAP_OPTIONS = {
+const BASE_MARKMAP_OPTIONS = {
   ...defaultOptions,
   nodeContent: nodeContentWithHeadingIcons,
   editable: {
@@ -20,6 +21,7 @@ const MARKMAP_OPTIONS = {
 
 export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
   const { activeDocId } = useActiveDocument();
+  const [editorArgs, setEditorArgs] = createSignal<IEditorArgs | null>(null);
 
   const [data] = createResource(
     () => activeDocId(),
@@ -43,6 +45,22 @@ export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
     },
   };
 
+  const markmapOptions = {
+    ...BASE_MARKMAP_OPTIONS,
+    editable: {
+      ...BASE_MARKMAP_OPTIONS.editable,
+      onCommit: (nodeId: string | number, text: string) => {
+        console.log("[MarkmapContainer] onCommit:", nodeId, text);
+        // TODO: Call backend API to update node content
+        // await updateNode(String(nodeId), text);
+        // refetch();
+      },
+      renderEditor: (args: any) => {
+        setEditorArgs(args);
+      },
+    },
+  };
+
   return (
     <div class={props.class}>
       <Show when={activeDocId()} fallback={
@@ -58,10 +76,18 @@ export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
           <Show when={data()}>
             <MarkmapCanvas
               data={data()}
-              options={MARKMAP_OPTIONS}
+              options={markmapOptions}
               loader={loader}
               class="h-full"
             />
+            <Show when={editorArgs()}>
+              {(args) => (
+                <CodeMirrorFloatEditor
+                  args={args()}
+                  onClose={() => setEditorArgs(null)}
+                />
+              )}
+            </Show>
           </Show>
           <Show when={error()}>
             <div class="absolute top-0 left-0 right-0 bg-red-100 text-red-800 p-2 z-20">
