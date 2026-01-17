@@ -238,6 +238,7 @@ export function renderNodes(args: {
           node: d,
           rect,
           k: transform.k,
+          paddingX,
           initialContent: d.content,
           save: (text) => {
             restore();

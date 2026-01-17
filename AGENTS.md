@@ -32,6 +32,7 @@
 ## 提交与 PR 规范
 
 - 提交消息采用 Conventional Commits（示例：`feat(markmap): unify inline editable text`、`chore: ignore workspace artifacts`）。
+- 提交需要得到确认！！
 - PR 需包含简要说明、测试命令与结果；涉及 UI 变更时附截图/GIF。
 
 ## 文档与架构入口

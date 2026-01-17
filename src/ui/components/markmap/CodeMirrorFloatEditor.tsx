@@ -11,6 +11,7 @@ export interface IEditorArgs {
   node: INode;
   rect: DOMRect;
   k: number;
+  paddingX: number;
   initialContent: string;
   save: (newContent: string) => void;
   cancel: () => void;
@@ -66,7 +67,7 @@ export const CodeMirrorFloatEditor: Component<Props> = (props) => {
           overflow: "hidden",
         },
         ".cm-content": {
-          padding: `${2 * props.args.k}px ${4 * props.args.k}px`,
+          padding: `${2 * props.args.k}px ${4 * props.args.k}px ${2 * props.args.k}px ${2 * props.args.k}px`,
           fontFamily: "ui-sans-serif, system-ui, sans-serif",
           fontSize: `${14 * props.args.k}px`,
         },
@@ -95,9 +96,9 @@ export const CodeMirrorFloatEditor: Component<Props> = (props) => {
         style={{
           position: "fixed",
           top: `${props.args.rect.top + props.args.rect.height / 2}px`,
-          left: `${props.args.rect.left}px`,
+          left: `${props.args.rect.left - props.args.paddingX * props.args.k}px`,
           transform: "translateY(-50%)",
-          "min-width": `${props.args.rect.width}px`,
+          "min-width": `${props.args.rect.width + props.args.paddingX * props.args.k}px`,
           "z-index": 9999,
         }}
       />

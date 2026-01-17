@@ -91,6 +91,8 @@ export interface IEditorArgs {
   rect: DOMRect;
   /** The current zoom scale of the SVG */
   k: number;
+  /** The horizontal padding of the node (from markmap options) */
+  paddingX: number;
   /** The initial text content */
   initialContent: string;
   /** Callback to commit changes */
