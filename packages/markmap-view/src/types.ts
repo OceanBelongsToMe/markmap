@@ -89,6 +89,8 @@ export interface IEditorArgs {
   node: INode;
   /** The DOM rect of the node's content element (for positioning) */
   rect: DOMRect;
+  /** The current zoom scale of the SVG */
+  k: number;
   /** The initial text content */
   initialContent: string;
   /** Callback to commit changes */

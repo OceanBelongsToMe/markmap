@@ -1,4 +1,4 @@
-import type * as d3 from 'd3';
+import * as d3 from 'd3';
 import type { INode } from 'markmap-common';
 import { childSelector } from '../util';
 import type { ID3SVGElement, IMarkmapEditableOptions } from '../types';
@@ -228,6 +228,8 @@ export function renderNodes(args: {
 
         if (svgNode) svgNode.style.pointerEvents = 'none';
 
+        const transform = svgNode ? d3.zoomTransform(svgNode) : { k: 1 };
+
         const restore = () => {
           if (svgNode) svgNode.style.pointerEvents = '';
         };
@@ -235,6 +237,7 @@ export function renderNodes(args: {
         editable.renderEditor({
           node: d,
           rect,
+          k: transform.k,
           initialContent: d.content,
           save: (text) => {
             restore();

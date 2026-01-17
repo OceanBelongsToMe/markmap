@@ -9,6 +9,8 @@ interface UseCodeMirrorProps {
   extensions?: Extension[];
   onChange?: (value: string) => void;
   autoFocus?: boolean;
+  /** @default true */
+  useBasicSetup?: boolean;
 }
 
 export function useCodeMirror(props: () => UseCodeMirrorProps) {
@@ -32,11 +34,12 @@ export function useCodeMirror(props: () => UseCodeMirrorProps) {
 
     // Use untrack to prevent re-running this effect when value/extensions change
     const currentProps = untrack(props);
+    const { useBasicSetup = true } = currentProps;
 
     const state = EditorState.create({
       doc: currentProps.value || "",
       extensions: [
-        basicSetup,
+        ...(useBasicSetup ? [basicSetup] : []),
         ...(currentProps.extensions || []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && currentProps.onChange) {
