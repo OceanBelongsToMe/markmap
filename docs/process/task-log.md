@@ -54,6 +54,13 @@
 ## Markmap ListItem 文本渲染
 - [x] 说明：inline 遍历需展开 Paragraph 作为容器，避免 ListItem 为空。
 
+## Markmap 节点内嵌编辑（SRP 分阶段）
+- [ ] 说明：markmap 模式双击节点进入内嵌单行编辑，Enter/失焦保存，Esc 取消。仅使用 `mm.renderData()`。
+- [ ] 阶段 1（渲染/定位）：捕获双击节点 + 计算节点 DOMRect，不引入编辑 UI。
+- [ ] 阶段 2（编辑 UI）：引入 Ark Editable overlay 组件，纯 UI 收集输入/触发回调。
+- [ ] 阶段 3（编辑控制器）：管理 open/commit/cancel 状态机，与 UI/渲染解耦。
+- [ ] 阶段 4（后端链路）：新增保存与单节点读取接口；提交后按 node-id 拉新文本并 `mm.renderData()`。
+
 ## Markmap ListItem Paragraph 承载
 - [x] 说明：ListItem 文本由 Paragraph 承载时，由 markmap inline 适配层展开。
 
