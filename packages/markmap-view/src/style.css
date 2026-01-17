@@ -104,6 +104,16 @@
   }
 }
 
+.markmap-inline-editing {
+  display: inline-block;
+  padding: 1px 3px;
+  border-radius: 4px;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: rgba(76, 125, 255, 0.06);
+}
+
 .markmap-highlight rect {
   fill: var(--markmap-highlight-node-bg);
 }

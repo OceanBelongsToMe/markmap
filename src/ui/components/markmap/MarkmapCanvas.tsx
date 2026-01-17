@@ -14,6 +14,7 @@ export type MarkmapCanvasProps = {
 
 export const MarkmapCanvas = (props: MarkmapCanvasProps) => {
   let svgRef: SVGSVGElement | undefined;
+  let hostRef: HTMLDivElement | undefined;
   const renderer = createMarkmapRenderer([createFitOnceAfterRender()]);
 
   createEffect(() => {
@@ -28,7 +29,7 @@ export const MarkmapCanvas = (props: MarkmapCanvasProps) => {
   });
 
   return (
-    <div class={`markmap-container ${props.class || ""}`}>
+    <div ref={hostRef} class={`markmap-container ${props.class || ""}`}>
       <svg ref={svgRef} class="markmap-svg" />
     </div>
   );

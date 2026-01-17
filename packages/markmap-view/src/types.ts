@@ -63,6 +63,20 @@ export interface IMarkmapOptions {
 
   // Node content rendering
   nodeContent?: (node: INode) => string;
+
+  // Inline editing
+  editable?: IMarkmapEditableOptions;
+}
+
+export interface IMarkmapEditableOptions {
+  enabled?: boolean;
+  getNodeId?: (node: INode) => string | number | undefined;
+  onCommit?: (
+    nodeId: string | number,
+    text: string,
+    node: INode,
+  ) => void | Promise<void>;
+  onCancel?: (nodeId: string | number, node: INode) => void;
 }
 
 export interface IPadding {

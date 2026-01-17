@@ -411,6 +411,7 @@ export class Markmap {
       color,
       maxWidth: this.options.maxWidth,
       nodeContent: this.options.nodeContent,
+      editable: this.options.editable,
       handleClick: this.handleClick,
       stopPropagation,
       observer: this._observer,

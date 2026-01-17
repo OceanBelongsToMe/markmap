@@ -1,7 +1,33 @@
 import type * as d3 from 'd3';
 import type { INode } from 'markmap-common';
 import { childSelector } from '../util';
-import type { ID3SVGElement } from '../types';
+import type { ID3SVGElement, IMarkmapEditableOptions } from '../types';
+
+type EditableState = {
+  nodeId: string | number;
+  node: INode;
+  cleanup: (restoreHtml: boolean) => void;
+};
+
+const activeEditors = new WeakMap<SVGElement, EditableState>();
+
+function getForeignObjectInner(el: SVGForeignObjectElement): HTMLDivElement | null {
+  const outer = el.firstChild as HTMLDivElement | null;
+  const inner = outer?.firstChild as HTMLDivElement | null;
+  return inner ?? null;
+}
+
+function closeActiveEditor(
+  svgNode: SVGElement | null,
+  editable: IMarkmapEditableOptions | undefined,
+) {
+  if (!svgNode) return;
+  const current = activeEditors.get(svgNode);
+  if (!current) return;
+  current.cleanup(true);
+  editable?.onCancel?.(current.nodeId, current.node);
+  activeEditors.delete(svgNode);
+}
 
 export function measureNodeSizes(
   g: d3.Selection<SVGGElement, INode, HTMLElement, INode>,
@@ -56,6 +82,7 @@ export function renderNodes(args: {
   handleClick: (e: MouseEvent, d: INode) => void;
   stopPropagation: (e: Event) => void;
   observer: ResizeObserver;
+  editable?: IMarkmapEditableOptions;
 }) {
   const {
     svg,
@@ -73,6 +100,7 @@ export function renderNodes(args: {
     handleClick,
     stopPropagation,
     observer,
+    editable,
   } = args;
 
   const setOriginFromParent = (node: INode) => {
@@ -182,7 +210,104 @@ export function renderNodes(args: {
     .attr('y', 0)
     .style('opacity', 0)
     .on('mousedown', stopPropagation)
-    .on('dblclick', stopPropagation);
+    .on('dblclick', function (event, d) {
+      if (!editable?.enabled) {
+        stopPropagation(event);
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      const svgNode = svg.node() as SVGElement | null;
+      closeActiveEditor(svgNode, editable);
+      const inner = getForeignObjectInner(this);
+      if (!inner) return;
+      const resolvedId = editable?.getNodeId?.(d) ?? d.state.id;
+      let targetEl = inner.querySelector('.mm-editable-text') as HTMLElement | null;
+      if (!targetEl) {
+        targetEl = document.createElement('span');
+        targetEl.className = 'mm-editable-text';
+        targetEl.textContent = inner.textContent ?? '';
+        inner.replaceChildren(targetEl);
+      }
+      const originalHtml = targetEl.innerHTML;
+      const originalContentEditable = targetEl.getAttribute('contenteditable');
+      const initialText = targetEl.textContent ?? '';
+      targetEl.textContent = initialText;
+      targetEl.setAttribute('contenteditable', 'true');
+      targetEl.classList.add('markmap-inline-editing');
+      targetEl.focus();
+
+      const placeCaretAtEnd = () => {
+        const range = document.createRange();
+        range.selectNodeContents(targetEl);
+        range.collapse(false);
+        const sel = window.getSelection();
+        if (!sel) return;
+        sel.removeAllRanges();
+        sel.addRange(range);
+      };
+      placeCaretAtEnd();
+
+      let disposed = false;
+      const cleanup = (restoreHtml: boolean) => {
+        if (disposed) return;
+        disposed = true;
+        targetEl.removeEventListener('keydown', onKeyDown);
+        targetEl.removeEventListener('blur', onBlur);
+        targetEl.removeEventListener('mousedown', stopEvent);
+        targetEl.removeEventListener('dblclick', stopEvent);
+        if (restoreHtml) {
+          targetEl.innerHTML = originalHtml;
+        }
+        targetEl.classList.remove('markmap-inline-editing');
+        if (originalContentEditable === null) {
+          targetEl.removeAttribute('contenteditable');
+        } else {
+          targetEl.setAttribute('contenteditable', originalContentEditable);
+        }
+      };
+
+      const commit = () => {
+        const text = targetEl.textContent ?? '';
+        cleanup(false);
+        activeEditors.delete(svgNode as SVGElement);
+        editable?.onCommit?.(resolvedId, text, d);
+      };
+
+      const cancel = () => {
+        cleanup(true);
+        activeEditors.delete(svgNode as SVGElement);
+        editable?.onCancel?.(resolvedId, d);
+      };
+
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          commit();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancel();
+        }
+      };
+
+      const onBlur = () => {
+        commit();
+      };
+
+      const stopEvent = (e: Event) => {
+        e.stopPropagation();
+      };
+
+      targetEl.addEventListener('keydown', onKeyDown);
+      targetEl.addEventListener('blur', onBlur);
+      targetEl.addEventListener('mousedown', stopEvent);
+      targetEl.addEventListener('dblclick', stopEvent);
+      activeEditors.set(svgNode as SVGElement, {
+        nodeId: resolvedId,
+        node: d,
+        cleanup,
+      });
+    });
   mmFoEnter
     // The outer `<div>` with a width of `maxWidth`
     .append<HTMLDivElement>('xhtml:div')

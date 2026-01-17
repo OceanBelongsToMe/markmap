@@ -12,6 +12,10 @@ export type MarkmapContainerProps = {
 const MARKMAP_OPTIONS = {
   ...defaultOptions,
   nodeContent: nodeContentWithHeadingIcons,
+  editable: {
+    enabled: true,
+    getNodeId: (node: any) => node?.payload?.node_id ?? node?.payload?.id,
+  },
 };
 
 export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
@@ -52,7 +56,12 @@ export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
           </div>
         }>
           <Show when={data()}>
-            <MarkmapCanvas data={data()} options={MARKMAP_OPTIONS} loader={loader} class="h-full" />
+            <MarkmapCanvas
+              data={data()}
+              options={MARKMAP_OPTIONS}
+              loader={loader}
+              class="h-full"
+            />
           </Show>
           <Show when={error()}>
             <div class="absolute top-0 left-0 right-0 bg-red-100 text-red-800 p-2 z-20">

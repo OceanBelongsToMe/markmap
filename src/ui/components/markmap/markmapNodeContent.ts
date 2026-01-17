@@ -82,5 +82,5 @@ export const nodeContentWithHeadingIcons = (node: INode): string => {
   const level = Number(node?.payload?.heading_level || 0);
   const iconHtml = getHeadingIconHtml(level);
   if (!iconHtml) return node.content;
-  return `${iconHtml}<span class="mm-heading-text">${node.content}</span>`;
+  return `${iconHtml}<span class="mm-editable-text">${node.content}</span>`;
 };
