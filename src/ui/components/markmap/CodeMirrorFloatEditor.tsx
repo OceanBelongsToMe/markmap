@@ -97,7 +97,7 @@ export const CodeMirrorFloatEditor: Component<Props> = (props) => {
           top: `${props.args.rect.top + props.args.rect.height / 2}px`,
           left: `${props.args.rect.left}px`,
           transform: "translateY(-50%)",
-          "min-width": `${Math.max(props.args.rect.width - 20 * props.args.k, 20)}px`,
+          "min-width": `${props.args.rect.width}px`,
           "z-index": 9999,
         }}
       />
