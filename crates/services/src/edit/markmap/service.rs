@@ -2,8 +2,22 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 
 use common::error::{AppError, ErrorCode};
+use common::time::Clock;
 use common::types::AppResult;
-use knowlattice_core::model::{DocumentId, NodeId};
+use knowlattice_core::model::{
+    node_base::NodeBase,
+    node_code_block::NodeCodeBlock,
+    node_heading::NodeHeading,
+    node_image::NodeImage,
+    node_link::{LinkType, NodeLink},
+    node_list::NodeListItem,
+    node_range::NodeRange,
+    node_table::NodeTable,
+    node_text::NodeText,
+    DocumentId,
+    HeadingLevel,
+    NodeId,
+};
 use knowlattice_storage::repo::node::{
     NodeBaseRepository, NodeCodeBlockRepository, NodeFootnoteDefinitionRepository,
     NodeHeadingRepository, NodeImageRepository, NodeLinkRepository, NodeListRepository,
@@ -14,7 +28,7 @@ use knowlattice_storage::repo::node::{
 use crate::builder::{ServiceContext, ServiceRegistry};
 use crate::index::parse::ParseDocument;
 use crate::index::node_sink::NodeCollectingResult;
-use crate::node_types::NodeTypeLookup;
+use crate::node_types::{NodeTypeCache, NodeTypeLookup};
 use crate::render::markdown::classify::NodeTypeSnapshotProvider;
 use crate::render::markdown::inline::markdown_serializer::InlineMarkdownSerializer;
 use crate::render::markdown::serializer::MarkdownSerializerImpl;
@@ -24,7 +38,7 @@ use crate::render::markdown::traits::{
     MarkdownSerializing, NodeLoading, NodeTypeSnapshot, TreeBuilding,
 };
 use crate::render::markdown::tree::{NodeTreeBuilder, NodeTreeBuilderImpl};
-use crate::render::markdown::types::{NodeRecord, NodeTree, NodeSnapshot};
+use crate::render::markdown::types::{NodeRecord, NodeTree};
 use crate::edit::markmap::{MarkmapAstKind, MarkmapResolvedAst, MarkmapResolvedAstNode};
 use crate::edit::markmap::{MarkmapAnchorKind, MarkmapNodeIdAnchor};
 use crate::render::markdown::classify::classifier::MarkdownKind;
@@ -114,6 +128,7 @@ pub struct MarkmapEdit {
     node_repo: Arc<dyn NodeBaseRepository>,
     node_text_repo: Arc<dyn NodeTextRepository>,
     apply_node_set: Arc<ApplyNodeSet>,
+    clock: Arc<dyn Clock>,
 }
 
 impl MarkmapEdit {
@@ -129,6 +144,7 @@ impl MarkmapEdit {
             node_repo: Arc::clone(&ctx.repos.node.base),
             node_text_repo: Arc::clone(&ctx.repos.node.text),
             apply_node_set: Arc::new(ApplyNodeSet::new(ctx)),
+            clock: ctx.clock.clone(),
         };
         registry.register(Arc::new(service));
         Ok(())
@@ -185,54 +201,34 @@ impl MarkmapEdit {
         &self,
         doc_id: DocumentId,
         root_id: NodeId,
-        markdown: String,
+        _markdown: String,
         ast: MarkmapResolvedAst,
     ) -> AppResult<()> {
-        let mut result = self.parse_document.execute(doc_id, markdown).await?;
-
-        let snapshot = NodeSnapshot {
-            doc_id,
-            bases: result.bases.clone(),
-            texts: result.texts.clone(),
-            ranges: result.ranges.clone(),
-            headings: result.node_types.headings.clone(),
-            footnote_definitions: result.node_types.footnote_definitions.clone(),
-            lists: result.node_types.lists.clone(),
-            code_blocks: result.node_types.code_blocks.clone(),
-            tables: result.node_types.tables.clone(),
-            images: result.node_types.images.clone(),
-            links: result.node_types.links.clone(),
-            tasks: result.node_types.tasks.clone(),
-            wikis: result.node_types.wikis.clone(),
-        };
-        let parsed_tree = self.tree_builder.build(snapshot)?;
-        let node_types = self.node_types.snapshot().await?;
-        let classifier =
-            crate::render::markdown::classify::classifier::NodeTypeClassifier::new(node_types);
-        let parsed_root = parsed_tree
-            .roots
-            .first()
-            .copied()
-            .ok_or_else(|| AppError::new(ErrorCode::ValidationFailed, "parsed markdown has no root"))?;
-        let parsed_node = build_parsed_node(&parsed_tree, parsed_root, &classifier);
-
-        let mut id_map = HashMap::<NodeId, NodeId>::new();
-        let target_root_id = root_id;
-        id_map.insert(parsed_root, target_root_id);
-        map_ids_recursive(&parsed_node, &ast.root, &mut id_map);
-        id_map.insert(parsed_root, target_root_id);
-
+        let existing_snapshot = self.loader.load(doc_id).await?;
+        let existing_tree = self.tree_builder.build(existing_snapshot.clone())?;
         let root_parent_id = self
             .node_repo
-            .get(target_root_id)
+            .get(root_id)
             .await?
             .and_then(|node| node.parent_id);
+        let node_types = self.node_types.snapshot().await?;
+        let classifier =
+            crate::render::markdown::classify::classifier::NodeTypeClassifier::new(node_types.clone());
 
-        remap_ids_in_result(&mut result, &id_map, target_root_id, root_parent_id);
+        let mut counter: usize = 0;
+        let result = build_result_from_resolved_ast(
+            doc_id,
+            root_id,
+            root_parent_id,
+            &ast.root,
+            &existing_tree,
+            &node_types,
+            &classifier,
+            self.clock.as_ref(),
+            &mut counter,
+        )?;
 
-        let existing_snapshot = self.loader.load(doc_id).await?;
-        let existing_tree = self.tree_builder.build(existing_snapshot)?;
-        let subtree_ids = collect_subtree_ids(&existing_tree, target_root_id)?;
+        let subtree_ids = collect_subtree_ids(&existing_tree, root_id)?;
         let subtree_id_vec: Vec<NodeId> = subtree_ids.into_iter().collect();
         self.node_repo.delete_by_ids(&subtree_id_vec).await?;
         self.apply_node_set.execute(result).await
@@ -516,13 +512,6 @@ fn remap_root_id(
     }
 }
 
-#[derive(Debug, Clone)]
-struct ParsedNode {
-    node_id: NodeId,
-    kind: MarkmapAstKind,
-    children: Vec<ParsedNode>,
-}
-
 fn map_kind(kind: MarkdownKind) -> MarkmapAstKind {
     match kind {
         MarkdownKind::Heading => MarkmapAstKind::Heading,
@@ -548,32 +537,245 @@ fn map_kind(kind: MarkdownKind) -> MarkmapAstKind {
     }
 }
 
-fn build_parsed_node(
-    tree: &NodeTree,
-    node_id: NodeId,
+fn node_type_name_for_kind(kind: MarkmapAstKind) -> &'static str {
+    match kind {
+        MarkmapAstKind::Heading => "Heading",
+        MarkmapAstKind::List => "List",
+        MarkmapAstKind::ListItem => "ListItem",
+        MarkmapAstKind::Paragraph => "Paragraph",
+        MarkmapAstKind::Blockquote => "BlockQuote",
+        MarkmapAstKind::CodeBlock => "CodeBlock",
+        MarkmapAstKind::Table => "Table",
+        MarkmapAstKind::Text => "Text",
+        MarkmapAstKind::Emphasis => "Emphasis",
+        MarkmapAstKind::Strong => "Strong",
+        MarkmapAstKind::Strikethrough => "Strikethrough",
+        MarkmapAstKind::Superscript => "Superscript",
+        MarkmapAstKind::Subscript => "Subscript",
+        MarkmapAstKind::InlineCode => "CodeInline",
+        MarkmapAstKind::Link => "Link",
+        MarkmapAstKind::Image => "Image",
+        MarkmapAstKind::HtmlInline => "HtmlInline",
+        MarkmapAstKind::HtmlBlock => "HtmlBlock",
+        MarkmapAstKind::ThematicBreak => "HorizontalRule",
+        MarkmapAstKind::Unknown => "Paragraph",
+    }
+}
+
+fn resolve_node_type_id(
+    kind: MarkmapAstKind,
+    existing: Option<&NodeRecord>,
+    node_types: &NodeTypeCache,
     classifier: &crate::render::markdown::classify::classifier::NodeTypeClassifier,
-) -> ParsedNode {
-    let kind = tree
-        .nodes_by_id
-        .get(&node_id)
+    is_root: bool,
+) -> AppResult<i64> {
+    if let Some(record) = existing {
+        if is_root {
+            return Ok(record.base.node_type_id);
+        }
+        let existing_kind = map_kind(classifier.classify(record.base.node_type_id));
+        if kind == MarkmapAstKind::Unknown || existing_kind == kind {
+            return Ok(record.base.node_type_id);
+        }
+    }
+
+    let name = node_type_name_for_kind(kind);
+    node_types
+        .id_by_name(name)
+        .ok_or_else(|| AppError::new(ErrorCode::Config, format!("node type id missing: {name}")))
+}
+
+fn build_result_from_resolved_ast(
+    doc_id: DocumentId,
+    root_id: NodeId,
+    root_parent_id: Option<NodeId>,
+    root: &MarkmapResolvedAstNode,
+    existing_tree: &NodeTree,
+    node_types: &NodeTypeCache,
+    classifier: &crate::render::markdown::classify::classifier::NodeTypeClassifier,
+    clock: &dyn Clock,
+    counter: &mut usize,
+) -> AppResult<NodeCollectingResult> {
+    let mut result = NodeCollectingResult::default();
+    build_resolved_node(
+        &mut result,
+        doc_id,
+        root_id,
+        root_parent_id,
+        root,
+        existing_tree,
+        node_types,
+        classifier,
+        clock,
+        counter,
+        true,
+    )?;
+    Ok(result)
+}
+
+fn build_resolved_node(
+    result: &mut NodeCollectingResult,
+    doc_id: DocumentId,
+    node_id: NodeId,
+    parent_id: Option<NodeId>,
+    node: &MarkmapResolvedAstNode,
+    existing_tree: &NodeTree,
+    node_types: &NodeTypeCache,
+    classifier: &crate::render::markdown::classify::classifier::NodeTypeClassifier,
+    clock: &dyn Clock,
+    counter: &mut usize,
+    is_root: bool,
+) -> AppResult<()> {
+    let existing = existing_tree.nodes_by_id.get(&node_id);
+    let existing_kind = existing
         .map(|record| classifier.classify(record.base.node_type_id))
-        .map(map_kind)
-        .unwrap_or(MarkmapAstKind::Unknown);
+        .map(map_kind);
+    let existing_for_kind = if existing_kind == Some(node.kind) {
+        existing
+    } else {
+        None
+    };
 
-    let children = tree
-        .children_by_id
-        .get(&node_id)
-        .map(|ids| {
-            ids.iter()
-                .map(|child_id| build_parsed_node(tree, *child_id, classifier))
-                .collect()
-        })
-        .unwrap_or_default();
+    let node_type_id = resolve_node_type_id(
+        node.kind,
+        existing,
+        node_types,
+        classifier,
+        is_root,
+    )?;
 
-    ParsedNode {
+    let now = clock.now();
+    let base =
+        NodeBase::new(node_id, doc_id, parent_id, node_type_id, now, now).map_err(|err| {
+            AppError::with_details(
+                ErrorCode::ValidationFailed,
+                "build node base failed",
+                format!("{err:?}"),
+            )
+        })?;
+    result.bases.push(base);
+
+    let start = *counter;
+    *counter += 1;
+    let end = *counter;
+    result.ranges.push(NodeRange {
         node_id,
-        kind,
-        children,
+        range_start: start,
+        range_end: end,
+        updated_at: now,
+    });
+
+    if let Some(ref text) = node.text {
+        result.texts.push(NodeText {
+            node_id,
+            text: text.clone(),
+        });
+    }
+
+    push_node_type_record(result, node_id, node.kind, existing_for_kind);
+
+    for child in &node.children {
+        let child_id = parse_node_id(child).unwrap_or_else(NodeId::new);
+        build_resolved_node(
+            result,
+            doc_id,
+            child_id,
+            Some(node_id),
+            child,
+            existing_tree,
+            node_types,
+            classifier,
+            clock,
+            counter,
+            false,
+        )?;
+    }
+
+    Ok(())
+}
+
+fn parse_node_id(node: &MarkmapResolvedAstNode) -> Option<NodeId> {
+    node.node_id
+        .as_ref()
+        .and_then(|id| parse_uuid_str(id).ok())
+        .map(NodeId::from_uuid)
+}
+
+fn push_node_type_record(
+    result: &mut NodeCollectingResult,
+    node_id: NodeId,
+    kind: MarkmapAstKind,
+    existing: Option<&NodeRecord>,
+) {
+    match kind {
+        MarkmapAstKind::Heading => {
+            if let Some(record) = existing.and_then(|record| record.heading.clone()) {
+                result.node_types.headings.push(record);
+            } else {
+                let level = HeadingLevel::new(1).expect("heading level");
+                result
+                    .node_types
+                    .headings
+                    .push(NodeHeading { node_id, level });
+            }
+        }
+        MarkmapAstKind::List | MarkmapAstKind::ListItem => {
+            if let Some(record) = existing.and_then(|record| record.list.clone()) {
+                result.node_types.lists.push(record);
+            } else {
+                result.node_types.lists.push(NodeListItem {
+                    node_id,
+                    ordering: 0,
+                    is_item: kind == MarkmapAstKind::ListItem,
+                });
+            }
+        }
+        MarkmapAstKind::CodeBlock => {
+            if let Some(record) = existing.and_then(|record| record.code_block.clone()) {
+                result.node_types.code_blocks.push(record);
+            } else {
+                result
+                    .node_types
+                    .code_blocks
+                    .push(NodeCodeBlock { node_id, language: None });
+            }
+        }
+        MarkmapAstKind::Table => {
+            if let Some(record) = existing.and_then(|record| record.table.clone()) {
+                result.node_types.tables.push(record);
+            } else {
+                result.node_types.tables.push(NodeTable {
+                    node_id,
+                    alignments: Vec::new(),
+                });
+            }
+        }
+        MarkmapAstKind::Image => {
+            if let Some(record) = existing.and_then(|record| record.image.clone()) {
+                result.node_types.images.push(record);
+            } else {
+                result.node_types.images.push(NodeImage {
+                    node_id,
+                    src: String::new(),
+                    alt: None,
+                    title: None,
+                });
+            }
+        }
+        MarkmapAstKind::Link => {
+            if let Some(record) = existing.and_then(|record| record.link.clone()) {
+                result.node_types.links.push(record);
+            } else {
+                result.node_types.links.push(NodeLink {
+                    node_id,
+                    href: String::new(),
+                    title: None,
+                    link_type: LinkType::Inline,
+                    ref_id: None,
+                });
+            }
+        }
+        _ => {}
     }
 }
 
@@ -607,104 +809,6 @@ fn build_resolved_ast_node(
     }
 }
 
-fn map_ids_recursive(
-    parsed: &ParsedNode,
-    resolved: &MarkmapResolvedAstNode,
-    id_map: &mut HashMap<NodeId, NodeId>,
-) {
-    if parsed.kind == resolved.kind {
-        if let Some(ref node_id) = resolved.node_id {
-            if let Ok(uuid) = parse_uuid_str(node_id) {
-                id_map.insert(parsed.node_id, NodeId::from_uuid(uuid));
-            }
-        }
-    }
-
-    let count = parsed.children.len().min(resolved.children.len());
-    for idx in 0..count {
-        map_ids_recursive(&parsed.children[idx], &resolved.children[idx], id_map);
-    }
-}
-
-fn remap_ids_in_result(
-    result: &mut NodeCollectingResult,
-    id_map: &HashMap<NodeId, NodeId>,
-    root_id: NodeId,
-    root_parent_id: Option<NodeId>,
-) {
-    for base in result.bases.iter_mut() {
-        if let Some(new_id) = id_map.get(&base.id) {
-            base.id = *new_id;
-        }
-        if let Some(parent_id) = base.parent_id {
-            if let Some(new_parent) = id_map.get(&parent_id) {
-                base.parent_id = Some(*new_parent);
-            }
-        }
-        if base.id == root_id {
-            base.parent_id = root_parent_id;
-        }
-    }
-
-    for text in result.texts.iter_mut() {
-        if let Some(new_id) = id_map.get(&text.node_id) {
-            text.node_id = *new_id;
-        }
-    }
-    for range in result.ranges.iter_mut() {
-        if let Some(new_id) = id_map.get(&range.node_id) {
-            range.node_id = *new_id;
-        }
-    }
-    for heading in result.node_types.headings.iter_mut() {
-        if let Some(new_id) = id_map.get(&heading.node_id) {
-            heading.node_id = *new_id;
-        }
-    }
-    for def in result.node_types.footnote_definitions.iter_mut() {
-        if let Some(new_id) = id_map.get(&def.node_id) {
-            def.node_id = *new_id;
-        }
-    }
-    for list in result.node_types.lists.iter_mut() {
-        if let Some(new_id) = id_map.get(&list.node_id) {
-            list.node_id = *new_id;
-        }
-    }
-    for block in result.node_types.code_blocks.iter_mut() {
-        if let Some(new_id) = id_map.get(&block.node_id) {
-            block.node_id = *new_id;
-        }
-    }
-    for table in result.node_types.tables.iter_mut() {
-        if let Some(new_id) = id_map.get(&table.node_id) {
-            table.node_id = *new_id;
-        }
-    }
-    for image in result.node_types.images.iter_mut() {
-        if let Some(new_id) = id_map.get(&image.node_id) {
-            image.node_id = *new_id;
-        }
-    }
-    for link in result.node_types.links.iter_mut() {
-        if let Some(new_id) = id_map.get(&link.node_id) {
-            link.node_id = *new_id;
-        }
-    }
-    for task in result.node_types.tasks.iter_mut() {
-        if let Some(new_id) = id_map.get(&task.node_id) {
-            task.node_id = *new_id;
-        }
-    }
-    for wiki in result.node_types.wikis.iter_mut() {
-        if let Some(new_id) = id_map.get(&wiki.node_id) {
-            wiki.node_id = *new_id;
-        }
-        if let Some(new_id) = id_map.get(&wiki.target_node_id) {
-            wiki.target_node_id = *new_id;
-        }
-    }
-}
 
 fn build_anchors_for_node(
     tree: &NodeTree,
