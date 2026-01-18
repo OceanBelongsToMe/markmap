@@ -155,6 +155,7 @@ impl ServicesBuilder {
         crate::workspace::register(ctx, &mut registry)?;
         crate::config::register(&mut registry);
         crate::render::register(ctx, &mut registry)?;
+        crate::edit::register(ctx, &mut registry)?;
         crate::search::register(ctx, &mut registry)?;
         crate::export::register(ctx, &mut registry)?;
         Ok(registry)

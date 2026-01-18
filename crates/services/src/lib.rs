@@ -5,6 +5,7 @@ pub mod index;
 pub mod render;
 pub mod search;
 pub mod export;
+pub mod edit;
 pub mod builder;
 pub mod error;
 pub mod node_types;
