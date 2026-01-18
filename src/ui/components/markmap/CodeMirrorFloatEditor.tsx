@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, createEffect } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useCodeMirror } from "../../../lib/codemirror/useCodeMirror";
 import { markdown } from "@codemirror/lang-markdown";
@@ -6,10 +6,20 @@ import { keymap, EditorView, drawSelection } from "@codemirror/view";
 import { history, historyKeymap, defaultKeymap } from "@codemirror/commands";
 import { bracketMatching, indentOnInput } from "@codemirror/language";
 import type { IEditorArgs } from "markmap-view";
+import type { NodeIdAnchor, ResolvedAst } from "../../../features/markmap/edit/types";
+import { nodeIdAnchorField, setNodeIdAnchors } from "../../../features/markmap/edit/nodeIdAnchors";
+import { buildResolvedAstFromEditor } from "../../../features/markmap/edit/usecase";
+import { extractMarkdownAst } from "../../../features/markmap/edit/astExtractor";
+import { applyResolvedAstToParsed } from "../../../features/markmap/edit/resolvedAstBinder";
+import { buildAnchorsFromResolvedAst } from "../../../features/markmap/edit/anchorBuilder";
+import { syntaxTree } from "@codemirror/language";
 
 interface Props {
   args: IEditorArgs;
   onClose: () => void;
+  anchors?: NodeIdAnchor[];
+  onSaveResolvedAst?: (ast: ResolvedAst, markdown: string) => void;
+  resolvedAst?: { root: { kind: string; node_id: string; children: any[] } };
 }
 
 export const CodeMirrorFloatEditor: Component<Props> = (props) => {
@@ -27,13 +37,18 @@ export const CodeMirrorFloatEditor: Component<Props> = (props) => {
       drawSelection(),
       bracketMatching(),
       indentOnInput(),
+      nodeIdAnchorField,
       keymap.of([
         ...defaultKeymap,
         ...historyKeymap,
         {
           key: "Mod-Enter",
           run: (v) => {
-            props.args.save(v.state.doc.toString());
+            if (props.onSaveResolvedAst) {
+              props.onSaveResolvedAst(buildResolvedAstFromEditor(v), v.state.doc.toString());
+            } else {
+              props.args.save(v.state.doc.toString());
+            }
             props.onClose();
             return true;
           },
@@ -79,11 +94,33 @@ export const CodeMirrorFloatEditor: Component<Props> = (props) => {
     if (containerRef && !containerRef.contains(e.relatedTarget as Node)) {
       const v = view();
       if (v) {
-        props.args.save(v.state.doc.toString());
+        if (props.onSaveResolvedAst) {
+          props.onSaveResolvedAst(buildResolvedAstFromEditor(v), v.state.doc.toString());
+        } else {
+          props.args.save(v.state.doc.toString());
+        }
         props.onClose();
       }
     }
   };
+
+  createEffect(() => {
+    const v = view();
+    if (!v) return;
+    if (props.resolvedAst) {
+      const doc = v.state.doc.toString();
+      const tree = syntaxTree(v.state);
+      const ast = extractMarkdownAst(doc, tree);
+      const resolved = applyResolvedAstToParsed(ast, props.resolvedAst.root);
+      const anchors = buildAnchorsFromResolvedAst(doc, resolved);
+      if (anchors.length) setNodeIdAnchors(v, anchors);
+      return;
+    }
+    if (props.anchors?.length) {
+      setNodeIdAnchors(v, props.anchors);
+      return;
+    }
+  });
 
   return (
     <Portal>

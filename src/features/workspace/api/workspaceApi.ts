@@ -50,10 +50,53 @@ export type MarkmapChildrenResponse = {
   content: object[];
 };
 
+export type MarkmapNodeResponse = {
+  content: object | null;
+};
+
 export type MarkmapEditMode = "node" | "subtree";
 
 export type MarkmapEditMarkdownResponse = {
   content: string;
+};
+
+export type MarkmapResolvedAstNode = {
+  kind: string;
+  node_id?: string | null;
+  text?: string | null;
+  children: MarkmapResolvedAstNode[];
+};
+
+export type MarkmapResolvedAst = {
+  root: MarkmapResolvedAstNode;
+};
+
+export type MarkmapAnchorKind = "block" | "inline";
+
+export type MarkmapNodeIdAnchor = {
+  kind: MarkmapAnchorKind;
+  line?: number | null;
+  from?: number | null;
+  to?: number | null;
+  node_id: string;
+};
+
+export type MarkmapEditAnchorsResponse = {
+  anchors: MarkmapNodeIdAnchor[];
+};
+
+export type MarkmapResolvedAstTreeNode = {
+  kind: string;
+  node_id: string;
+  children: MarkmapResolvedAstTreeNode[];
+};
+
+export type MarkmapResolvedAstTree = {
+  root: MarkmapResolvedAstTreeNode;
+};
+
+export type MarkmapResolvedAstResponse = {
+  ast: MarkmapResolvedAstTree;
 };
 
 export type WorkspaceAttachFolderRequest = {
@@ -132,6 +175,15 @@ export const fetchMarkmapChildren = async (documentId: string, nodeId: string) =
   });
 };
 
+export const fetchMarkmapNode = async (documentId: string, nodeId: string) => {
+  return invoke<DispatchResponse<MarkmapNodeResponse>>("dispatch", {
+    req: {
+      command: "markmap_get_node",
+      payload: { document_id: documentId, node_id: nodeId }
+    }
+  });
+};
+
 export const fetchMarkmapEditMarkdown = async (
   documentId: string,
   nodeId: string,
@@ -155,6 +207,44 @@ export const saveMarkmapEditMarkdown = async (
     req: {
       command: "markmap_edit_save_markdown",
       payload: { document_id: documentId, node_id: nodeId, mode, content }
+    }
+  });
+};
+
+export const applyMarkmapResolvedAst = async (
+  documentId: string,
+  rootNodeId: string,
+  markdown: string,
+  ast: MarkmapResolvedAst
+) => {
+  return invoke<DispatchResponse<Record<string, never>>>("dispatch", {
+    req: {
+      command: "markmap_edit_apply_resolved_ast",
+      payload: { document_id: documentId, root_node_id: rootNodeId, markdown, ast }
+    }
+  });
+};
+
+export const fetchMarkmapEditAnchors = async (
+  documentId: string,
+  rootNodeId: string
+) => {
+  return invoke<DispatchResponse<MarkmapEditAnchorsResponse>>("dispatch", {
+    req: {
+      command: "markmap_edit_get_anchors",
+      payload: { document_id: documentId, root_node_id: rootNodeId }
+    }
+  });
+};
+
+export const fetchMarkmapResolvedAst = async (
+  documentId: string,
+  rootNodeId: string
+) => {
+  return invoke<DispatchResponse<MarkmapResolvedAstResponse>>("dispatch", {
+    req: {
+      command: "markmap_edit_get_resolved_ast",
+      payload: { document_id: documentId, root_node_id: rootNodeId }
     }
   });
 };
