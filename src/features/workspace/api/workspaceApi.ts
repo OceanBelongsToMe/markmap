@@ -50,6 +50,12 @@ export type MarkmapChildrenResponse = {
   content: object[];
 };
 
+export type MarkmapEditMode = "node" | "subtree";
+
+export type MarkmapEditMarkdownResponse = {
+  content: string;
+};
+
 export type WorkspaceAttachFolderRequest = {
   root_path: string;
   workspace_name?: string | null;
@@ -122,6 +128,33 @@ export const fetchMarkmapChildren = async (documentId: string, nodeId: string) =
     req: {
       command: "markmap_get_children",
       payload: { document_id: documentId, node_id: nodeId }
+    }
+  });
+};
+
+export const fetchMarkmapEditMarkdown = async (
+  documentId: string,
+  nodeId: string,
+  mode: MarkmapEditMode
+) => {
+  return invoke<DispatchResponse<MarkmapEditMarkdownResponse>>("dispatch", {
+    req: {
+      command: "markmap_edit_get_markdown",
+      payload: { document_id: documentId, node_id: nodeId, mode }
+    }
+  });
+};
+
+export const saveMarkmapEditMarkdown = async (
+  documentId: string,
+  nodeId: string,
+  mode: MarkmapEditMode,
+  content: string
+) => {
+  return invoke<DispatchResponse<Record<string, never>>>("dispatch", {
+    req: {
+      command: "markmap_edit_save_markdown",
+      payload: { document_id: documentId, node_id: nodeId, mode, content }
     }
   });
 };
