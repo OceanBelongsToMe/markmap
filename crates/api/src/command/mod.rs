@@ -4,6 +4,7 @@ pub mod folder;
 pub mod ids;
 pub mod index;
 pub mod markmap;
+pub mod markmap_edit;
 mod ping;
 pub mod render;
 pub mod search;

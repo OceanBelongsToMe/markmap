@@ -8,6 +8,7 @@ use crate::command::export;
 use crate::command::folder;
 use crate::command::index;
 use crate::command::markmap;
+use crate::command::markmap_edit;
 use crate::command::render;
 use crate::command::search;
 use crate::command::workspace;
@@ -20,6 +21,7 @@ pub fn default_registry() -> CommandRegistry {
     search::register(&mut registry);
     index::register(&mut registry);
     markmap::register(&mut registry);
+    markmap_edit::register(&mut registry);
     render::register(&mut registry);
     export::register(&mut registry);
     registry
@@ -33,6 +35,7 @@ pub fn default_codecs() -> CodecRegistry {
     search::register_codecs(&mut codecs);
     index::register_codecs(&mut codecs);
     markmap::register_codecs(&mut codecs);
+    markmap_edit::register_codecs(&mut codecs);
     render::register_codecs(&mut codecs);
     export::register_codecs(&mut codecs);
     codecs
