@@ -5,17 +5,7 @@ import { markdown } from "@codemirror/lang-markdown";
 import { keymap, EditorView, drawSelection } from "@codemirror/view";
 import { history, historyKeymap, defaultKeymap } from "@codemirror/commands";
 import { bracketMatching, indentOnInput } from "@codemirror/language";
-import type { INode } from "markmap-common";
-
-export interface IEditorArgs {
-  node: INode;
-  rect: DOMRect;
-  k: number;
-  paddingX: number;
-  initialContent: string;
-  save: (newContent: string) => void;
-  cancel: () => void;
-}
+import type { IEditorArgs } from "markmap-view";
 
 interface Props {
   args: IEditorArgs;

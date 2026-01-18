@@ -78,10 +78,28 @@ export interface IMarkmapEditableOptions {
   ) => void | Promise<void>;
   onCancel?: (nodeId: string | number, node: INode) => void;
   /**
+   * Provide a custom editor implementation.
+   * If not set, the default contenteditable editor will be used.
+   */
+  editor?: IInlineEditorAdapter;
+  /**
    * Render a custom editor instead of the default contenteditable behavior.
    * This is useful for integrating rich editors like CodeMirror or Monaco.
+   * @deprecated Prefer `editor` for a clean adapter-based integration.
    */
   renderEditor?: (args: IEditorArgs) => void;
+}
+
+export interface IInlineEditorAdapter {
+  open: (args: IEditorArgs) => IInlineEditorSession | void;
+  /**
+   * Whether to temporarily disable SVG pointer events while editing.
+   */
+  lockPointerEvents?: boolean;
+}
+
+export interface IInlineEditorSession {
+  close: (opts?: { cancel?: boolean }) => void;
 }
 
 export interface IEditorArgs {
@@ -95,6 +113,10 @@ export interface IEditorArgs {
   paddingX: number;
   /** The initial text content */
   initialContent: string;
+  /** The content container inside foreignObject */
+  host?: HTMLDivElement;
+  /** The foreignObject element of the node */
+  foreignObject?: SVGForeignObjectElement;
   /** Callback to commit changes */
   save: (newContent: string) => void;
   /** Callback to cancel editing */

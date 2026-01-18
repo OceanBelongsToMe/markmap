@@ -1,20 +1,45 @@
 import * as d3 from 'd3';
 import type { INode } from 'markmap-common';
 import { childSelector } from '../util';
-import type { ID3SVGElement, IMarkmapEditableOptions } from '../types';
+import type {
+  ID3SVGElement,
+  IInlineEditorAdapter,
+  IInlineEditorSession,
+  IMarkmapEditableOptions,
+} from '../types';
+import { createContentEditableEditor } from './editors/contentEditableEditor';
 
 type EditableState = {
   nodeId: string | number;
   node: INode;
-  cleanup: (restoreHtml: boolean) => void;
+  session: IInlineEditorSession;
 };
 
 const activeEditors = new WeakMap<SVGElement, EditableState>();
+const defaultEditor = createContentEditableEditor();
 
 function getForeignObjectInner(el: SVGForeignObjectElement): HTMLDivElement | null {
   const outer = el.firstChild as HTMLDivElement | null;
   const inner = outer?.firstChild as HTMLDivElement | null;
   return inner ?? null;
+}
+
+function resolveEditor(editable?: IMarkmapEditableOptions): IInlineEditorAdapter {
+  if (editable?.editor) return editable.editor;
+  if (editable?.renderEditor) {
+    return {
+      lockPointerEvents: true,
+      open: (args) => {
+        editable.renderEditor?.(args);
+        return {
+          close: () => {
+            // Legacy renderEditor doesn't expose teardown; rely on args.cancel if needed.
+          },
+        };
+      },
+    };
+  }
+  return defaultEditor;
 }
 
 function closeActiveEditor(
@@ -24,7 +49,7 @@ function closeActiveEditor(
   if (!svgNode) return;
   const current = activeEditors.get(svgNode);
   if (!current) return;
-  current.cleanup(true);
+  current.session.close({ cancel: true });
   editable?.onCancel?.(current.nodeId, current.node);
   activeEditors.delete(svgNode);
 }
@@ -219,126 +244,51 @@ export function renderNodes(args: {
       event.stopPropagation();
       const svgNode = svg.node() as SVGElement | null;
       closeActiveEditor(svgNode, editable);
-
-      if (editable?.renderEditor) {
-        const inner = getForeignObjectInner(this);
-        if (!inner) return;
-        const rect = inner.getBoundingClientRect();
-        const resolvedId = editable?.getNodeId?.(d) ?? d.state.id;
-
-        if (svgNode) svgNode.style.pointerEvents = 'none';
-
-        const transform = svgNode ? d3.zoomTransform(svgNode) : { k: 1 };
-
-        const restore = () => {
-          if (svgNode) svgNode.style.pointerEvents = '';
-        };
-
-        editable.renderEditor({
-          node: d,
-          rect,
-          k: transform.k,
-          paddingX,
-          initialContent: d.content,
-          save: (text) => {
-            restore();
-            editable?.onCommit?.(resolvedId, text, d);
-          },
-          cancel: () => {
-            restore();
-            editable?.onCancel?.(resolvedId, d);
-          },
-        });
-        return;
-      }
-
       const inner = getForeignObjectInner(this);
       if (!inner) return;
+      const rect = inner.getBoundingClientRect();
       const resolvedId = editable?.getNodeId?.(d) ?? d.state.id;
-      let targetEl = inner.querySelector('.mm-editable-text') as HTMLElement | null;
-      if (!targetEl) {
-        targetEl = document.createElement('span');
-        targetEl.className = 'mm-editable-text';
-        targetEl.textContent = inner.textContent ?? '';
-        inner.replaceChildren(targetEl);
+      const transform = svgNode ? d3.zoomTransform(svgNode) : { k: 1 };
+      const editor = resolveEditor(editable);
+
+      let restorePointerEvents = () => {};
+      if (svgNode && editor.lockPointerEvents) {
+        svgNode.style.pointerEvents = 'none';
+        restorePointerEvents = () => {
+          svgNode.style.pointerEvents = '';
+        };
       }
-      const originalHtml = targetEl.innerHTML;
-      const originalContentEditable = targetEl.getAttribute('contenteditable');
-      const initialText = targetEl.textContent ?? '';
-      targetEl.textContent = initialText;
-      targetEl.setAttribute('contenteditable', 'true');
-      targetEl.classList.add('markmap-inline-editing');
-      targetEl.focus();
 
-      const placeCaretAtEnd = () => {
-        const range = document.createRange();
-        range.selectNodeContents(targetEl);
-        range.collapse(false);
-        const sel = window.getSelection();
-        if (!sel) return;
-        sel.removeAllRanges();
-        sel.addRange(range);
-      };
-      placeCaretAtEnd();
+      const session = editor.open({
+        node: d,
+        rect,
+        k: transform.k,
+        paddingX,
+        initialContent: d.content,
+        host: inner,
+        foreignObject: this as SVGForeignObjectElement,
+        save: (text) => {
+          restorePointerEvents();
+          activeEditors.delete(svgNode as SVGElement);
+          editable?.onCommit?.(resolvedId, text, d);
+        },
+        cancel: () => {
+          restorePointerEvents();
+          activeEditors.delete(svgNode as SVGElement);
+          editable?.onCancel?.(resolvedId, d);
+        },
+      });
 
-      let disposed = false;
-      const cleanup = (restoreHtml: boolean) => {
-        if (disposed) return;
-        disposed = true;
-        targetEl.removeEventListener('keydown', onKeyDown);
-        targetEl.removeEventListener('blur', onBlur);
-        targetEl.removeEventListener('mousedown', stopEvent);
-        targetEl.removeEventListener('dblclick', stopEvent);
-        if (restoreHtml) {
-          targetEl.innerHTML = originalHtml;
-        }
-        targetEl.classList.remove('markmap-inline-editing');
-        if (originalContentEditable === null) {
-          targetEl.removeAttribute('contenteditable');
-        } else {
-          targetEl.setAttribute('contenteditable', originalContentEditable);
-        }
-      };
-
-      const commit = () => {
-        const text = targetEl.textContent ?? '';
-        cleanup(false);
-        activeEditors.delete(svgNode as SVGElement);
-        editable?.onCommit?.(resolvedId, text, d);
-      };
-
-      const cancel = () => {
-        cleanup(true);
-        activeEditors.delete(svgNode as SVGElement);
-        editable?.onCancel?.(resolvedId, d);
-      };
-
-      const onKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          commit();
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          cancel();
-        }
-      };
-
-      const onBlur = () => {
-        commit();
-      };
-
-      const stopEvent = (e: Event) => {
-        e.stopPropagation();
-      };
-
-      targetEl.addEventListener('keydown', onKeyDown);
-      targetEl.addEventListener('blur', onBlur);
-      targetEl.addEventListener('mousedown', stopEvent);
-      targetEl.addEventListener('dblclick', stopEvent);
-      activeEditors.set(svgNode as SVGElement, {
+      if (!svgNode || !session) return;
+      activeEditors.set(svgNode, {
         nodeId: resolvedId,
         node: d,
-        cleanup,
+        session: {
+          close: (opts) => {
+            restorePointerEvents();
+            session.close(opts);
+          },
+        },
       });
     });
   mmFoEnter
