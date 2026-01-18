@@ -28,3 +28,8 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+.markmap-foreign > div > div {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
