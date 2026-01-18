@@ -25,4 +25,6 @@
 .mm-editable-text {
   display: inline-block;
   vertical-align: middle;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
