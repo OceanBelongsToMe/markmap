@@ -38,5 +38,3 @@ const options = {
   },
 };
 ```
-
-Note: `editable.renderEditor` is still supported for backward compatibility but is deprecated.

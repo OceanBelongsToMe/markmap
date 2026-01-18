@@ -82,12 +82,6 @@ export interface IMarkmapEditableOptions {
    * If not set, the default contenteditable editor will be used.
    */
   editor?: IInlineEditorAdapter;
-  /**
-   * Render a custom editor instead of the default contenteditable behavior.
-   * This is useful for integrating rich editors like CodeMirror or Monaco.
-   * @deprecated Prefer `editor` for a clean adapter-based integration.
-   */
-  renderEditor?: (args: IEditorArgs) => void;
 }
 
 export interface IInlineEditorAdapter {

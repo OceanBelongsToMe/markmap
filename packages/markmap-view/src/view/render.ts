@@ -26,19 +26,6 @@ function getForeignObjectInner(el: SVGForeignObjectElement): HTMLDivElement | nu
 
 function resolveEditor(editable?: IMarkmapEditableOptions): IInlineEditorAdapter {
   if (editable?.editor) return editable.editor;
-  if (editable?.renderEditor) {
-    return {
-      lockPointerEvents: true,
-      open: (args) => {
-        editable.renderEditor?.(args);
-        return {
-          close: () => {
-            // Legacy renderEditor doesn't expose teardown; rely on args.cancel if needed.
-          },
-        };
-      },
-    };
-  }
   return defaultEditor;
 }
 

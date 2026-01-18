@@ -1,11 +1,9 @@
-import { Component, Show, createResource, createSignal } from "solid-js";
+import { Component, Show, createResource } from "solid-js";
 import { MarkmapCanvas } from "../../ui/components/markmap/MarkmapCanvas";
 import { useActiveDocument } from "../../state/workspace/useActiveDocument";
-import type { IEditorArgs, IInlineEditorAdapter } from "markmap-view";
 import { defaultOptions } from "markmap-view";
 import { nodeContentWithHeadingIcons } from "../../ui/components/markmap/markmapNodeContent";
 import { fetchMarkmapChildren, fetchMarkmapRoot } from "../workspace/api/workspaceApi";
-import { CodeMirrorFloatEditor } from "../../ui/components/markmap/CodeMirrorFloatEditor";
 
 export type MarkmapContainerProps = {
   class?: string;
@@ -22,21 +20,6 @@ const BASE_MARKMAP_OPTIONS = {
 
 export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
   const { activeDocId } = useActiveDocument();
-  const [editorArgs, setEditorArgs] = createSignal<IEditorArgs | null>(null);
-  const editorAdapter: IInlineEditorAdapter = {
-    lockPointerEvents: true,
-    open: (args) => {
-      setEditorArgs(args);
-      return {
-        close: (opts) => {
-          if (opts?.cancel) {
-            args.cancel();
-          }
-          setEditorArgs(null);
-        },
-      };
-    },
-  };
 
   const [data] = createResource(
     () => activeDocId(),
@@ -70,7 +53,6 @@ export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
         // await updateNode(String(nodeId), text);
         // refetch();
       },
-      editor: editorAdapter,
     },
   };
 
@@ -93,14 +75,6 @@ export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
               loader={loader}
               class="h-full"
             />
-            <Show when={editorArgs()}>
-              {(args) => (
-                <CodeMirrorFloatEditor
-                  args={args()}
-                  onClose={() => setEditorArgs(null)}
-                />
-              )}
-            </Show>
           </Show>
           <Show when={error()}>
             <div class="absolute top-0 left-0 right-0 bg-red-100 text-red-800 p-2 z-20">
