@@ -63,24 +63,39 @@ export function createContentEditableEditor(): IInlineEditorAdapter {
       placeCaretAtEnd(targetEl);
 
       let disposed = false;
+      const multiline = args.multiline !== false;
+      const commitOnBlur = args.commitOnBlur !== false;
+
       const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          cleanupEditable(state, true);
+          disposed = true;
+          args.cancel();
+          return;
+        }
+        if (multiline) {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            const text = targetEl.innerText;
+            cleanupEditable(state, false);
+            disposed = true;
+            args.save(text);
+          }
+          return;
+        }
         if (e.key === 'Enter') {
           e.preventDefault();
           const text = targetEl.textContent ?? '';
           cleanupEditable(state, false);
           disposed = true;
           args.save(text);
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          cleanupEditable(state, true);
-          disposed = true;
-          args.cancel();
         }
       };
 
       const onBlur = () => {
-        if (disposed) return;
-        const text = targetEl.textContent ?? '';
+        if (disposed || !commitOnBlur) return;
+        const text = multiline ? targetEl.innerText : (targetEl.textContent ?? '');
         cleanupEditable(state, false);
         disposed = true;
         args.save(text);

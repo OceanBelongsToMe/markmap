@@ -78,6 +78,16 @@ export interface IMarkmapEditableOptions {
   ) => void | Promise<void>;
   onCancel?: (nodeId: string | number, node: INode) => void;
   /**
+   * Allow multiline editing in the default contenteditable editor.
+   * When true, Enter inserts a new line and Ctrl/Cmd+Enter commits.
+   */
+  multiline?: boolean;
+  /**
+   * Commit changes automatically when the editor loses focus.
+   * Defaults to true for the default contenteditable editor.
+   */
+  commitOnBlur?: boolean;
+  /**
    * Provide a custom editor implementation.
    * If not set, the default contenteditable editor will be used.
    */
@@ -111,6 +121,12 @@ export interface IEditorArgs {
   host?: HTMLDivElement;
   /** The foreignObject element of the node */
   foreignObject?: SVGForeignObjectElement;
+  /** The triggering mouse event (if available) */
+  triggerEvent?: MouseEvent;
+  /** Allow multiline editing behavior */
+  multiline?: boolean;
+  /** Commit changes when losing focus */
+  commitOnBlur?: boolean;
   /** Callback to commit changes */
   save: (newContent: string) => void;
   /** Callback to cancel editing */

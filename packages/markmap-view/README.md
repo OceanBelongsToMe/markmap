@@ -16,6 +16,18 @@ This package is separated from [markmap-lib](https://github.com/markmap/markmap/
 an embedded `contenteditable` editor. To integrate a rich editor (CodeMirror, Monaco, etc.),
 provide an adapter through `editable.editor`.
 
+The default `contenteditable` editor uses multiline input by default, and can be configured:
+
+```ts
+const options = {
+  editable: {
+    enabled: true,
+    multiline: true,
+    commitOnBlur: true,
+  },
+};
+```
+
 ```ts
 import type { IInlineEditorAdapter, IEditorArgs } from "markmap-view";
 

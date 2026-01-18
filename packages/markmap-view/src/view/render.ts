@@ -254,6 +254,9 @@ export function renderNodes(args: {
         initialContent: d.content,
         host: inner,
         foreignObject: this as SVGForeignObjectElement,
+        triggerEvent: event,
+        multiline: editable?.multiline,
+        commitOnBlur: editable?.commitOnBlur,
         save: (text) => {
           restorePointerEvents();
           activeEditors.delete(svgNode as SVGElement);
