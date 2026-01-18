@@ -5,8 +5,6 @@ pub mod ids;
 pub mod index;
 pub mod markmap;
 pub mod markmap_edit;
-pub mod markmap_edit_anchors;
-pub mod markmap_edit_resolved_ast;
 mod ping;
 pub mod render;
 pub mod search;

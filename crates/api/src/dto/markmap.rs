@@ -21,14 +21,3 @@ pub struct MarkmapGetChildrenRequest {
 pub struct MarkmapGetChildrenResponse {
     pub content: Value,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MarkmapGetNodeRequest {
-    pub document_id: String,
-    pub node_id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MarkmapGetNodeResponse {
-    pub content: Value,
-}
