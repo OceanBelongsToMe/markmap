@@ -38,3 +38,28 @@ const options = {
   },
 };
 ```
+
+### Example: switch to CodeMirror (app layer)
+
+```ts
+import type { IInlineEditorAdapter, IEditorArgs } from "markmap-view";
+
+const editorAdapter: IInlineEditorAdapter = {
+  lockPointerEvents: true,
+  open: (args: IEditorArgs) => {
+    // mount CodeMirror and call args.save / args.cancel
+    return {
+      close: (opts) => {
+        if (opts?.cancel) args.cancel();
+      },
+    };
+  },
+};
+
+const options = {
+  editable: {
+    enabled: true,
+    editor: editorAdapter,
+  },
+};
+```
