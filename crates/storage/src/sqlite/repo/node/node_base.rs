@@ -91,6 +91,31 @@ impl NodeBaseRepository for SqliteNodeBaseRepo {
         Ok(())
     }
 
+    async fn delete_by_ids(&self, node_ids: &[NodeId]) -> AppResult<()> {
+        if node_ids.is_empty() {
+            return Ok(());
+        }
+
+        common::log_info!(count = node_ids.len(), "node repo delete_by_ids");
+
+        let placeholders = std::iter::repeat("?")
+            .take(node_ids.len())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let sql = format!("DELETE FROM nodes WHERE id IN ({placeholders})");
+        let mut query = sqlx::query(&sql);
+        for node_id in node_ids {
+            query = query.bind(uuid_to_blob(node_id.as_uuid()));
+        }
+
+        query.execute(self.pool.pool()).await.map_err(|err| {
+            common::log_error!("node repo delete_by_ids failed: {err}");
+            map_sqlx_error("delete nodes by ids", err)
+        })?;
+
+        Ok(())
+    }
+
     async fn delete_by_doc(&self, doc_id: DocumentId) -> AppResult<()> {
         common::log_info!(document_id = %doc_id.as_uuid(), "node repo delete_by_doc");
 

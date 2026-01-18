@@ -8,5 +8,6 @@ pub trait NodeBaseRepository: Send + Sync {
     async fn list_by_doc(&self, doc_id: DocumentId) -> AppResult<Vec<NodeBase>>;
     async fn get(&self, id: NodeId) -> AppResult<Option<NodeBase>>;
     async fn batch_upsert(&self, nodes: &[NodeBase]) -> AppResult<()>;
+    async fn delete_by_ids(&self, node_ids: &[NodeId]) -> AppResult<()>;
     async fn delete_by_doc(&self, doc_id: DocumentId) -> AppResult<()>;
 }
