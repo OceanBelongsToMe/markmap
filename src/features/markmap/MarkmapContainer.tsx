@@ -1,9 +1,16 @@
 import { Component, Show, createResource } from "solid-js";
 import { MarkmapCanvas } from "../../ui/components/markmap/MarkmapCanvas";
 import { useActiveDocument } from "../../state/workspace/useActiveDocument";
-import { defaultOptions } from "markmap-view";
+import type { IEditorArgs, IInlineEditorAdapter } from "markmap-view";
+import { createContentEditableEditor, defaultOptions } from "markmap-view";
 import { nodeContentWithHeadingIcons } from "../../ui/components/markmap/markmapNodeContent";
-import { fetchMarkmapChildren, fetchMarkmapRoot } from "../workspace/api/workspaceApi";
+import {
+  fetchMarkmapChildren,
+  fetchMarkmapEditMarkdown,
+  fetchMarkmapRoot,
+  saveMarkmapEditMarkdown,
+  type MarkmapEditMode,
+} from "../workspace/api/workspaceApi";
 
 export type MarkmapContainerProps = {
   class?: string;
@@ -20,8 +27,13 @@ const BASE_MARKMAP_OPTIONS = {
 
 export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
   const { activeDocId } = useActiveDocument();
+  const inlineEditor = createContentEditableEditor();
+  const resolveNodeId = (node: any) =>
+    BASE_MARKMAP_OPTIONS.editable.getNodeId(node) ?? node?.state?.id;
+  const resolveEditMode = (args: IEditorArgs): MarkmapEditMode =>
+    args.triggerEvent?.altKey ? "subtree" : "node";
 
-  const [data] = createResource(
+  const [data, { refetch }] = createResource(
     () => activeDocId(),
     async (docId) => {
       if (!docId) return null;
@@ -43,16 +55,66 @@ export const MarkmapContainer: Component<MarkmapContainerProps> = (props) => {
     },
   };
 
+  const editorAdapter: IInlineEditorAdapter = {
+    open: (args) => {
+      const docId = activeDocId();
+      const nodeId = resolveNodeId(args.node);
+      if (!docId || !nodeId) return;
+      const mode = resolveEditMode(args);
+      let closed = false;
+      let innerSession: ReturnType<typeof inlineEditor.open> | null = null;
+
+      const start = async () => {
+        const response = await fetchMarkmapEditMarkdown(docId, String(nodeId), mode);
+        if (!response.ok) {
+          console.error("[MarkmapContainer] fetch edit markdown failed", response.error);
+          return;
+        }
+        if (closed) return;
+        if (args.host) {
+          args.host.textContent = response.data.content;
+        }
+        innerSession = inlineEditor.open({
+          ...args,
+          multiline: true,
+          commitOnBlur: true,
+          save: async (content) => {
+            const saveResponse = await saveMarkmapEditMarkdown(
+              docId,
+              String(nodeId),
+              mode,
+              content
+            );
+            if (!saveResponse.ok) {
+              console.error("[MarkmapContainer] save edit markdown failed", saveResponse.error);
+              return;
+            }
+            refetch();
+          },
+          cancel: () => args.cancel(),
+        }) || null;
+      };
+
+      void start();
+
+      return {
+        close: (opts) => {
+          closed = true;
+          if (innerSession) {
+            innerSession.close(opts);
+          } else if (opts?.cancel) {
+            args.cancel();
+          }
+        },
+      };
+    },
+  };
+
   const markmapOptions = {
     ...BASE_MARKMAP_OPTIONS,
     editable: {
       ...BASE_MARKMAP_OPTIONS.editable,
-      onCommit: (nodeId: string | number, text: string) => {
-        console.log("[MarkmapContainer] onCommit:", nodeId, text);
-        // TODO: Call backend API to update node content
-        // await updateNode(String(nodeId), text);
-        // refetch();
-      },
+      editor: editorAdapter,
     },
   };
 
